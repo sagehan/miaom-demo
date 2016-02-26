@@ -1,0 +1,553 @@
+@charset "UTF-8";
+@import "compass/reset";
+
+// base
+$white      : #fafafa;
+$yellow     : #FFBA33;
+$green      : #30AD63;
+$gray       : #CECED2;
+$black      : #525151;
+
+// config
+/// Typography && Foreground Colors
+$base__TypeColor          : $yellow;
+$section__TitleColor      : $gray;
+$cuisine__TitleColor      : $black;
+$price__TagColor          : $gray;
+$counter__TagColor        : $green;
+$counter__TagBorderColor  : $green;
+/// Background colors
+$item__BackGround       : #ffffff;
+
+/// Typography
+$base__LineHeight       : 1.375em !default;
+$base__font-size        : 1em  !default;
+$base__font-family      : -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', Helvetica, sans-serif;
+$base__TextColor        : hsla(0, 0%, 0%, 1);
+@font-face {
+  font-family: icomiaomfood;
+  src: url('../stylesheets/icomiaomfood.woff');
+}
+
+/// Layout
+$base__gutter           : 2px;
+$banner__height         : 46px;
+$minimum-window-size    : 320px;
+$percentage_golden-ratio: 61.803398874989484820458%;
+@mixin columns--2 ($gutter: $base__gutter) {
+  position: relative;
+  display: inline-block;
+  width: calc( ( 100% - #{$gutter} ) / 2 );
+
+  &:nth-child(2n) {
+    /*float: right;*/
+    margin-left: $gutter;
+  }
+}
+@mixin columns__3 ($gutter: $base__gutter) {
+  position: relative;
+  display: inline-block;
+  width: calc( (100% - 2 * #{$base__gutter} ) / 3);
+
+  &:nth-child(3n-1),
+  &:nth-child(3n) {
+    margin-left: $base__gutter;
+  }
+
+  &:nth-child(3n+1) {
+    margin-left: 0;
+  }
+}
+
+// Functions
+@function calc-em($target, $context: $base__font-size) {
+  @return ($target / $context) * 1em;
+}
+
+@function calc-rem($target) {
+  @return ($target / $base_-font-size) * 1 rem;
+}
+
+// mixins
+@mixin b--equal-ratio($ratio) {
+  content: "";
+  display: block;
+  height: 0;
+  padding-top: $ratio;
+}
+@mixin b--full-stretched {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+@mixin b--centered {
+  display: block;
+  position: absolute;
+  left: -100%;
+  right: -100%;
+  top: -100%;
+  bottom: -100%;
+  margin: auto;
+  height: auto;
+}
+@mixin clearfix {
+  &:before,
+  &clearfix:after {
+    display: table;
+    content: " ";
+  }
+
+  &:after { clear: both;  }
+}
+
+*,
+*:before,
+*:after {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+a { text-decoration: none; }
+
+html { font-size: calc-em(1em, 1em); }
+
+body {
+  margin: 0;
+  color: $base__TextColor;
+  background-color: $white;
+  font-family: $base__font-family;
+}
+
+img {
+  vertical-align: top;
+  max-width: 100%;
+}
+
+.wrapper {
+  position: relative;
+  width: 100%;
+  min-width: $minimum-window-size;
+  margin: 0 auto;
+  padding: 0 0 1rem;
+}
+
+.clearfix{ @include clearfix; }
+.wrp_ratio--golden:before { @include b--equal-ratio($percentage_golden-ratio);}
+.wrp_ratio--4_3:before { @include b--equal-ratio(75.000%); }
+.wrp--stretched { @include b--full-stretched; }
+.wrp--centering { @include b--centered; }
+
+.icon {
+  margin: 1em 0.5em;
+
+  &:before {
+    margin-right: 0.5em;
+    font-family: "icomiaomfood";
+  }
+
+  &__wechat:before   { content: "\e901"; }
+  &__phone:before    { content: "\e91a"; }
+  &__location:before { content: "\e91c"; }
+  &__timer:before    { content: "\e90b"; }
+}
+
+.section__title {
+  color: $section__TitleColor;
+  font-size: 1em;
+  font-weight: lighter;
+  margin: 0;
+  line-height: $base__LineHeight;
+  padding: 0.125rem 0.5rem;
+}
+
+.slideshow,
+.item__header {
+  position: relative;
+  width: 100%;
+}
+.item__body {
+  position: relative;
+  padding: 2px 2px 0 8px;
+  height: 76px;
+}
+.cuisine {
+  &__picture {
+    width: 100%;
+    max-width: 100%;
+    min-width: 150px;
+  }
+
+  &__title {
+    overflow: hidden;
+    color: $cuisine__TitleColor;
+    font-size: 1.063em;
+    margin: 0;
+    line-height: 1.5em;
+  }
+
+  &__currency,
+  &__price {
+    color: $price__TagColor;
+    font-weight: lighter;
+  }
+
+  &__currency {
+    margin-right: 3px;
+  }
+
+  &__price {
+    font-size: 1em;
+    line-height: $base__LineHeight;
+  }
+
+  &__button {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 44px;
+    height: 44px;
+    background: no-repeat center/100% url("../img/Add_Button.png");
+  }
+}
+.slideshow {
+  &__pagination {
+    position: absolute;
+    bottom: 8px;
+    left: 0;
+    width: 100%;
+    line-height: 0.5em;
+    text-align: center;
+  }
+
+  &__pagination b {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 100%;
+    /*opacity: 0.2;*/
+    background: $base__TypeColor;
+    margin: 0 4px;
+  }
+}
+.banner {
+  position: relative;
+  height: $banner__height;
+  width: 100%;
+  background-color: hsla(0, 0%, 100%, 0.9);
+  margin-top: 0.5em;
+  padding: 0.188rem 0.5rem;
+}
+.notice-board {
+  float: left;
+  height: 100%;
+
+
+  &__notice {
+    border: 1px solid $counter__TagBorderColor;
+    border-radius: 16px;
+    padding: 0.125rem 0.625rem;
+    height: 17px;
+    line-height: 1.063em;
+    font-size: 0.813em;
+    text-align: center;
+  }
+}
+.btn-order {
+  float: right;
+  height: 100%;
+
+&__label {
+  color: $base__TypeColor;
+  font-size: 1.25em;
+}
+}
+.btn-order img { max-height: 40px; }
+
+.btn-order img {
+  max-height: 40px;
+}
+
+.btn-order img {
+  max-height: 40px;
+}
+.item-list {
+  /*position: relative;
+  width: 100%;*/
+  text-align: justify;
+  vertical-align: top;
+}
+
+.counter-tag {
+  position: absolute;
+  left: 8px;
+  bottom: 2px;
+  padding-right: 1px;
+  height: 22px;
+  line-height: $base__LineHeight;
+  background: $counter__TagBorderColor;
+  border-radius: 12px 0 0 12px;
+  text-align: center;
+
+  &:before {
+    content: "已选";
+    margin: 5px 5px;
+    font-size: 0.75em;
+    color: #FFFFFF;
+    height: 22px;
+    line-height: $base__LineHeight;
+  }
+
+  &__amount,
+  &__specs {
+    display: inline-block;
+    font-size: 0.75em;
+    line-height: $base__LineHeight;
+    height: 20px;
+    margin: 0;
+    padding-left: 5px;
+    color: $counter__TagBorderColor;
+    background: #ffffff;
+  }
+
+  &__amount {
+    padding-right: 5px;
+
+    &:before {
+      content: "x";
+      padding-right: 1px;
+    }
+  }
+}
+
+.footer {
+  position: relative;
+  margin-top: 1em;
+  font-size: 1em;
+  color: $base__TypeColor;
+  font-weight: lighter;
+}
+
+.card--back {
+  position: relative;
+  width: 100%;
+  text-align: center;
+  margin-top: 0.5em;
+  background-color: #000;
+}
+
+.card--back figure {
+  display: inline-block;
+  max-width: 31%;
+  text-align: center;
+}
+
+.card--back .card__title {
+  font-size: 1em;
+  font-weight: lighter;
+  text-align: left;
+}
+
+.card--back figcaption h2 {
+  margin-top: 8px;
+  margin-bottom: 5px;
+  font-size: 0.875em;
+  font-weight: lighter;
+  text-align: center;
+}
+
+.card--back figcaption p {
+  font-size: 0.688em;
+  font-weight: lighter;
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.crease {
+  border-width: 0;
+  font-size: 0;
+  border-top: 1px dotted #F2F2F2;
+}
+
+.card--front {
+  position: relative;
+  width: 100%;
+  margin-top: 0.5em;
+  background-color: #000;
+}
+
+.card--front img {
+  position: absolute;
+  right: 8px;
+  bottom: 16px;
+  width: 77px;
+}
+
+.card--front ul {
+  margin: 4em 0;
+}
+
+/* 2 column's layout */
+@media screen and (max-width: 480px) {
+  .item {
+    margin-bottom: 8px;
+    background-color: $item__BackGround;
+    @include columns--2;
+  }
+
+  .footer {
+    width: 100%;
+  }
+}
+
+/* 3 column's items */
+@media screen and (min-width: 480px) and (max-width: 720px) {
+  .item {
+    margin-bottom: 8px;
+    background-color: $item__BackGround;
+    @include columns--3;
+  }
+
+  .footer {
+    width: 100%;
+  }
+}
+
+/* 1 column's 320px sidebar  + 2 column's items */
+@media screen and (min-width: 720px) and (max-width: 800px) {
+  .slideshow {
+    float: left;
+    width: 320px;
+    margin-top: 1em;
+    margin-left: 1em;
+  }
+
+  .banner {
+    position: fixed;
+    top: 1em;
+    right: 1em;
+    z-index: 999;
+    clear: right;
+    float: right;
+    width: calc( 100% - 320px - 3em);
+    margin-left: 1em;
+  }
+
+  .section-wrapper {
+    /*position: absolute;*/
+    margin-top: $banner__height;
+    margin-right: 1em;
+    clear: right;
+    float: right;
+    width: calc(100% - 320px - 3em);
+  }
+
+  .item {
+    margin-bottom: 8px;
+    background-color: $item__BackGround;
+    @include columns--2;
+  }
+
+  .footer {
+    clear: left;
+    width: 320px;
+    margin-left: 1em;
+  }
+}
+
+/* 1 column's 320px sidebar + 3 column's items */
+@media screen and (min-width: 800px) and (max-width: 1040px) {
+  .slideshow {
+    float: left;
+    width: 320px;
+    margin-top: 1em;
+    margin-left: 1em;
+  }
+
+  .banner {
+    position: fixed;
+    top: 1em;
+    right: 1em;
+    z-index: 999;
+    clear: right;
+    float: right;
+    width: calc( 100% - 320px - 3em);
+    margin-left: 1em;
+  }
+
+  .section-wrapper {
+    /*position: absolute;*/
+    margin-right: 1em;
+    margin-top: $banner__height;
+    clear: right;
+    float: right;
+    width: calc( 100% - 320px - 3em );
+  }
+
+  .item {
+    margin-bottom: 8px;
+    background-color: $item__BackGround;
+    @include columns--3;
+  }
+
+  .footer {
+    clear: left;
+    width: 320px;
+    margin-left: 1em;
+  }
+}
+
+/* 1 column's 320px sidebar + 3 column's 240px items,
+should been wthin a 1040px wrapper
+which place near the left side of the browser window*/
+@media screen and (min-width: 1040px)  {
+  .wrapper {
+    width: 1040px;
+  }
+
+  .slideshow {
+    float: left;
+    width: 320px;
+    margin-top: 1em;
+    margin-left: 1em;
+  }
+
+  .banner {
+    $banner__width  : calc(1040px - 320px - 3em);
+    $banner-offset  : calc(1040px / 2 - 1em);
+
+    position: fixed;
+    top: 1em;
+    right: 50%;
+    transform: translateX($banner-offset);
+    z-index: 999;
+    clear: right;
+    float: right;
+    width: $banner__width;
+    margin-left: 1em;
+  }
+
+  .section-wrapper {
+    margin-right: 1em;
+    margin-top: $banner__height;
+    clear: right;
+    float: right;
+    width: calc( 100% - 320px - 3em );
+  }
+
+  .item {
+    margin-bottom: 8px;
+    background-color: $item__BackGround;
+    @include columns--3;
+  }
+
+  .footer {
+    clear: left;
+    width: 320px;
+    margin-left: 1em;
+  }
+}
