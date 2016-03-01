@@ -9,22 +9,6 @@
 #+KEYWORDS:  clojurescript hoplon SPA miaomufood
 #+TAGS: clojurescript hoplon
 
-#+NAME: miaom.app
-#+BEGIN_SRC clojurescript :tangle index.html.hl :exports none :noweb yes
-<<script-section>>
-
-<<presentation-section>>
-#+END_SRC
-
-#+NAME: author-section
-#+BEGIN_SRC clojurescript
-;; 喵姆餐厅 - 乌鲁木齐全城外送
-;; DATE: 2016-02-28 12:11
-;; AUTHOR: Sage Han
-;; EMAIL: zongshian@gmail.com
-;; WEBSITE: https://miaomfood.com
-;; Github: https://github.com/sagehan
-#+END_SRC
 
 #+NAME: script-section
 #+BEGIN_SRC clojurescript
@@ -280,4 +264,21 @@
 <!-- <script type="text/javascript" src="index.html.js"></script> -->
 </body>
 </html>
+#+END_SRC
+
+#+NAME: miaom.app
+#+BEGIN_SRC clojurescript :tangle index.html.hl :exports none :noweb yes
+<<script-section>>
+
+<<presentation-section>>
+#+END_SRC
+
+#+NAME: author-section
+#+BEGIN_SRC clojurescript
+;; 喵姆餐厅 - 乌鲁木齐全城外送
+;; DATE: 2016-02-28 12:11
+;; AUTHOR: Sage Han
+;; EMAIL: zongshian@gmail.com
+;; WEBSITE: https://miaomfood.com
+;; Github: https://github.com/sagehan
 #+END_SRC
