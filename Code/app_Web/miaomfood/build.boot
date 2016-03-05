@@ -7,20 +7,20 @@
                   [hoplon/hoplon             "6.0.0-alpha13"]
                   [org.clojure/clojure       "1.7.0"]
                   [org.clojure/clojurescript "1.7.228"]
-                  [tailrecursion/boot-jetty  "0.1.3"]
+                  [pandeiro/boot-http        "0.7.3"]
                   [ring                      "1.4.0"]
                   [ring/ring-defaults        "0.1.5"]
                   [com.datomic/datomic-free  "0.9.4766"]
                   [datascript                "0.15.0"]
                   [org.clojure/algo.generic  "0.1.0"]]
   :source-paths #{"src/hl" "src/cljs"}
-  :asset-paths  #{"assets"})
+  :resource-paths  #{"assets"})
 
 (require
   '[adzerk.boot-cljs         :refer [cljs]]
   '[adzerk.boot-reload       :refer [reload]]
   '[hoplon.boot-hoplon       :refer [hoplon prerender]]
-  '[tailrecursion.boot-jetty :refer [serve]])
+  '[pandeiro.boot-http       :refer [serve]])
 
 (deftask dev
   "Build miaomfood for local development."
