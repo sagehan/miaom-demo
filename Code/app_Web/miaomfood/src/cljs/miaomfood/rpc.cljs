@@ -12,7 +12,7 @@
 (defc= random-number (get state :random))
 
 (def get-state
-  (mkremote 'demo.api/get-state state error loading))
+  (mkremote 'miaomfood.api/get-state state error loading))
 
 (defn init []
   (get-state)

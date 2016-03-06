@@ -9,7 +9,137 @@
 #+KEYWORDS:  clojurescript hoplon SPA miaomufood
 #+TAGS: clojurescript hoplon
 
+* 数据关系
+** Cuisine Entities
+#+TBLNAME: menu-entities
+| Attribute             | type                     | Cardinality | doc      |
+|-----------------------+--------------------------+-------------+----------|
+| :menu/groups          | ref                      | many        | 分组     |
+| :menuGroup/name       | string                   | one         |          |
+| :menuGroup/categories | ref                      | many        | 菜品种类 |
+| :category/name        | indexed, fulltext string | one         |          |
+| :category/cuisines    | ref                      | many        |          |
+#+TBLNAME: cuisine-entities
+| Attribute          | type                     | Cardinality | doc  |
+|--------------------+--------------------------+-------------+------|
+| :cuisine/name      | indexed, fulltext string | one         | 名称 |
+| :cuisine/shortname | fulltext string          | one         | 简称 |
+| :cuisine/doc       | fulltext string          | many        | 描述 |
+| :cuisine/depict    | string                   | many        | 图片 |
+| :cuisine/species   | component ref            | many        | 规格 |
+#+TBLNAME: species-entities
+| Attribute       | type              | Cardinality | doc      |
+|-----------------+-------------------+-------------+----------|
+| :spec           | enum ref, one of: | one         | 规格名称 |
+|                 | :spec/10寸        |             | 10 inch  |
+|                 | :spec/8寸         |             | 8 inch   |
+|                 | :spec/买五赠一    |             |          |
+| :spec/duplex    | ref               |             | 双拼     |
+| :currency       | enum ref, one of: | one         | 币种     |
+|                 | :currency/CNY     |             | 人民币   |
+| :spec/price     | float             | one         | 售价     |
+| :spec/inventory | long              | one         | 库存     |
+| :spec/quantity  | long              | one         | 订购量   |
 
+** Customer Entities
+#+TBLNAME: customer-entities
+| Attribute                   | type                     | Cardinality | doc        |
+|-----------------------------+--------------------------+-------------+------------|
+| :customer/phone             | indexed, fulltext string | one         | 手机       |
+| :customer/username          | fulltext string          | one         | 顾客名称   |
+| :customer/address           | fulltext string          | many        | 送餐地址   |
+| :customer/email             | string                   | one         | E-Mail     |
+| :customer/wechat            | string                   | one         | 微信       |
+| :customer/qq                | string                   | one         | QQ         |
+| :customer/password          | string                   | one         | 哈希密码   |
+| gender                      | enum ref, one of:        | one         | 性别       |
+|                             | :gender/男士             |             | male       |
+|                             | :gender/女士             |             | female     |
+|                             | :gender/其她             |             | others     |
+| :customer/total-consumption | long                     | one         | 消费总额   |
+| :customer/total-purchase    | long                     | one         | 订购次数   |
+| :customer/isNew             | boolean                  | one         | 是否新用户 |
+| :customer/isRegular         | boolean                  | one         | 是否老顾客 |
+| :customer/isSuspicious      | boolean                  | one         | 是否可疑   |
+| :customer/isBlocked         | boolean                  | one         | 是否被锁   |
+| :customer/ip                | string                   | one         |            |
+| :customer/ip_geo            | string                   | one         |            |
+** Order Entities
+#+TBLNAME: order-entities
+| Attribute            | type                         | Cardinality | doc    |
+|----------------------+------------------------------+-------------+--------|
+| :order/token         | indexed string               | one         |        |
+| :order/cuisines      | component ref                | many        |        |
+| :order/coupons       | component ref                | many        | 优惠码 |
+| :order/total         | float                        | one         | 总价   |
+| :order/comment       | fulltext string              | one         | 备注   |
+| :order/customer      | ref                          | one         |        |
+| :order/payment       | component ref                | one         | 支付   |
+| :order/schedule-day  | enum ref ,one of:            | one         | 预订   |
+|                      | :order.schedule-day/intraday |             | 当日   |
+|                      | :order.schedule-day/morrow   |             | 翌日   |
+| :order/schedule-time | long                         | one         | 时间   |
+
+#+TBLNAME: coupon-entities
+| Attribute           | type                 | Cardinality | doc          |
+|---------------------+----------------------+-------------+--------------|
+| :coupon/code        | string               | one         | 优惠码       |
+| :coupon/min-total   | long                 | one         | 最小订单总价 |
+| :coupon/discounting | long                 | one         | 折扣幅度     |
+| :coupon/operator    | enum ref, one of:    | one         | 折扣方式     |
+|                     | :cupon.operator/直减 |             | subtraction  |
+|                     | :cupon.operator/打折 |             | off          |
+| :coupon/quota       | long                 | one         | 限量         |
+| :coupon/deadline    | long                 | one         | 失效日期     |
+
+#+TBLNAME: payment-entities
+| Attribute               | type                       | Cardinality | doc    |
+|-------------------------+----------------------------+-------------+--------|
+| :payment/receiver       | enum ref, one of:          |             | 收款方 |
+|                         | :payment.receiver/到付     |             |        |
+|                         | :paymnet.receiver/微信支付 |             |        |
+|                         | :paymnet.receiver/支付宝   |             |        |
+| :payment/transaction-ID | string                     | one         | 流水号 |
+| :payment/total          | long                       | one         |        |
+
+#+NAME: datomic-schema
+#+BEGIN_SRC dot :file schema.png :cmdline -Kdot -Tpng
+digraph dfd{
+
+}
+#+END_SRC
+** WebApp Entities
+#+TBLNAME: website-entities
+| Attribute        | type   | Cardinality | doc      |
+|------------------+--------+-------------+----------|
+| :website/title   | string | one         | 网站标题 |
+| :website/notices | ref    | many        | 网站布告 |
+
+#+TBLNAME: notices-entities
+| Attribute        | type   | Cardinality | doc |
+|------------------+--------+-------------+-----|
+| :notice/priority | string | one         |     |
+| :notice/content  | string | one         |     |
+| :notice/duration | long   | one         |     |
+
+#+TBLNAME: restaurant-entities
+| Attribute            | type              | Cardinality | doc      |
+|----------------------+-------------------+-------------+----------|
+| :restaurant/name     | string            | one         | 餐厅名称 |
+| :restaurant/phone    | string            | one         | 餐厅电话 |
+| :restaurant/wechat   | string            | one         | 餐厅微信 |
+| :restaurant/address  | string            | one         | 餐厅地址 |
+| :restaurant/isClosed | boolean           | one         | 营业状态 |
+| :restaurant/rest-day | enum ref, one of: |             | 休整日   |
+|                      | :rest-day/周一    |             | Mon.     |
+|                      | :rest-day/周二    |             | Tues.    |
+|                      | :rest-day/周三    |             | Wed.     |
+|                      | :rest-day/周四    |             | Thur.    |
+|                      | :rest-day/周五    |             | Fri.     |
+|                      | :rest-day/周六    |             | Sat.     |
+|                      | :rest-day/周天    |             | Sun.     |
+
+* 程序
 #+NAME: script-section
 #+BEGIN_SRC clojurescript
 <script type="text/hoplon">

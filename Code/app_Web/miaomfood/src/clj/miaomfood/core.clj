@@ -8,15 +8,29 @@
 
 (ns miaomfood.core
   (:require
-    [demo.handler          :as handler]
-    [ring.adapter.jetty             :refer [run-jetty]]))
+    [compojure.core :as c]
+    [compojure.route :as route]
+    [ring.middleware.defaults :as d]
+    [ring.util.response :as response]
+    [castra.middleware :as castra]
+    [ring.adapter.jetty  :refer [run-jetty]]))
 
 (def server (atom nil))
 
-(defn app [port public-path]
-  (run-jetty handler/app {:join? false :port port}))
+(c/defroutes app-routes
+  (c/GET "/" req (response/content-type (response/resource-response "index.html") "text/html"))
+  (route/resources "/" {:root ""}))
+
+(def handler
+  (-> app-routes
+      (d/wrap-defaults d/api-defaults)
+      (castra/wrap-castra-session "a 16-byte secret")
+      (castra/wrap-castra 'miaomfood.api)))
+
+(defn app [port]
+  (run-jetty handler {:join? false :port port}))
 
 (defn start-server
   "Start castra server (port 33333)."
   [port public-path]
-  (swap! server #(or % (app port public-path))))
+  (swap! server #(or % (app port ))))
