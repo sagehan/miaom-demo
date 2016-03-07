@@ -1,2 +1,2 @@
 {:datomic
- {:uri "datomic:free://localhost:4334/miaomufood"}}
+ {:uri "datomic:dev://localhost:4334/miaomfood"}}

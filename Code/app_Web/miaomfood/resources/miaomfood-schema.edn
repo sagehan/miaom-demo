@@ -36,13 +36,6 @@
   :db/doc "布告优先级"
   :db.install/_attribute :db.part/db}
 
- ;; restaurant
- {:db/id #db/id[:db.part/db]
-  :db/ident :website/title
-  :db/valueType :db.type/string
-  :db/cardinality :db.cardinality/one
-  :db/doc "网站标题"
-  :db.install/_attribute :db.part/db}
  ;;;; Golobal settings
  {:db/id #db/id[db.part/db]
   :db/ident :threshold/oldCustomer
@@ -209,8 +202,8 @@
   :db.install/_attribute :db.part/db}
 
 ;; Enums
- [:db/add #db/id[:db.part/user] :db/ident :spec/8寸]
- [:db/add #db/id[:db.part/user] :db/ident :spec/10寸]
+ [:db/add #db/id[:db.part/user] :db/ident :spec/寸8]
+ [:db/add #db/id[:db.part/user] :db/ident :spec/寸10]
  [:db/add #db/id[:db.part/user] :db/ident :spec/买五赠一]
 
  [:db/add #db/id[:db.part/user] :db/ident :currency/CNY]
@@ -241,7 +234,7 @@
   :db.install/_attribute :db.part/db}
 
  {:db/id #db.id[db.part/db]
-  :db/ident :customer/address
+  :db/ident :customer/streetAddress
   :db/valueType :db.type/string
   :db/cardinality :db.cardinality/one
   :db/unique :db.unique/identity
