@@ -1,19 +1,22 @@
-(ns demo.rpc
+(ns miaomfood.rpc
   (:require-macros
     [javelin.core :refer [defc defc=]])
   (:require
    [javelin.core]
    [castra.core :refer [mkremote]]))
 
-(defc state {:random nil})
+(defc website {:title "喵姆餐厅"})
+(defc user {})
 (defc error nil)
 (defc loading [])
 
 (defc= random-number (get state :random))
 
-(def get-state
-  (mkremote 'miaomfood.api/get-state state error loading))
+(def website-metadata
+  (mkremote 'miaomfood.api/website-metadata website error loading))
+
+(def like! (mkremote 'miaomfood.api/like! user error loading))
 
 (defn init []
-  (get-state)
-  (js/setInterval get-state 1000))
+  (website-metadata)
+  (js/setInterval website-metadata 1000))

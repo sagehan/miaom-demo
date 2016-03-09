@@ -1,3 +1,5 @@
+#!/usr/bin/env boot
+
 (set-env!
  :dependencies '[
                  [org.clojure/clojure       "1.7.0"]

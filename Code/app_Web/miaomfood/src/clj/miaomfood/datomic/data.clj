@@ -1,4 +1,55 @@
-[
+(ns miaomfood.datomic.data
+  (:require
+      [datomic.api :as d]))
+
+(def data-tx
+  [
+   {:db/id (d/tempid :db.part/user -1)
+    :website/title "喵姆餐厅 - 乌鲁木齐全城外送"}
+   {:db/id (d/tempid :db.part/user -2)
+    :groups/menus [#db/id[:db.part/user -3]]}
+   {:db/id (d/tempid :db.part/user -3)
+    :menu/name "好吃的"
+    :menu/categories [#db/id[:db.part/user -5]
+                           #db/id[:db.part/user -6]
+                           #db/id[:db.part/user -7]]}
+   {:db/id (d/tempid :db.part/user -5)
+    :category/name "披萨"
+    :category/cuisines [#db/id[:db.part/user -8]
+                        #db/id[:db.part/user -9]]}
+   {:db/id (d/tempid :db.part/user -6)
+    :category/name "焗饭"}
+   {:db/id (d/tempid :db.part/user -7)
+    :category/name "沙拉"}
+   {:db/id (d/tempid :db.part/user -8)
+    :cuisine/name "激情培根"
+    :cuisine/species [{:db/id #db/id [:db.part/user -10]
+                       :spec/name :spec.name/八寸
+                       :currency/Abbr :currency.Abbr/CNY
+                       :spec/price 39
+                       :spec/inventory 100}
+                      {:db/id #db/id [:db.part/user -11]
+                       :spec/name :spec.name/十寸
+                       :currency/Abbr :currency.Abbr/CNY
+                       :spec/price 59
+                       :spec/inventory 100}
+                      ]}
+   {:db/id (d/tempid :db.part/user -9)
+    :cuisine/name "风情夏威夷"
+    :cuisine/species [{:db/id #db/id [:db.part/user -12]
+                       :spec/name :spec.name/八寸
+                       :currency/Abbr :currency.Abbr/CNY
+                       :spec/price 39
+                       :spec/inventory 100}
+                      {:db/id #db/id [:db.part/user -13]
+                       :spec/name :spec.name/十寸
+                       :currency/Abbr :currency.Abbr/CNY
+                       :spec/price 59
+                       :spec/inventory 100}
+                      ]}
+   ])
+
+(def schema-tx [
  ;;;; App settings
  ;;; website
    {:db/id #db/id[:db.part/db]
@@ -498,5 +549,4 @@
 
    [:db/add #db/id[:db.part/user] :db/ident :payment.receiver/到付]
    [:db/add #db/id[:db.part/user] :db/ident :payment.receiver/微信支付]
-   [:db/add #db/id[:db.part/user] :db/ident :payment.receiver/支付宝]
-   ]
+   [:db/add #db/id[:db.part/user] :db/ident :payment.receiver/支付宝]])

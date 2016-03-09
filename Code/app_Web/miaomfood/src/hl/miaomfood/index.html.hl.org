@@ -143,10 +143,11 @@ digraph dfd{
 #+NAME: script-section
 #+BEGIN_SRC clojurescript
 <script type="text/hoplon">
-(page "index.html")
+(page "index.html"
+      (:requirle [miaomfood.rpc :as rpc])))
 
-;; persisted state cell
-   ;;;;;;;;;;;;;;;;;;;;;;;;
+;; cell ==========================
+(defc= notice "营业中，欢迎点餐！")
 
 ;;   (def notices (-> (cell {}) (local-storage ::store)))
 </script>
@@ -156,243 +157,245 @@ digraph dfd{
 #+BEGIN_SRC html
 <!doctype html>
 <html>
-<head>
+  <head>
     <title>喵姆餐厅 - 乌鲁木齐全城外送</title>
     <link href="/favicon.ico" rel="shortcut icon" type="img/vnd.microsoft.icon">
     <link href="stylesheets/main.css" rel="stylesheet" type="text/css">
-    <html-meta charset="utf-8">
-    <html-meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <html-meta name="description" content="美味披萨,焗饭,还有各种小吃,乌鲁木齐全城外送!">
-    <html-meta name="keywords" content="喵姆餐厅 喵姆 Miaom 乌鲁木齐快餐 快餐 美味 披萨 焗饭 沙拉">
-    <html-meta name="viewport" content="initial-scale=1.0, width=device-width">
-</head>
-<body>
-<div class="wrapper">
-    <div class="slideshow wrp_ratio--golden">
+    <html-meta charset="utf-8"/>
+      <html-meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <html-meta name="description" content="美味披萨,焗饭,还有各种小吃,乌鲁木齐全城外送!"/>
+          <html-meta name="keywords" content="喵姆餐厅 喵姆 Miaom 乌鲁木齐快餐 快餐 美味 披萨 焗饭 沙拉"/>
+            <html-meta name="viewport" content="initial-scale=1.0, width=device-width"/>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="slideshow wrp_ratio--golden">
         <!--TODO: 轮播栏自动隐藏-->
         <div class="wrp--stretched">
-            <img class="slideshow__img wrp--centering" src="img/logo.jpg">
+          <img class="slideshow__img wrp--centering" src="img/logo.jpg">
         </div>
         <div class="slideshow__pagination">
-            <b class="slide__pagination-bullet"></b>
-            <b class="slide__pagination-bullet"></b>
-            <b class="slide__pagination-bullet"></b>
+          <b class="slide__pagination-bullet"></b>
+          <b class="slide__pagination-bullet"></b>
+          <b class="slide__pagination-bullet"></b>
         </div>
-    </div>
-    <div class="banner clearfix">
+      </div>
+      <div class="banner clearfix">
         <!--TODO: 顶栏置顶悬浮-->
         <div class="notice-board">
-            <span class="notice-board__notice">营业中，欢迎点餐！</span>
+          <span class="notice-board__notice"><text>~{notice}</text></span>
         </div>
         <a href="#pizza-category" class="btn-order">
-            <span class="btn-order__label">提交订单</span>
-            <img src="img/notepad.png">
+          <span class="btn-order__label">提交订单</span>
+          <img src="img/notepad.png">
         </a>
-    </div>
-    <nav class="nav">
+      </div>
+      <nav class="nav">
         <!--TODO: 底栏弹出菜单-->
-    </nav>
-    <div class="checkout-page">
+      </nav>
+      <div class="checkout-page">
         <!-- TODO: 订单结算表单
-        -->
-    </div>
-    <section class="section-wrapper clearfix" id="tasty">
+          -->
+      </div>
+      <section class="section-wrapper clearfix" id="tasty">
         <section class="section cuisine-category" id="pizza-category">
-            <header class="section__header">
-                <h1 class="section__title">披萨</h1>
-            </header>
-            <div class="section__body item-list clearfix">
-                <article class="item cuisine" id="cuisine-bacon">
-                    <div class="item__header wrp_ratio--4_3" >
-                        <div class="wrp--stretched">
-                            <img class="cuisine__picture" src="img/Bacon.JPG">
-                        </div>
-                    </div>
-                    <div class="item__body clearfix">
-                        <h2 class="cuisine__title">激情培根</h2>
-                        <small class="cuisine__currency">¥</small><span class="cuisine__price">39/59</span>
-                        <div class="cuisine__button"></div>
-                        <div class="counter-tag">
-                            <b class="counter-tag__specs">10寸</b><b class="counter-tag__amount">1</b>
-                        </div>
-                    </div>
-                </article><!--
-             --><article class="item cuisine" id="cuisine-hawawii">
-                <div class="item__header wrp_ratio--4_3">
-                    <div class="wrp--stretched">
-                        <img class="cuisine__picture" src="img/Hawaii.JPG">
-                    </div>
+          <header class="section__header">
+            <h1 class="section__title">披萨</h1>
+          </header>
+          <div class="section__body item-list clearfix">
+              <article class="item cuisine" id="cuisine-bacon">
+                <div class="item__header wrp_ratio--4_3" >
+                  <div class="wrp--stretched">
+                    <img class="cuisine__picture" src="img/Bacon.JPG">
+                  </div>
                 </div>
                 <div class="item__body clearfix">
-                    <h2 class="cuisine__title">风情夏威夷</h2>
-                    <small class="cuisine__currency">¥</small><span class="cuisine__price">39/59</span>
-                    <div class="cuisine__button"></div>
+                  <h2 class="cuisine__title">
+                    <text>~{c-title}</text>
+                  </h2>
+                  <small class="cuisine__currency">¥</small><span class="cuisine__price"><text>~{c-prices}</text></span>
+                  <div class="cuisine__button"></div>
+                  <div class="counter-tag">
+                    <b class="counter-tag__specs"><text>~{c-specs}</text></b><b class="counter-tag__amount"><text>~{c-amount}</text></b>
+                  </div>
                 </div>
+              </article><!--
+                          --><article class="item cuisine" id="cuisine-hawawii">
+              <div class="item__header wrp_ratio--4_3">
+                <div class="wrp--stretched">
+                  <img class="cuisine__picture" src="img/Hawaii.JPG">
+                </div>
+              </div>
+              <div class="item__body clearfix">
+                <h2 class="cuisine__title">风情夏威夷</h2>
+                <small class="cuisine__currency">¥</small><span class="cuisine__price">39/59</span>
+                <div class="cuisine__button"></div>
+              </div>
             </article><!--
-             --><article class="item cuisine" id="cuisine-beef">
-                <div class="item__header wrp_ratio--4_3">
-                    <div class="wrp--stretched">
-                        <img class="cuisine__picture" src="img/Beef.JPG">
-                    </div>
+                        --><article class="item cuisine" id="cuisine-beef">
+              <div class="item__header wrp_ratio--4_3">
+                <div class="wrp--stretched">
+                  <img class="cuisine__picture" src="img/Beef.JPG">
                 </div>
-                <div class="item__body clearfix">
-                    <h2 class="cuisine__title">泪牛满面</h2>
-                    <small class="cuisine__currency">¥</small><span class="cuisine__price">39/59</span>
-                    <div class="cuisine__button"></div>
-                </div>
+              </div>
+              <div class="item__body clearfix">
+                <h2 class="cuisine__title">泪牛满面</h2>
+                <small class="cuisine__currency">¥</small><span class="cuisine__price">39/59</span>
+                <div class="cuisine__button"></div>
+              </div>
             </article><!--
-             --><article class="item cuisine" id="cuisine-chiecken">
-                <div class="item__header">
-                    <img class="cuisine__picture" src="img/Chicken.JPG">
-                </div>
-                <div class="item__body clearfix">
-                    <h2 class="cuisine__title">菌菇鸡肉</h2>
-                    <small class="cuisine__currency">¥</small><span class="cuisine__price">39/59</span>
-                    <div class="cuisine__button"></div>
-                </div>
+                        --><article class="item cuisine" id="cuisine-chiecken">
+              <div class="item__header">
+                <img class="cuisine__picture" src="img/Chicken.JPG">
+              </div>
+              <div class="item__body clearfix">
+                <h2 class="cuisine__title">菌菇鸡肉</h2>
+                <small class="cuisine__currency">¥</small><span class="cuisine__price">39/59</span>
+                <div class="cuisine__button"></div>
+              </div>
             </article><!--
-             --><article class="item cuisine" id="cuisine-peppery-chiecken">
-                <div class="item__header">
-                    <img class="cuisine__picture" src="img/辣味鸡肉.JPG">
-                </div>
-                <div class="item__body clearfix">
-                    <h2 class="cuisine__title">辣味鸡肉</h2>
-                    <small class="cuisine__currency">¥</small><span class="cuisine__price">39/59</span>
-                    <div class="cuisine__button"></div>
-                </div>
+                        --><article class="item cuisine" id="cuisine-peppery-chiecken">
+              <div class="item__header">
+                <img class="cuisine__picture" src="img/辣味鸡肉.JPG">
+              </div>
+              <div class="item__body clearfix">
+                <h2 class="cuisine__title">辣味鸡肉</h2>
+                <small class="cuisine__currency">¥</small><span class="cuisine__price">39/59</span>
+                <div class="cuisine__button"></div>
+              </div>
             </article><!--
-             --><article class="item cuisine" id="cuisine-peppery-beef">
-                <div class="item__header">
-                    <img class="cuisine__picture" src="img/热辣牛肉.JPG">
-                </div>
-                <div class="item__body clearfix">
-                    <h2 class="cuisine__title">热辣牛肉</h2>
-                    <small class="cuisine__currency">¥</small><span class="cuisine__price">39/59</span>
-                    <div class="cuisine__button"></div>
-                </div>
+                        --><article class="item cuisine" id="cuisine-peppery-beef">
+              <div class="item__header">
+                <img class="cuisine__picture" src="img/热辣牛肉.JPG">
+              </div>
+              <div class="item__body clearfix">
+                <h2 class="cuisine__title">热辣牛肉</h2>
+                <small class="cuisine__currency">¥</small><span class="cuisine__price">39/59</span>
+                <div class="cuisine__button"></div>
+              </div>
             </article><!--
-             --><article class="item cuisine" id="cuisine-shrimp">
-                <div class="item__header">
-                    <img class="cuisine__picture" src="img/席卷天虾.JPG">
-                </div>
-                <div class="item__body clearfix">
-                    <h2 class="cuisine__title">席卷天虾</h2>
-                    <small class="cuisine__currency">¥</small><span class="cuisine__price">39/59</span>
-                    <div class="cuisine__button"></div>
-                </div>
+                        --><article class="item cuisine" id="cuisine-shrimp">
+              <div class="item__header">
+                <img class="cuisine__picture" src="img/席卷天虾.JPG">
+              </div>
+              <div class="item__body clearfix">
+                <h2 class="cuisine__title">席卷天虾</h2>
+                <small class="cuisine__currency">¥</small><span class="cuisine__price">39/59</span>
+                <div class="cuisine__button"></div>
+              </div>
             </article><!--
-             --><article class="item cuisine" id="cuisine-aubergine">
-                <div class="item__header">
-                    <img class="cuisine__picture" src="img/肉酱茄子.JPG">
-                </div>
-                <div class="item__body clearfix">
-                    <h2 class="cuisine__title">肉酱茄子</h2>
-                    <small class="cuisine__currency">¥</small><span class="cuisine__price">39/59</span>
-                    <div class="cuisine__button"></div>
-                </div>
+                        --><article class="item cuisine" id="cuisine-aubergine">
+              <div class="item__header">
+                <img class="cuisine__picture" src="img/肉酱茄子.JPG">
+              </div>
+              <div class="item__body clearfix">
+                <h2 class="cuisine__title">肉酱茄子</h2>
+                <small class="cuisine__currency">¥</small><span class="cuisine__price">39/59</span>
+                <div class="cuisine__button"></div>
+              </div>
             </article>
-            </div>
+          </div>
         </section>
         <section class="section cuisine-category" id="salad-category">
-            <header class="section__header">
-                <h1 class="section__title">沙拉</h1>
-            </header>
-            <div class="section__body item-list clearfix">
-                <article class="item cuisine" id="cuisine-fruit-salad">
-                    <div class="item__header wrp_ratio--4_3">
-                        <div class="wrp--stretched">
-                            <img class="cuisine__picture" src="img/Salad.jpg">
-                        </div>
-                    </div>
-                    <div class="item__body clearfix">
-                        <h2 class="cuisine__title">水果沙拉</h2>
-                        <small class="cuisine__currency">¥</small><span class="cuisine__price">25</span>
-                        <div class="cuisine__button"></div>
-                        <div class="counter-tag">
-                            <b class="counter-tag__specs">&nbsp;</b><b class="counter-tag__amount">1</b>
-                        </div>
-                    </div>
-                </article><!--
-             --><article class="item cuisine" id="cuisine-vegetable-salad">
-                <div class="item__header wrp_ratio--4_3">
-                    <div class="wrp--stretched">
-                        <img class="cuisine__picture" src="img/Salad.jpg">
-                    </div>
+          <header class="section__header">
+            <h1 class="section__title">沙拉</h1>
+          </header>
+          <div class="section__body item-list clearfix">
+            <article class="item cuisine" id="cuisine-fruit-salad">
+              <div class="item__header wrp_ratio--4_3">
+                <div class="wrp--stretched">
+                  <img class="cuisine__picture" src="img/Salad.jpg">
                 </div>
-                <div class="item__body clearfix">
-                    <h2 class="cuisine__title">蔬菜沙拉</h2>
-                    <small class="cuisine__currency">¥</small><span class="cuisine__price">25</span>
-                    <div class="cuisine__button"></div>
+              </div>
+              <div class="item__body clearfix">
+                <h2 class="cuisine__title">水果沙拉</h2>
+                <small class="cuisine__currency">¥</small><span class="cuisine__price">25</span>
+                <div class="cuisine__button"></div>
+                <div class="counter-tag">
+                  <b class="counter-tag__specs">&nbsp;</b><b class="counter-tag__amount">1</b>
                 </div>
+              </div>
             </article><!--
-             -->
-            </div>
+                        --><article class="item cuisine" id="cuisine-vegetable-salad">
+              <div class="item__header wrp_ratio--4_3">
+                <div class="wrp--stretched">
+                  <img class="cuisine__picture" src="img/Salad.jpg">
+                </div>
+              </div>
+              <div class="item__body clearfix">
+                <h2 class="cuisine__title">蔬菜沙拉</h2>
+                <small class="cuisine__currency">¥</small><span class="cuisine__price">25</span>
+                <div class="cuisine__button"></div>
+              </div>
+            </article><!--
+                        -->
+          </div>
         </section>
         <section class="section cuisine-category" id="snack-category">
-            <header class="section__header">
-                <h1 class="section__title">小吃</h1>
-            </header>
-            <div class="section__body item-list clearfix">
-                <article class="item cuisine" id="cuisine-Orleans">
-                    <div class="item__header wrp_ratio--4_3">
-                        <div class="wrp--stretched">
-                            <img class="cuisine__picture" src="img/Orleans.jpg">
-                        </div>
-                    </div>
-                    <div class="item__body clearfix">
-                        <h2 class="cuisine__title">奥尔良烤翅</h2>
-                        <small class="cuisine__currency">¥</small><span class="cuisine__price">10/50</span>
-                        <div class="cuisine__button"></div>
-                        <div class="counter-tag">
-                            <b class="counter-tag__specs">买五送一</b><b class="counter-tag__amount">1</b>
-                        </div>
-                    </div>
-                </article>
-            </div>
+          <header class="section__header">
+            <h1 class="section__title">小吃</h1>
+          </header>
+          <div class="section__body item-list clearfix">
+            <article class="item cuisine" id="cuisine-Orleans">
+              <div class="item__header wrp_ratio--4_3">
+                <div class="wrp--stretched">
+                  <img class="cuisine__picture" src="img/Orleans.jpg">
+                </div>
+              </div>
+              <div class="item__body clearfix">
+                <h2 class="cuisine__title">奥尔良烤翅</h2>
+                <small class="cuisine__currency">¥</small><span class="cuisine__price">10/50</span>
+                <div class="cuisine__button"></div>
+                <div class="counter-tag">
+                  <b class="counter-tag__specs">买五送一</b><b class="counter-tag__amount">1</b>
+                </div>
+              </div>
+            </article>
+          </div>
         </section>
-    </section>
-    <footer class="footer">
+      </section>
+      <footer class="footer">
         <div class="card card--back wrp_ratio--golden">
-        <div class=" wrp--stretched">
+          <div class=" wrp--stretched">
             <h1 class="card__title icon icon__wechat">关注微信</h1>
             <figure class="">
-                <img class="card__img" src="img/QR-1.jpg" alt="喵姆餐厅微信服务号">
-                <figcaption class="clearfix">
-                    <h2>喵姆餐厅</h2>
-                    <p>id:miaomu_food</p>
-                </figcaption>
+              <img class="card__img" src="img/QR-1.jpg" alt="喵姆餐厅微信服务号">
+              <figcaption class="clearfix">
+                <h2>喵姆餐厅</h2>
+                <p>id:miaomu_food</p>
+              </figcaption>
             </figure>
             <figure>
-                <img src="img/QR-1.jpg" alt="胖喵微信号">
-                <figcaption class="clearfix">
-                    <h2>胖喵</h2>
-                    <p>id:pangmiao</p>
-                </figcaption>
+              <img src="img/QR-1.jpg" alt="胖喵微信号">
+              <figcaption class="clearfix">
+                <h2>胖喵</h2>
+                <p>id:pangmiao</p>
+              </figcaption>
             </figure>
             <figure>
-                <img src="img/QR-1.jpg" alt="瘦喵微信号">
-                <figcaption class="clearfix">
-                    <h2>瘦喵</h2>
-                    <p>id:shoumiao</p>
-                </figcaption>
+              <img src="img/QR-1.jpg" alt="瘦喵微信号">
+              <figcaption class="clearfix">
+                <h2>瘦喵</h2>
+                <p>id:shoumiao</p>
+              </figcaption>
             </figure>
+          </div>
         </div>
-            </div>
         <hr class="crease">
         <div class="card card--front wrp_ratio--golden">
-        <div class="wrp--stretched">
+          <div class="wrp--stretched">
             <ul>
-                <li class="icon icon__phone">18690890381</li>
-                <li class="icon icon__location">乌鲁木齐市高新区桂林路锦林二巷8号</li>
-                <li class="icon icon__timer">送餐时间: 12:00 - 22:00（周一休息）</li>
+              <li class="icon icon__phone">18690890381</li>
+              <li class="icon icon__location">乌鲁木齐市高新区桂林路锦林二巷8号</li>
+              <li class="icon icon__timer">送餐时间: 12:00 - 22:00（周一休息）</li>
             </ul>
             <img src="img/motorbike.png" alt="外送电动车">
+          </div>
         </div>
-        </div>
-    </footer>
-</div>
-<!-- <script type="text/javascript" src="index.html.js"></script> -->
-</body>
+      </footer>
+    </div>
+    <!-- <script type="text/javascript" src="index.html.js"></script> -->
+  </body>
 </html>
 #+END_SRC
 
