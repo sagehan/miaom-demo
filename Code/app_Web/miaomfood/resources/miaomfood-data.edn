@@ -1,0 +1,62 @@
+[
+ {:db/id #db/id[:db.part/user -1]
+  :website/title "喵姆餐厅 - 乌鲁木齐全城外送"}
+ {:db/id #db/id[:db.part/user -2]
+  :group/menus [#db/id[:db.part/user -3]]}
+ {:db/id #db/id[:db.part/user -3]
+  :menu/name "好吃的"
+  :menu/categories [#db/id[:db.part/user -5]
+                    #db/id[:db.part/user -6]
+                    #db/id[:db.part/user -7]]}
+ {:db/id #db/id[:db.part/user -5]
+  :category/name "披萨"
+  :category/cuisines [#db/id[:db.part/user -8]
+                      #db/id[:db.part/user -9]]}
+ {:db/id #db/id[:db.part/user -6]
+  :category/name "焗饭"}
+ {:db/id #db/id[:db.part/user -7]
+  :category/name "沙拉"
+  :category/cuisines [#db/id[:db.part/user 14]]}
+ {:db/id #db/id[:db.part/user -8]
+  :cuisine/name "激情培根"
+  :cuisine/id "JQPG"
+  :cuisine/species [{:db/id #db/id[:db.part/user -10]
+                     :spec/name :spec.name/八寸
+                     :currency/Abbr :currency.Abbr/CNY
+                     :spec/price 39
+                     :spec/inventory 100}
+                    {:db/id #db/id[:db.part/user -11]
+                     :spec/name :spec.name/十寸
+                     :currency/Abbr :currency.Abbr/CNY
+                     :spec/price 59
+                     :spec/inventory 100}
+                    ]}
+ {:db/id #db/id[:db.part/user -9]
+  :cuisine/name "风情夏威夷"
+  :cuisine/id "FQXWY"
+  :cuisine/species [{:db/id #db/id[:db.part/user -12]
+                     :spec/name :spec.name/八寸
+                     :currency/Abbr :currency.Abbr/CNY
+                     :spec/price 39
+                     :spec/inventory 100}
+                    {:db/id #db/id[:db.part/user -13]
+                     :spec/name :spec.name/十寸
+                     :currency/Abbr :currency.Abbr/CNY
+                     :spec/price 59
+                     :spec/inventory 100}
+                    ]}
+ {:db/id  #db/id[:db.part/user -14]
+  :cuisine/name "水果沙拉"
+  :cuisine/id "SGSL"
+  :cuisine/species [{:db/id #db/id[:db.part/user]
+                     :spec/name :spec.name/份
+                     :spec/price 25
+                     :spec/inventory 100}]}
+ {:db/id #db/id[:db.part/user -15]
+  :customer/id #uuid "56e658a4-9686-45cd-a746-5d983306aff4"
+  :customer/phone "1234567890"
+  :customer/email "testuser@testuser.com"
+  :customer/qq "123456789"
+  :customer/likes [{:db/id #db/id[:db.part/user -9]}
+                   {:db/id #db/id[:db.part/user -14]}]}
+ ]

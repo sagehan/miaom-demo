@@ -1,55 +1,4 @@
-(ns miaomfood.datomic.data
-  (:require
-      [datomic.api :as d]))
-
-(def data-tx
-  [
-   {:db/id (d/tempid :db.part/user -1)
-    :website/title "喵姆餐厅 - 乌鲁木齐全城外送"}
-   {:db/id (d/tempid :db.part/user -2)
-    :groups/menus [#db/id[:db.part/user -3]]}
-   {:db/id (d/tempid :db.part/user -3)
-    :menu/name "好吃的"
-    :menu/categories [#db/id[:db.part/user -5]
-                           #db/id[:db.part/user -6]
-                           #db/id[:db.part/user -7]]}
-   {:db/id (d/tempid :db.part/user -5)
-    :category/name "披萨"
-    :category/cuisines [#db/id[:db.part/user -8]
-                        #db/id[:db.part/user -9]]}
-   {:db/id (d/tempid :db.part/user -6)
-    :category/name "焗饭"}
-   {:db/id (d/tempid :db.part/user -7)
-    :category/name "沙拉"}
-   {:db/id (d/tempid :db.part/user -8)
-    :cuisine/name "激情培根"
-    :cuisine/species [{:db/id #db/id [:db.part/user -10]
-                       :spec/name :spec.name/八寸
-                       :currency/Abbr :currency.Abbr/CNY
-                       :spec/price 39
-                       :spec/inventory 100}
-                      {:db/id #db/id [:db.part/user -11]
-                       :spec/name :spec.name/十寸
-                       :currency/Abbr :currency.Abbr/CNY
-                       :spec/price 59
-                       :spec/inventory 100}
-                      ]}
-   {:db/id (d/tempid :db.part/user -9)
-    :cuisine/name "风情夏威夷"
-    :cuisine/species [{:db/id #db/id [:db.part/user -12]
-                       :spec/name :spec.name/八寸
-                       :currency/Abbr :currency.Abbr/CNY
-                       :spec/price 39
-                       :spec/inventory 100}
-                      {:db/id #db/id [:db.part/user -13]
-                       :spec/name :spec.name/十寸
-                       :currency/Abbr :currency.Abbr/CNY
-                       :spec/price 59
-                       :spec/inventory 100}
-                      ]}
-   ])
-
-(def schema-tx [
+[
  ;;;; App settings
  ;;; website
    {:db/id #db/id[:db.part/db]
@@ -97,7 +46,7 @@
 
  ;;;; menu
    {:db/id #db/id[:db.part/db]
-    :db/ident :groups/menus
+    :db/ident :group/menus
     :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/many
     :db.install/_attribute :db.part/db}
@@ -143,7 +92,7 @@
 
    {:db/id #db/id[:db.part/db]
     :db/ident :restaurant/phone
-    :db/valueType :db.type/long
+    :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
     :db/doc "餐厅电话"
     :db.install/_attribute :db.part/db}
@@ -193,6 +142,15 @@
     :db/unique :db.unique/identity
     :db/fulltext true
     :db/doc "菜品简称"
+    :db.install/_attribute :db.part/db}
+
+   {:db/id #db/id[:db.part/db]
+    :db/ident :cuisine/id
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/unique :db.unique/identity
+    :db/fulltext true
+    :db/doc "菜品简拼"
     :db.install/_attribute :db.part/db}
 
    {:db/id #db/id[:db.part/db]
@@ -267,13 +225,24 @@
    [:db/add #db/id[:db.part/user] :db/ident :spec.name/八寸]
    [:db/add #db/id[:db.part/user] :db/ident :spec.name/十寸]
    [:db/add #db/id[:db.part/user] :db/ident :spec.name/买五赠一]
+   [:db/add #db/id[:db.part/user] :db/ident :spec.name/份]
+   [:db/add #db/id[:db.part/user] :db/ident :spec.name/对]
 
    [:db/add #db/id[:db.part/user] :db/ident :currency.Abbr/CNY]
 
 ;;; customer
    {:db/id #db/id[:db.part/db]
+    :db/ident :customer/id
+    :db/valueType :db.type/uuid
+    :db/cardinality :db.cardinality/one
+    :db/unique :db.unique/identity
+    :db/doc "用户ID"
+    :db.install/_attribute :db.part/db}
+
+
+   {:db/id #db/id[:db.part/db]
     :db/ident :customer/phone
-    :db/valueType :db.type/long
+    :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
     :db/unique :db.unique/identity
     :db/fulltext true
@@ -325,7 +294,7 @@
 
    {:db/id #db/id[:db.part/db]
     :db/ident :customer/qq
-    :db/valueType :db.type/long
+    :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
     :db/unique :db.unique/identity
     :db/fulltext true
@@ -340,7 +309,7 @@
     :db.install/_attribute :db.part/db}
 
    {:db/id #db/id[:db.part/db]
-    :db/ident :customer/total-consumption
+    :db/ident :customer/totalConsume
     :db/valueType :db.type/long
     :db/cardinality :db.cardinality/one
     :db/noHistory true
@@ -348,7 +317,7 @@
     :db.install/_attribute :db.part/db}
 
    {:db/id #db/id[:db.part/db]
-    :db/ident :customer/total-purchase
+    :db/ident :customer/totalPurchase
     :db/valueType :db.type/long
     :db/cardinality :db.cardinality/one
     :db/noHistory true
@@ -363,28 +332,28 @@
     :db.install/_attribute :db.part/db}
 
    {:db/id #db/id[:db.part/db]
-    :db/ident :customer/total-isNew
+    :db/ident :customer/isNew
     :db/valueType :db.type/boolean
     :db/cardinality :db.cardinality/one
     :db/doc "是否新用户"
     :db.install/_attribute :db.part/db}
 
    {:db/id #db/id[:db.part/db]
-    :db/ident :customer/total-isRegular
+    :db/ident :customer/isRegular
     :db/valueType :db.type/boolean
     :db/cardinality :db.cardinality/one
     :db/doc "是否熟客"
     :db.install/_attribute :db.part/db}
 
    {:db/id #db/id[:db.part/db]
-    :db/ident :customer/total-isSuspicious
+    :db/ident :customer/isSuspicious
     :db/valueType :db.type/boolean
     :db/cardinality :db.cardinality/one
     :db/doc "是否可疑"
     :db.install/_attribute :db.part/db}
 
    {:db/id #db/id[:db.part/db]
-    :db/ident :customer/total-isBlocked
+    :db/ident :customer/isBlocked
     :db/valueType :db.type/boolean
     :db/cardinality :db.cardinality/one
     :db/doc "是否被锁"
@@ -549,4 +518,5 @@
 
    [:db/add #db/id[:db.part/user] :db/ident :payment.receiver/到付]
    [:db/add #db/id[:db.part/user] :db/ident :payment.receiver/微信支付]
-   [:db/add #db/id[:db.part/user] :db/ident :payment.receiver/支付宝]])
+   [:db/add #db/id[:db.part/user] :db/ident :payment.receiver/支付宝]
+ ]

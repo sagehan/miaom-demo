@@ -144,7 +144,8 @@ digraph dfd{
 #+BEGIN_SRC clojurescript
 <script type="text/hoplon">
 (page "index.html"
-      (:requirle [miaomfood.rpc :as rpc])))
+      (:require
+       [miaomfood.rpc :as rpc]))
 
 ;; cell ==========================
 (defc= notice "营业中，欢迎点餐！")
@@ -167,7 +168,8 @@ digraph dfd{
           <html-meta name="keywords" content="喵姆餐厅 喵姆 Miaom 乌鲁木齐快餐 快餐 美味 披萨 焗饭 沙拉"/>
             <html-meta name="viewport" content="initial-scale=1.0, width=device-width"/>
   </head>
-  <body>
+  <body
+    <p><text>~{rpc/website}</text></p>
     <div class="wrapper">
       <div class="slideshow wrp_ratio--golden">
         <!--TODO: 轮播栏自动隐藏-->

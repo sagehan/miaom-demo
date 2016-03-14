@@ -5,12 +5,11 @@
    [javelin.core]
    [castra.core :refer [mkremote]]))
 
-(defc website {:title "喵姆餐厅"})
+(defc website {})
 (defc user {})
 (defc error nil)
 (defc loading [])
 
-(defc= random-number (get state :random))
 
 (def website-metadata
   (mkremote 'miaomfood.api/website-metadata website error loading))

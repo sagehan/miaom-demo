@@ -1,34 +1,39 @@
 (ns miaomfood.db
-    (:require
-      [mount.core :refer [defstate start]]
-      [environ.core :refer [env]]
-      [datomic.api :as d]
-      [miaomfood.conf :refer [config]]
-      [miaomfood.datomic.data :refer [schema-tx data-tx]]))
+  (:require
+   [boot.core :refer [load-data-readers!]]
+   [mount.core :as mount :refer [defstate start]]
+   [environ.core :refer [env]]
+   [clojure.tools.logging :refer [info]]
+   [datomic.api :as d]
+   [miaomfood.conf :refer [config]]
+   [miaomfood.util.io :refer [resource transact-all]]))
 
 (defn- get-uri [conf]
   (if-let [env-uri (env :datomic-uri)]
-    env-uri
-    (get-in conf [:datomic :uri])))
+    (do
+      (info "Get uri settings from environ")
+      env-uri)
+    (do
+      (info "Get uri settings from config file")
+      (get-in conf [:datomic :uri]))))
 
-(def uri (get-uri config))
+(defstate uri :start (get-uri config))
 ; (defstate conn :start (d/connect uri))
 ; (defstate db :start (d/db conn))
 
 ;; Be cautious, just for development !!!
 ;; #######################################
 
-(defn- init-conn [uri schema seed-data]
-  (let [conn (do (d/delete-database uri)
-                 (d/create-database uri)
-                 (d/connect uri))]
-    @(d/transact conn schema)
-    @(d/transact conn seed-data)
+(defn- init-conn [uri]
+  (let [conn (do
+               (info "creating a connection to datomic:" uri)
+               (d/delete-database uri)
+               (d/create-database uri)
+               (d/connect uri))]
+    (transact-all conn (resource "miaomfood-schema.edn"))
+    (transact-all conn (resource "miaomfood-data.edn"))
     conn))
 
-(defstate conn :start (init-conn uri schema-tx data-tx))
-(def db (d/db conn))
+(defstate conn :start (init-conn uri))
 
-; hook for mount to initiate from
-(defn init []
-  (start))
+(defstate db :start (d/db conn))

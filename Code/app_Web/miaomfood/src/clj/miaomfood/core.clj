@@ -13,22 +13,29 @@
     [ring.middleware.defaults :as d]
     [ring.util.response :as response]
     [castra.middleware :as castra]
-    [ring.adapter.jetty  :refer [run-jetty]]))
+    [ring.adapter.jetty  :refer [run-jetty]]
+    [mount.core :refer [defstate]]
+    [miaomfood.conf :refer [config]]))
 
 (def server (atom nil))
 
 (c/defroutes app-routes
   (c/GET "/" req (response/content-type (response/resource-response "index.html") "text/html"))
+  (c/GET "/love/" [] "Love Miaom!")
   (route/resources "/" {:root ""}))
 
-(def handler
+(defn app [{:keys [http]}]
   (-> app-routes
       (d/wrap-defaults d/api-defaults)
       (castra/wrap-castra-session "a 16-byte secret")
-      (castra/wrap-castra 'miaomfood.api)))
+      (castra/wrap-castra 'miaomfood.api)
+      (run-jetty {:join? false
+                  :port (:port http)})))
 
-(defn app [port]
-  (run-jetty handler {:join? false :port port}))
+(defstate miaom-app
+  :start (app config)
+  :stop  (.stop miaom-app))
+
 
 (defn start-server
   "Start castra server (port 33333)."

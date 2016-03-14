@@ -21,35 +21,64 @@
 
 ;; Copyright (c) https://github.com/danielneal/  ==== end =========================
 
-(defn- e->website [db]
-  (d/q '[:find ?e
-         :in $ %
-         :where (e__website ?e)]
-    db
-    '[[(e__website ?t)
-       [?t :website/title _ ]]
-      [(e__website ?n)
-       [?n :website/notices _]]
-      [(e__website ?c)
-       [?c :notice/content _]]
-      [(e__webstie ?d)
-       [?d :notice/duration _ ]]
-      [(e__website ?p)
-       [?p :notice/priority _]]]))
+(defn- e->website
+  "Get the entities related to website itself"
+  [db]
+  (d/q '[:find [(pull ?e [:website/title
+                          {:website/notices [:notice/content
+                                             :notice/duration
+                                             :notice/priority]}])]
+         :where [?e :website/title]]
+    db))
 
-(defn- e->user [db]
-  (d/q '[:find ?e
-         :in $ %
-         :where ]))
 
-(defn website-metadata []
-  {:entities (map (comp (partial load-entity db) first) (e->website db))})
+(defn-  e->menus
+  "Get the original structure of the menus"
+  [db]
+  (d/q '[:find [(pull ?e [{:group/menus
+                           [:menu/name {:menu/categories
+                                        [:category/name {:category/cuisines
+                                                         [:cuisine/name]}]}]}])]
+         :where [?e :group/menus]]
+    db))
 
-(defn user-metadata []
-  {})
+(defn- e->cuisines
+  "Get all cuisines entities"
+  [db]
+  (d/q '[:find [(pull ?e [:cuisine/name
+                          :cuisine/id
+                          :cuisine/doc
+                          :cuisine/depict
+                          {:cuisine/species [{:spec/name [:db/ident]}
+                                             :spec/price
+                                             :spec/inventory]}])
+                ...]
+         :where [?e :cuisine/name]]
+    db))
+
+(defn- e->user
+  "Get a user's entities"
+  [user-ident db]
+  (d/pull db '[:customer/id
+               :customer/username
+               :customer/phone
+               :customer/gender
+               :customer/streetAddress
+               :customer/email
+               :customer/wechat
+               :customer/qq
+               :customer/totalConsume
+               :customer/totalPurchase
+               {:customer/likes [:cuisine/name]}]
+          user-ident))
+
+(def website  (e->website db))
+(def menus    (e->menus db))
+(def cuisines (e->cuisines db))
+
+(defn user [user-ident] (e->user user-ident db))
 
 (defn like!
   "A customer up-vote an cuisine"
-  [username cuisine]
-  (d/transact conn [{:db/id (d/tempid :db.part/user) :customer/username username :customer/favorites cuisine}])
-  (user-metadata))
+  [user-ident cuisine-id]
+  (d/transact conn [{:db/id user-ident  :customer/likes cuisine-id}]))
