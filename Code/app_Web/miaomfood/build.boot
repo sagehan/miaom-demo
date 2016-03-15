@@ -9,10 +9,11 @@
                  [ring/ring-defaults        "0.1.5"]
                  [datascript                "0.15.0"]
                  [org.clojure/algo.generic  "0.1.0"]
-                 [org.clojure/tools.logging "0.3.1"        :scope "provided"]
+                 [org.clojure/tools.namespace "0.2.11"]
+                 [org.clojure/tools.nrepl   "0.2.12"]
+                 [org.clojure/tools.logging "0.3.1"]
                  [environ                   "1.0.2"]
-                 [mount                     "0.1.7"]
-                 [lein-light-nrepl          "0.3.2"]
+                 [mount                     "0.1.10"]
 
                  ;; locate the datomic-pro installation , execute  bin/maven-install
                  ;; , that will install the datomic-pro jar to your local maven repo
@@ -35,49 +36,35 @@
   '[hoplon.boot-hoplon       :refer [hoplon prerender]]
   '[pandeiro.boot-http       :refer [serve]]
   '[environ.core             :refer [env]]
-  '[lighttable.nrepl.handler :as light]
-  '[clojure.tools.nrepl.server :as nrepl]
-  '[clojure.tools.namespace.repl :refer [set-refresh-dirs]])
 
-(deftask repl-light []
-  (let [nrepl-server (atom nil)]
-    (fn [continue]
-      (fn [event]
-        (swap! nrepl-server
-               #(or % (nrepl/start-server
-                       :port 0
-                       :handler (nrepl/default-handler #'light/lighttable-ops))))
-        (println "nrepl running on " (:port @nrepl-server))
-        (continue event)
-        @(promise)))))
+  '[clojure.tools.namespace.repl :refer [set-refresh-dirs]])
 
 (deftask dev
   "Build miaomfood for local development."
   []
-  (set-env! :source-paths #{"src/clj" "src/cljs" "src/hl"})
-  (set-env! :resource-paths #{"resources"})
+  (set-env! :source-paths #{"dev/clj" "src/clj"})
+  (set-env! :resource-paths #{"dev/resources"})
   (apply set-refresh-dirs (get-env :directories))
+  (load-data-readers!)
 
   (require 'dev)
   (in-ns 'dev))
 
 (deftask cljs-dev
+  []
   (set-env! :source-paths #{"src/clj" "src/cljs" "src/hl"})
-  (set-env! :resource-paths #{"resources"})
-  (set-env! :target-path    "target/public")
+  (set-env! :resource-paths #{"resources/assets"})
+  (set-env! :target-path    "resources/public")
 
   (comp
-   (repl-light)
    (watch)
    (speak)
    (hoplon :pretty-print true)
    (reload)
    (cljs :optimizations :none :source-map true)
    (serve
-    :init 'miaomfood.db/init
-    :handler 'miaomfood.core/handler
-    :resource-root "target/public"
-    :reload true
+    :dir "resources/public"
+;    :reload true
     :port 8000)))
 
 (deftask prod

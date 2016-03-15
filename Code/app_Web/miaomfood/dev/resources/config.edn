@@ -1,0 +1,14 @@
+{
+
+ :datomic
+ {:uri     "datomic:dev://localhost:4334/miaomfood"
+  :dev-uri "datomic:dev://localhost:4334/miaomfood-dev"}
+
+ :http
+ {:port 5252}
+
+ :nrepl
+ {:host "127.0.0.1"
+  :port 1221}
+
+ }

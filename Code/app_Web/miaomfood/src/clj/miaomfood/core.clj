@@ -15,7 +15,8 @@
     [castra.middleware :as castra]
     [ring.adapter.jetty  :refer [run-jetty]]
     [mount.core :refer [defstate]]
-    [miaomfood.conf :refer [config]]))
+    [miaomfood.conf :refer [config]]
+    [miaomfood.db :refer[db conn]]))
 
 (def server (atom nil))
 
@@ -25,7 +26,7 @@
   (route/resources "/" {:root ""}))
 
 (defn app [{:keys [http]}]
-  (-> app-routes
+  (-> (c/routes  app-routes)
       (d/wrap-defaults d/api-defaults)
       (castra/wrap-castra-session "a 16-byte secret")
       (castra/wrap-castra 'miaomfood.api)

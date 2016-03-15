@@ -6,7 +6,7 @@
 ;   the terms of this license.
 ;   You must not remove this notice, or any other, from this software.
 
-(ns miaomfood.util.io
+(ns miaomfood.utils.io
   (:use [datomic.api :as d])
   (:require [clojure.java.io :as io]
             [mount.core :as mount :refer [defstate]])

@@ -1,12 +1,11 @@
 (ns miaomfood.db
   (:require
-   [boot.core :refer [load-data-readers!]]
    [mount.core :as mount :refer [defstate start]]
    [environ.core :refer [env]]
    [clojure.tools.logging :refer [info]]
    [datomic.api :as d]
    [miaomfood.conf :refer [config]]
-   [miaomfood.util.io :refer [resource transact-all]]))
+   [miaomfood.utils.io :refer [resource transact-all]]))
 
 (defn- get-uri [conf]
   (if-let [env-uri (env :datomic-uri)]
@@ -17,23 +16,15 @@
       (info "Get uri settings from config file")
       (get-in conf [:datomic :uri]))))
 
-(defstate uri :start (get-uri config))
-; (defstate conn :start (d/connect uri))
-; (defstate db :start (d/db conn))
+(defn disconnect [conf conn]
+  (let [uri (get-uri conf)]
+    (info "disconnecting from " uri)
+    (d/release conn)))
 
-;; Be cautious, just for development !!!
-;; #######################################
+(defstate conn
+  :start (let [uri (get-uri config)]
+           (d/connect uri))
+  :stop (disconnect config conn))
 
-(defn- init-conn [uri]
-  (let [conn (do
-               (info "creating a connection to datomic:" uri)
-               (d/delete-database uri)
-               (d/create-database uri)
-               (d/connect uri))]
-    (transact-all conn (resource "miaomfood-schema.edn"))
-    (transact-all conn (resource "miaomfood-data.edn"))
-    conn))
-
-(defstate conn :start (init-conn uri))
-
-(defstate db :start (d/db conn))
+(defstate db
+  :start (d/db conn))

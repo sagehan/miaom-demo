@@ -10,4 +10,4 @@
       edn/read-string))
 
 (defstate config
-  :start (load-config "resources/config.edn"))
+  :start (load-config "dev/resources/config.edn"))

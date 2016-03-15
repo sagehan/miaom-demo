@@ -24,10 +24,12 @@
 (defn- e->website
   "Get the entities related to website itself"
   [db]
-  (d/q '[:find [(pull ?e [:website/title
-                          {:website/notices [:notice/content
-                                             :notice/duration
-                                             :notice/priority]}])]
+  (d/q '[:find [(pull
+                 ?e
+                 [:website/title
+                  {:website/notices [:notice/content
+                                     :notice/duration
+                                     :notice/priority]}])]
          :where [?e :website/title]]
     db))
 
@@ -35,23 +37,26 @@
 (defn-  e->menus
   "Get the original structure of the menus"
   [db]
-  (d/q '[:find [(pull ?e [{:group/menus
-                           [:menu/name {:menu/categories
-                                        [:category/name {:category/cuisines
-                                                         [:cuisine/name]}]}]}])]
+  (d/q '[:find [(pull
+                 ?e
+                 [{:group/menus [:menu/name
+                                 {:menu/categories [:category/name
+                                                    {:category/cuisines [:cuisine/name]}]}]}])]
          :where [?e :group/menus]]
     db))
 
 (defn- e->cuisines
   "Get all cuisines entities"
   [db]
-  (d/q '[:find [(pull ?e [:cuisine/name
-                          :cuisine/id
-                          :cuisine/doc
-                          :cuisine/depict
-                          {:cuisine/species [{:spec/name [:db/ident]}
-                                             :spec/price
-                                             :spec/inventory]}])
+  (d/q '[:find [(pull
+                 ?e
+                 [:cuisine/name
+                  :cuisine/id
+                  :cuisine/doc
+                  :cuisine/depict
+                  {:cuisine/species [:spec/price
+                                     :spec/inventory
+                                     {:spec/name [:db/ident]}]}])
                 ...]
          :where [?e :cuisine/name]]
     db))
@@ -81,4 +86,5 @@
 (defn like!
   "A customer up-vote an cuisine"
   [user-ident cuisine-id]
-  (d/transact conn [{:db/id user-ident  :customer/likes cuisine-id}]))
+  (d/transact conn [{:db/id user-ident  :customer/likes cuisine-id}])
+  (user user-ident))
