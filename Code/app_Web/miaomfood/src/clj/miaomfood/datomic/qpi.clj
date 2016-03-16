@@ -1,6 +1,6 @@
 (ns miaomfood.datomic.qpi
   (:require
-    [miaomfood.db :refer [conn db]]
+    [miaomfood.db :refer [conn]]
     [datomic.api :as d]
     [clojure.algo.generic.functor :refer [fmap]]))
 
@@ -23,7 +23,7 @@
 
 (defn- e->website
   "Get the entities related to website itself"
-  [db]
+  [conn]
   (d/q '[:find [(pull
                  ?e
                  [:website/title
@@ -31,23 +31,23 @@
                                      :notice/duration
                                      :notice/priority]}])]
          :where [?e :website/title]]
-    db))
+       (d/db conn)))
 
 
 (defn-  e->menus
   "Get the original structure of the menus"
-  [db]
+  [conn]
   (d/q '[:find [(pull
                  ?e
                  [{:group/menus [:menu/name
                                  {:menu/categories [:category/name
                                                     {:category/cuisines [:cuisine/name]}]}]}])]
          :where [?e :group/menus]]
-    db))
+       (d/db conn)))
 
 (defn- e->cuisines
   "Get all cuisines entities"
-  [db]
+  [conn]
   (d/q '[:find [(pull
                  ?e
                  [:cuisine/name
@@ -59,32 +59,31 @@
                                      {:spec/name [:db/ident]}]}])
                 ...]
          :where [?e :cuisine/name]]
-    db))
+       (d/db conn)))
 
 (defn- e->user
   "Get a user's entities"
-  [user-ident db]
-  (d/pull db '[:customer/id
-               :customer/username
-               :customer/phone
-               :customer/gender
-               :customer/streetAddress
-               :customer/email
-               :customer/wechat
-               :customer/qq
-               :customer/totalConsume
-               :customer/totalPurchase
-               {:customer/likes [:cuisine/name]}]
+  [user-ident conn]
+  (d/pull (d/db conn) '[:customer/id
+                        :customer/username
+                        :customer/phone
+                        :customer/gender
+                        :customer/streetAddress
+                        :customer/email
+                        :customer/wechat
+                        :customer/qq
+                        :customer/totalConsume
+                        :customer/totalPurchase
+                        {:customer/likes [:cuisine/name]}]
           user-ident))
 
-(def website  (e->website db))
-(def menus    (e->menus db))
+(def website  (e->website conn))
+(def menus    (e->menus conn))
 (def cuisines (e->cuisines db))
 
-(defn user [user-ident] (e->user user-ident db))
+(defn user [user-ident] (e->user user-ident conn))
 
 (defn like!
   "A customer up-vote an cuisine"
   [user-ident cuisine-id]
-  (d/transact conn [{:db/id user-ident  :customer/likes cuisine-id}])
-  (user user-ident))
+  @(d/transact-async conn [{:db/id user-ident  :customer/likes cuisine-id}]))

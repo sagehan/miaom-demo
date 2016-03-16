@@ -25,6 +25,3 @@
   :start (let [uri (get-uri config)]
            (d/connect uri))
   :stop (disconnect config conn))
-
-(defstate db
-  :start (d/db conn))

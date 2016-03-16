@@ -12,6 +12,7 @@
                  [org.clojure/tools.namespace "0.2.11"]
                  [org.clojure/tools.nrepl   "0.2.12"]
                  [org.clojure/tools.logging "0.3.1"]
+                 [ch.qos.logback/logback-classic "1.1.3"]
                  [environ                   "1.0.2"]
                  [mount                     "0.1.10"]
 
@@ -21,6 +22,7 @@
 
                  ;; boot clj
                  [boot/core                 "2.5.1"      :scope "provided"]
+                 [adzerk/boot-logservice    "1.0.1"      :scope "test"]
 
                  ;; boot cljs
                  [pandeiro/boot-http        "0.7.3"]
@@ -33,17 +35,30 @@
 (require
   '[adzerk.boot-cljs         :refer [cljs]]
   '[adzerk.boot-reload       :refer [reload]]
+  '[adzerk.boot-logservice   :as    log-service]
+  '[clojure.tools.logging    :as    log]
   '[hoplon.boot-hoplon       :refer [hoplon prerender]]
   '[pandeiro.boot-http       :refer [serve]]
   '[environ.core             :refer [env]]
-
+  '[clojure.tools.nrepl.server :as  nrepl]
   '[clojure.tools.namespace.repl :refer [set-refresh-dirs]])
+
+(def log4b
+  [:configuration
+   [:appender {:name "STDOUT" :class "ch.qos.logback.core.ConsoleAppender"}
+    [:encoder [:pattern "%-5level %logger{36} - %msg%n"]]]
+   [:root {:level "TRACE"}
+    [:appender-ref {:ref "STDOUT"}]]])
 
 (deftask dev
   "Build miaomfood for local development."
   []
   (set-env! :source-paths #{"dev/clj" "src/clj"})
   (set-env! :resource-paths #{"dev/resources"})
+
+  (alter-var-root #'log/*logger-factory*
+                  (constantly (log-service/make-factory log4b)))
+
   (apply set-refresh-dirs (get-env :directories))
   (load-data-readers!)
 

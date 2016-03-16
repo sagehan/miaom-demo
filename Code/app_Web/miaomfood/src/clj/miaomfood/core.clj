@@ -16,7 +16,7 @@
     [ring.adapter.jetty  :refer [run-jetty]]
     [mount.core :refer [defstate]]
     [miaomfood.conf :refer [config]]
-    [miaomfood.db :refer[db conn]]))
+    [miaomfood.db :refer[conn]]))
 
 (def server (atom nil))
 

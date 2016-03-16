@@ -8,12 +8,6 @@
             [miaomfood.app]))
 
 (defn start []
-  (comment (m/start #'miaomfood.conf/config))
-  (comment (-> (m/only #{#'miaomfood.conf/config
-                         #'miaomfood.db/conn
-                         #'miaomfood.db/db
-                         #'dev.db/conn-dev})
-               (m/swap-states {#'miaomfood.db/conn #'dev.db/conn-dev})))
   (m/start-with-states {#'miaomfood.db/conn #'dev.db/conn-dev}))
 
 (defn stop []
