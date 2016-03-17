@@ -1,0 +1,5 @@
+#_ ignore emacs backup files
+.*~$
+
+#_ ignore emacs org-mode files
+.*.org$

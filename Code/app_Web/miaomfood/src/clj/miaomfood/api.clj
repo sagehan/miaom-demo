@@ -6,8 +6,8 @@
 (defrpc website-metadata [] (q/website))
 (defrpc menus-metadata [] (q/menus))
 (defrpc cuisines-metadata [] (q/cuisines))
-(defrpc user-metadata [user-ident] (q/user user-ident))
+(defrpc user-metadata [uid] (q/user uid))
 
-(defrpc like! [user-ident cuisine]
-  (q/like! user-ident cuisine)
-  (q/user user-ident))
+(defrpc like! [uid cuisine]
+  (q/like! uid cuisine)
+  (q/user uid))

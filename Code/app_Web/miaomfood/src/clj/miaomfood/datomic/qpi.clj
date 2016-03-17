@@ -77,11 +77,10 @@
                         {:customer/likes [:cuisine/name]}]
           user-ident))
 
-(def website  (e->website conn))
-(def menus    (e->menus conn))
-(def cuisines (e->cuisines db))
-
-(defn user [user-ident] (e->user user-ident conn))
+(defn website [] (e->website conn))
+(defn menus [] (e->menus conn))
+(defn cuisines [] (e->cuisines conn))
+(defn user [uid] (e->user uid conn))
 
 (defn like!
   "A customer up-vote an cuisine"

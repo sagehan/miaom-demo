@@ -25,3 +25,7 @@
   :start (let [uri (get-uri config)]
            (d/connect uri))
   :stop (disconnect config conn))
+
+(defn- init
+  []
+  (mount/start))

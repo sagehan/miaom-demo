@@ -147,10 +147,10 @@ digraph dfd{
       (:require
        [miaomfood.rpc :as rpc]))
 
+(rpc/init)
 ;; cell ==========================
-(defc= notice "营业中，欢迎点餐！")
-
-;;   (def notices (-> (cell {}) (local-storage ::store)))
+(defc= website (get-in rpc/website [0 :website/title]))
+(defc= user rpc/user)
 </script>
 #+END_SRC
 
@@ -159,7 +159,7 @@ digraph dfd{
 <!doctype html>
 <html>
   <head>
-    <title>喵姆餐厅 - 乌鲁木齐全城外送</title>
+    <title><text>~{website}</text></title>
     <link href="/favicon.ico" rel="shortcut icon" type="img/vnd.microsoft.icon">
     <link href="stylesheets/main.css" rel="stylesheet" type="text/css">
     <html-meta charset="utf-8"/>
@@ -169,7 +169,6 @@ digraph dfd{
             <html-meta name="viewport" content="initial-scale=1.0, width=device-width"/>
   </head>
   <body
-    <p><text>~{rpc/website}</text></p>
     <div class="wrapper">
       <div class="slideshow wrp_ratio--golden">
         <!--TODO: 轮播栏自动隐藏-->
@@ -185,7 +184,7 @@ digraph dfd{
       <div class="banner clearfix">
         <!--TODO: 顶栏置顶悬浮-->
         <div class="notice-board">
-          <span class="notice-board__notice"><text>~{notice}</text></span>
+          <span class="notice-board__notice"><text>~{user}</text></span>
         </div>
         <a href="#pizza-category" class="btn-order">
           <span class="btn-order__label">提交订单</span>
@@ -213,12 +212,12 @@ digraph dfd{
                 </div>
                 <div class="item__body clearfix">
                   <h2 class="cuisine__title">
-                    <text>~{c-title}</text>
+                    <text>激情培根</text>
                   </h2>
-                  <small class="cuisine__currency">¥</small><span class="cuisine__price"><text>~{c-prices}</text></span>
+                  <small class="cuisine__currency">¥</small><span class="cuisine__price"><text>39/59</text></span>
                   <div class="cuisine__button"></div>
                   <div class="counter-tag">
-                    <b class="counter-tag__specs"><text>~{c-specs}</text></b><b class="counter-tag__amount"><text>~{c-amount}</text></b>
+                    <b class="counter-tag__specs"><text>8寸</text></b><b class="counter-tag__amount"><text>2</text></b>
                   </div>
                 </div>
               </article><!--
@@ -396,7 +395,7 @@ digraph dfd{
         </div>
       </footer>
     </div>
-    <!-- <script type="text/javascript" src="index.html.js"></script> -->
+    <script type="text/javascript" src="index.html.js"></script>
   </body>
 </html>
 #+END_SRC
