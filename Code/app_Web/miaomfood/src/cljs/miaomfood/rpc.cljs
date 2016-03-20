@@ -5,20 +5,17 @@
    [javelin.core]
    [castra.core :refer [mkremote]]))
 
-(defc website "")
-(defc user {})
+(set! cljs.core/*print-fn* #(.log js/console %))
+
+(defc raw-db {})
+(defc user-db {})
 (defc error nil)
 (defc loading [])
 
+(def fetch-raw-db
+  (mkremote 'miaomfood.api/customer-db raw-db error loading))
 
-(def website-metadata
-  (mkremote 'miaomfood.api/website-metadata website error loading))
-
-(def user-metadata
-  (mkremote 'miaomfood.api/user-metadata user error loading))
+(def fetch-user-db
+  (mkremote 'miaomfood.api/user-db user-db error loading))
 
 (def like! (mkremote 'miaomfood.api/like! user error loading))
-
-(defn init []
-  website-metadata
-  (js/setInterval website-metadata 10000))

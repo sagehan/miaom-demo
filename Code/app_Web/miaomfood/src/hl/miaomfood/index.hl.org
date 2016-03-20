@@ -141,16 +141,38 @@ digraph dfd{
 
 * 程序
 #+NAME: script-section
-#+BEGIN_SRC clojurescript
+#+BEGIN_SRC clojure
 <script type="text/hoplon">
 (page "index.html"
       (:require
+       [datascript.core :as d :refer [q]]
        [miaomfood.rpc :as rpc]))
 
-(rpc/init)
-;; cell ==========================
-(defc= website (get-in rpc/website [0 :website/title]))
-(defc= user rpc/user)
+(js/setInterval rpc/fetch-raw-db 20000)
+;; cell formula ============================================================
+;;(defc= datoms rpc/raw-db)
+(defc= datoms rpc/raw-db)
+(defc schema {:website/notices   {:db/cardinality :db.cardinality/many
+                                   :db/valueType :db.type/ref }
+               :group/menus       {:db/cardinality :db.cardinality/many
+                                   :db/valueType :db.type/ref }
+               :menu/categories   {:db/cardinality :db.cardinality/many
+                                   :db/valueType :db.type/ref }
+               :category/cuisines {:db/cardinality :db.cardinality/many
+                                   :db/valueType :db.type/ref }
+               :cuisine/species   {:db/cardinality :db.cardinality/many
+                                   :db/valueType :db.type/ref }})
+(defc=  conn  (d/create-conn schema))
+(d/transact! @conn  (vec @datoms))
+
+(defc= site-title (d/q '[:find ?t . :where [_ :website/title ?t]] @conn))
+
+(defc= notices (d/q '[:find [?n ...]
+                      :where
+                      [_ :website/notices ?ns]
+                      [?ns :notice/content ?n]]
+                 @conn))
+
 </script>
 #+END_SRC
 
@@ -159,14 +181,14 @@ digraph dfd{
 <!doctype html>
 <html>
   <head>
-    <title><text>~{website}</text></title>
+    <title><text>~{site-title}</text></title>
     <link href="/favicon.ico" rel="shortcut icon" type="img/vnd.microsoft.icon">
     <link href="stylesheets/main.css" rel="stylesheet" type="text/css">
-    <html-meta charset="utf-8"/>
-      <html-meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-        <html-meta name="description" content="美味披萨,焗饭,还有各种小吃,乌鲁木齐全城外送!"/>
-          <html-meta name="keywords" content="喵姆餐厅 喵姆 Miaom 乌鲁木齐快餐 快餐 美味 披萨 焗饭 沙拉"/>
-            <html-meta name="viewport" content="initial-scale=1.0, width=device-width"/>
+    <html-meta charset="utf-8">
+      <html-meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <html-meta name="description" content="美味披萨,焗饭,还有各种小吃,乌鲁木齐全城外送!">
+          <html-meta name="keywords" content="喵姆餐厅 喵姆 Miaom 乌鲁木齐快餐 快餐 美味 披萨 焗饭 沙拉">
+            <html-meta name="viewport" content="initial-scale=1.0, width=device-width">
   </head>
   <body
     <div class="wrapper">
@@ -184,7 +206,7 @@ digraph dfd{
       <div class="banner clearfix">
         <!--TODO: 顶栏置顶悬浮-->
         <div class="notice-board">
-          <span class="notice-board__notice"><text>~{user}</text></span>
+          <span class="notice-board__notice"><text>~{notices}</text></span>
         </div>
         <a href="#pizza-category" class="btn-order">
           <span class="btn-order__label">提交订单</span>
@@ -395,13 +417,12 @@ digraph dfd{
         </div>
       </footer>
     </div>
-    <script type="text/javascript" src="index.html.js"></script>
   </body>
 </html>
 #+END_SRC
 
 #+NAME: miaom.app
-#+BEGIN_SRC clojurescript :tangle index.html.hl :exports none :noweb yes
+#+BEGIN_SRC clojurescript :tangle index.hl :exports none :noweb yes
 <<script-section>>
 
 <<presentation-section>>

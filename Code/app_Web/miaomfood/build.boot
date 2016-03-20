@@ -87,13 +87,31 @@
    (speak)
    (hoplon :pretty-print true)
    (reload)
-   (cljs-repl)
-   (cljs :optimizations :none :source-map true)))
+   (cljs)))
 
 (deftask prod
   "Build miaomfood for production deployment."
   []
+  (set-env! :source-paths #{"src/cljs" "src/hl"})
+  (set-env! :resource-paths #{"resources/assets"})
   (comp
     (hoplon)
     (cljs :optimizations :advanced)
-    (prerender)))
+    (target :dir #{"target"})))
+
+(deftask play
+  []
+  (set-env! :source-paths #{"src/cljs" "src/hl" "src/clj"})
+  (set-env! :resource-paths #{"resources/assets"})
+
+  (comp
+    (environ :env
+            {:datomic-uri "datomic:dev://localhost:4334/miaomfood-dev"})
+    (serve
+     :init 'miaomfood.db/init
+     :handler 'miaomfood.core/handler
+     :port 8000
+     :reload true)
+    (hoplon)
+    (cljs :optimizations :advanced)
+    (wait)))

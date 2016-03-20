@@ -3,11 +3,10 @@
    [castra.core :refer [defrpc]]
    [miaomfood.datomic.qpi :as q]))
 
-(defrpc website-metadata [] (q/website))
-(defrpc menus-metadata [] (q/menus))
-(defrpc cuisines-metadata [] (q/cuisines))
-(defrpc user-metadata [uid] (q/user uid))
+(defrpc customer-db []  (q/customer-db))
+
+(defrpc user-db [uid] (q/user-db uid))
 
 (defrpc like! [uid cuisine]
   (q/like! uid cuisine)
-  (q/user uid))
+  (q/user-db uid))
