@@ -85,8 +85,8 @@
     :reload true)
    (watch)
    (speak)
-   (hoplon :pretty-print true)
    (reload)
+   (hoplon :pretty-print true)
    (cljs)))
 
 (deftask prod

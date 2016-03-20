@@ -141,37 +141,35 @@ digraph dfd{
 
 * 程序
 #+NAME: script-section
-#+BEGIN_SRC clojure
+#+BEGIN_SRC clojurescript
 <script type="text/hoplon">
 (page "index.html"
       (:require
        [datascript.core :as d :refer [q]]
        [miaomfood.rpc :as rpc]))
 
-(js/setInterval rpc/fetch-raw-db 20000)
+(js/setInterval rpc/fetch-raw-db 10000)
 ;; cell formula ============================================================
-;;(defc= datoms rpc/raw-db)
-(defc= datoms rpc/raw-db)
-(defc schema {:website/notices   {:db/cardinality :db.cardinality/many
-                                   :db/valueType :db.type/ref }
-               :group/menus       {:db/cardinality :db.cardinality/many
-                                   :db/valueType :db.type/ref }
-               :menu/categories   {:db/cardinality :db.cardinality/many
-                                   :db/valueType :db.type/ref }
-               :category/cuisines {:db/cardinality :db.cardinality/many
-                                   :db/valueType :db.type/ref }
-               :cuisine/species   {:db/cardinality :db.cardinality/many
-                                   :db/valueType :db.type/ref }})
-(defc=  conn  (d/create-conn schema))
-(d/transact! @conn  (vec @datoms))
+(let [schema {:website/notices   {:db/cardinality :db.cardinality/many
+                                  :db/valueType :db.type/ref }
+              :group/menus       {:db/cardinality :db.cardinality/many
+                                  :db/valueType :db.type/ref }
+              :menu/categories   {:db/cardinality :db.cardinality/many
+                                  :db/valueType :db.type/ref }
+              :category/cuisines {:db/cardinality :db.cardinality/many
+                                  :db/valueType :db.type/ref }
+              :cuisine/species   {:db/cardinality :db.cardinality/many
+                                  :db/valueType :db.type/ref }}
+      datoms  (cell= rpc/raw-db)
+      db (cell= (d/db-with (d/empty-db schema) datoms))]
 
-(defc= site-title (d/q '[:find ?t . :where [_ :website/title ?t]] @conn))
+  (defc= site-title (d/q '[:find ?t . :where [_ :website/title ?t]] db))
 
-(defc= notices (d/q '[:find [?n ...]
-                      :where
-                      [_ :website/notices ?ns]
-                      [?ns :notice/content ?n]]
-                 @conn))
+  (defc= notices (d/q '[:find [?n ...]
+                        :where
+                        [_ :website/notices ?ns]
+                        [?ns :notice/content ?n]]
+                   db)))
 
 </script>
 #+END_SRC

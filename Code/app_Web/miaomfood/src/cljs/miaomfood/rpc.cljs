@@ -7,7 +7,7 @@
 
 (set! cljs.core/*print-fn* #(.log js/console %))
 
-(defc raw-db {})
+(defc raw-db [])
 (defc user-db {})
 (defc error nil)
 (defc loading [])
