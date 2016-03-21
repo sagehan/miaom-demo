@@ -4,7 +4,7 @@
        [datascript.core :as d :refer [q]]
        [miaomfood.rpc :as rpc]))
 
-(js/setInterval rpc/fetch-raw-db 1000)
+(rpc/fetch-raw-db)
 ;; cell formula ============================================================
 (let [schema {:website/notices   {:db/cardinality :db.cardinality/many
                                   :db/valueType :db.type/ref }

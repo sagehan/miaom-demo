@@ -98,7 +98,7 @@
     :db.install/_attribute :db.part/db}
 
    {:db/id #db/id[:db.part/db]
-    :db/ident :restaurant/wechat
+    :db/ident :restaurant/wechatID
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
     :db/doc "餐厅微信ID"
@@ -116,6 +116,7 @@
     :db/valueType :db.type/boolean
     :db/cardinality :db.cardinality/one
     :db/doc "是否打烊"
+    :db/noHistory true
     :db.install/_attribute :db.part/db}
 
    {:db/id #db/id[:db.part/db]

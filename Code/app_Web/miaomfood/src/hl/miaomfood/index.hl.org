@@ -146,9 +146,10 @@ digraph dfd{
 (page "index.html"
       (:require
        [datascript.core :as d :refer [q]]
+       [javelin.core :refer [cell] :refer-macros [cell=]]))
        [miaomfood.rpc :as rpc]))
 
-(js/setInterval rpc/fetch-raw-db 10000)
+(rpc/fetch-raw-db)
 ;; cell formula ============================================================
 (let [schema {:website/notices   {:db/cardinality :db.cardinality/many
                                   :db/valueType :db.type/ref }
@@ -169,7 +170,7 @@ digraph dfd{
                         :where
                         [_ :website/notices ?ns]
                         [?ns :notice/content ?n]]
-                   db)))
+                   db))
 
 </script>
 #+END_SRC
@@ -377,7 +378,7 @@ digraph dfd{
       </section>
       <footer class="footer">
         <div class="card card--back wrp_ratio--golden">
-          <div class=" wrp--stretched">
+          <div class="wrp--stretched">
             <h1 class="card__title icon icon__wechat">关注微信</h1>
             <figure class="">
               <img class="card__img" src="img/QR-1.jpg" alt="喵姆餐厅微信服务号">

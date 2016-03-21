@@ -3,3 +3,5 @@
 
 #_ ignore emacs org-mode files
 .*.org$
+
+.DS_Store

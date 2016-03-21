@@ -1,6 +1,8 @@
 #!/usr/bin/env boot
 
 (set-env!
+ :source-paths   #{"src/cljs" "src/hl" "src/clj"}
+ :resource-paths #{"resources/assets"}
  :dependencies '[
                  [org.clojure/clojure       "1.7.0"]
                  [org.clojure/clojurescript "1.7.228"]
@@ -18,6 +20,7 @@
                  [environ                   "1.0.2"]
                  [mount                     "0.1.10"]
                  [hoplon/castra             "3.0.0-alpha3"]
+                 [hoplon/javelin            "3.8.4"]
 
                  ;; locate the datomic-pro installation , execute  bin/maven-install
                  ;; , that will install the datomic-pro jar to your local maven repo
@@ -48,6 +51,16 @@
   '[clojure.tools.nrepl.server :as  nrepl]
   '[clojure.tools.namespace.repl :refer [set-refresh-dirs]])
 
+(task-options!
+ target  {:dir #{"target"}}
+
+ environ {:env {:datomic-uri "datomic:dev://localhost:4334/miaomfood-dev"}}
+
+ serve   {:init 'miaomfood.db/init
+          :handler 'miaomfood.core/handler
+          :port 8000
+          :reload true})
+
 (def log4b
   [:configuration
    [:appender {:name "STDOUT" :class "ch.qos.logback.core.ConsoleAppender"}
@@ -58,9 +71,8 @@
 (deftask dev
   "Build miaomfood for local development."
   []
-  (set-env! :source-paths #{"dev/clj" "src/clj"})
+  (set-env! :source-paths #(conj % "dev/clj"))
   (set-env! :resource-paths #(conj % "dev/resources"))
-
   (alter-var-root #'log/*logger-factory*
                   (constantly (log-service/make-factory log4b)))
 
@@ -72,17 +84,9 @@
 
 (deftask cljs-dev
   []
-  (set-env! :source-paths #{"src/cljs" "src/hl" "src/clj"})
-  (set-env! :resource-paths #{"resources/assets"})
-
   (comp
-   (environ :env
-            {:datomic-uri "datomic:dev://localhost:4334/miaomfood-dev"})
-   (serve
-    :init 'miaomfood.db/init
-    :handler 'miaomfood.core/handler
-    :port 8000
-    :reload true)
+   (environ)
+   (serve)
    (watch)
    (speak)
    (reload)
@@ -92,26 +96,16 @@
 (deftask prod
   "Build miaomfood for production deployment."
   []
-  (set-env! :source-paths #{"src/cljs" "src/hl"})
-  (set-env! :resource-paths #{"resources/assets"})
   (comp
     (hoplon)
     (cljs :optimizations :advanced)
-    (target :dir #{"target"})))
+    (target)))
 
 (deftask play
   []
-  (set-env! :source-paths #{"src/cljs" "src/hl" "src/clj"})
-  (set-env! :resource-paths #{"resources/assets"})
-
   (comp
-    (environ :env
-            {:datomic-uri "datomic:dev://localhost:4334/miaomfood-dev"})
-    (serve
-     :init 'miaomfood.db/init
-     :handler 'miaomfood.core/handler
-     :port 8000
-     :reload true)
+    (environ)
+    (serve)
     (hoplon)
     (cljs :optimizations :advanced)
     (wait)))

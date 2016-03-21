@@ -1,0 +1,171 @@
+(page "index.html"
+      (:require
+       [datascript.core :as d :refer [q]]
+       [javelin.core :refer [cell] :refer-macros [cell= destroy-cell!]]
+       [miaomfood.rpc :as rpc]))
+
+(rpc/fetch-raw-db)
+
+;; Cells ====================================================================
+
+
+;; Cell formulas ============================================================
+(let [schema {:website/notices   {:db/cardinality :db.cardinality/many
+                                  :db/valueType :db.type/ref }
+              :group/menus       {:db/cardinality :db.cardinality/many
+                                  :db/valueType :db.type/ref }
+              :menu/categories   {:db/cardinality :db.cardinality/many
+                                  :db/valueType :db.type/ref }
+              :category/cuisines {:db/cardinality :db.cardinality/many
+                                  :db/valueType :db.type/ref }
+              :cuisine/species   {:db/cardinality :db.cardinality/many
+                                  :db/valueType :db.type/ref }}
+      datoms  (cell= rpc/raw-db)
+      db (cell= (d/db-with (d/empty-db schema) datoms))]
+
+  (defc= site-title (d/q '[:find ?t . :where [_ :website/title ?t]] db))
+
+  (defc= notices (d/q '[:find [?n ...]
+                        :where
+                        [_ :website/notices ?ns]
+                        [?ns :notice/content ?n]]
+                   db))
+
+  (defc= restaurant-meta (d/q '[:find (pull ?e [:restaurant/name
+                                                  :restaurant/phone
+                                                  :restaurant/address
+                                                  :restaurant/wechatID
+                                                  :restaurant/rest-day
+                                                  :restaurant/isClosed ]) .
+                                  :where [?e :restaurant/name]]
+                           db))
+
+  )
+
+
+;; Elements =================================================================
+(defelem slideshow
+  [{:keys [img_src]}]
+  (with-init!
+    (div :class "slideshow wrp_ratio--golden"
+      (div :class "wrp--stretched"
+        (img :class "slideshow__img wrp--centering" :src img_src)
+        (div :class "slideshow__pagination"
+          (b :class "slideshow__pagination-bullet")
+          (b :class "slideshow__pagination-bullet")
+          (b :class "slideshow__pagination-bullet"))))))
+
+(html
+  (head
+    (title (text "~{site-title}"))
+    (link
+      :href "img/motorbike.png"
+      :rel "shortcut icon")
+    (link
+      :href "stylesheets/main.css"
+      :rel "stylesheet")
+    (html-meta :charset "utf-8")
+    (html-meta
+      :content "text/html; charset=utf-8"
+      :http-equiv "Content-Type")
+    (html-meta
+      :content "美味披萨,焗饭,还有各种小吃,乌鲁木齐全城外送!"
+      :name "description")
+    (html-meta
+      :content "喵姆餐厅 喵姆 Miaom 快餐 美味 乌鲁木齐快餐 披萨 焗饭 沙拉 烤翅"
+      :name "keywords")
+    (html-meta
+      :content "initial-scale=1.0, width=device-width"
+      :name "viewport"))
+
+  (body
+    (div :class "wrapper"
+
+      (div :class "slideshow wrp_ratio--golden"
+        (div :class "wrp--stretched"
+          (img :class "slideshow__img wrp--centering" :src "img/logo.jpg")
+          (div :class "slideshow__pagination"
+            (b :class "slideshow__pagination-bullet")
+            (b :class "slideshow__pagination-bullet")
+            (b :class "slideshow__pagination-bullet"))))
+
+      (div :class "notice-board"
+        (span :class "notice-board__notice"
+          (text "~{notices}")))
+
+      (a :class "btn-order"
+        (span :class "btn-order__label"
+          (text "提交订单")))
+
+      (nav :class "nav")
+
+      (div :class "checkout-page")
+
+      (section
+        :class "section-wrapper clearfix"
+        :id "tasty"
+        (section
+          :class "section cuisine-category"
+          :id "pizza-category"
+          (header :class "section__header"
+            (h1 :class "section__title"
+              (text "披萨")))
+          (div
+            :class "section__body item-list clearfix"
+            (article
+              :class "item cuisine"
+              :id "cuisine-bacon"
+              (div :class "item__header wrp_ratio--4_3"
+                (div :class "wrp--stretched"
+                  (img
+                    :class "cuisine__pricture"
+                    :src "img/Bacon.JPG")))
+              (div :class "item__body clearfix"
+                (h2 :class "cuisine__title"
+                  (text "激情培根"))
+                (small :class "cuisine__currency"
+                  (span :class "cuisine__price"
+                    (text "39/59")))
+                (div :class "cuisine__button")
+                (div :class "counter-tag"
+                  (b :class "counter-tag__specs"
+                    (text "8寸"))
+                  (b :class "counter-tag__amount"
+                    (text "2")))))
+            (<!-- "注释测试")
+            )))
+
+      (footer :class "footer"
+        (div :class "card card--back wrp_ratio--golden"
+          (div :class "wrp--stretched"
+            (h1 :class "card__title icon icon__wechat"
+              (text "关注微信"))
+
+            (figure
+              (img
+                :class "card__img"
+                :src "img/QR-1.jpg"
+                :alt "喵姆餐厅微信服务号")
+              (figcaption :class "clearfix"
+                (h2 (text "~{(:restaurant/name restaurant-meta)}"))
+                (p (text "id: ~{(:restaurant/wechatID restaurant-meta)}"))))
+
+            (figure
+              (img
+                :class "card__img"
+                :src "img/QR-1.jpg"
+                :alt "客服微信号")
+              (figcaption :class "clearfix"
+                (h2 (text "胖喵"))
+                (p (text "id:miaomu_food"))))))
+
+        (div :class "card card--front wrp_ratio--golden"
+          (div :class "wrp--stretched"
+            (ul
+              (li :class "icon icon__phone"
+                (text "~{(:restaurant/phone restaurant-meta)}"))
+              (li :class "icon icon__location"
+                (text "~{(:restaurant/address restaurant-meta)}"))
+              (li :class "icon icon__timer"
+                (text "~{(:restaurant/rest-day restaurant-meta)}")))
+            (img :src "img/motorbike.png")))))))

@@ -30,6 +30,7 @@
        db
        '[[(visible? ?wt) [?wt :website/title]]
          [(visible? ?wn) [?wn :website/notices]]
+         [(visible? ?rn) [?rn :restaurant/name]]
          [(visible? ?nc) [?nc :notice/content]]
          [(visible? ?gm) [?gm :group/menus]]
          [(visible? ?mc) [?mc :menu/categories]]

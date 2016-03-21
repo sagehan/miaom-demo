@@ -66,4 +66,12 @@
   :customer/qq "123456789"
   :customer/likes [{:db/id #db/id[:db.part/user -9]}
                    {:db/id #db/id[:db.part/user -14]}]}
+ {:db/id #db/id[:db.part/user -18]
+  :restaurant/name "喵姆餐厅"
+  :restaurant/phone "18690890381"
+  :restaurant/wechatID "miaomfood"
+  :restaurant/address "乌鲁木齐市高新区桂林路锦林二巷8号"
+  :restaurant/rest-day :rest-day/周一
+  :restaurant/isClosed false
+  :db/doc "美味披萨,焗饭,还有各种小吃,乌鲁木齐全城外送!"}
  ]
