@@ -90,7 +90,7 @@
    (watch)
    (speak)
    (reload)
-   (hoplon :pretty-print true)
+   (hoplon :pretty-print true :source-map true)
    (cljs)))
 
 (deftask prod

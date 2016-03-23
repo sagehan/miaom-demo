@@ -54,4 +54,4 @@
 (defn like!
   "A customer up-vote an cuisine"
   [user-ident cuisine-id]
-  @(d/transact-async conn [{:db/id user-ident  :customer/likes cuisine-id}]))
+  @(d/transact conn [{:db/id user-ident  :customer/likes cuisine-id}]))

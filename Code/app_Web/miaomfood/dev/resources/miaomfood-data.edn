@@ -1,6 +1,6 @@
 [
  {:db/id #db/id[:db.part/user -1]
-  :website/title "喵姆餐厅 - 乌鲁木齐全城外送"}
+  :website/title "喵姆餐厅 • 乌鲁木齐全城外送"}
  {:db/id #db/id[:db.part/user -15]
   :website/notices [{:db/id #db/id[:db.part/user -16]
                      :notice/content "营业中，欢迎点餐！"

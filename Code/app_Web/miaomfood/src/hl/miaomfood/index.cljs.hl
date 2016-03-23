@@ -4,10 +4,13 @@
        [javelin.core :refer [cell] :refer-macros [cell= destroy-cell!]]
        [miaomfood.rpc :as rpc]))
 
-(rpc/fetch-raw-db)
+(add-initfn! (rpc/fetch-raw-db))
 
 ;; Cells ====================================================================
-
+(defc db__cart (d/empty-db
+                {:cuisine/id      {:db/unique :db.unique/identity}
+                 :cuisine/species {:db/cardinality :db.cardinality/many
+                                  :db/valueType :db.type/ref }}))
 
 ;; Cell formulas ============================================================
 (let [schema {:website/notices   {:db/cardinality :db.cardinality/many
@@ -43,6 +46,22 @@
   )
 
 
+;; state query functions ====================================================
+(defn check-selected-spec
+  "Check the special cuisine's cart status"
+  [cuisines-id db]
+  (d/q '[:find ?sn ?sq
+         :in $ ?cid
+         :where [ ?e  :cuisine/id      ?cid ]
+                [ ?e  :cuisine/species ?cs  ]
+                [ ?cs :spec/name       ?sn  ]
+                [ ?cs :spec/quantity   ?sq  ]]
+       db, cuisines-id))
+
+
+;; state transition functions ===============================================
+
+
 ;; Elements =================================================================
 (defelem slideshow
   [{:keys [img_src]}]
@@ -55,13 +74,54 @@
           (b :class "slideshow__pagination-bullet")
           (b :class "slideshow__pagination-bullet"))))))
 
+(defelem addition-button
+  [{:keys [serve] :as attr} _]
+  (let [attr (dissoc attr :serve)]
+    ((div :click #("TODO// popup order float panel")) attr)))
+
+(defelem counter-tag
+  [{:keys [cid] :as attr} _]
+  (let [ attr (dissoc attr :cid)]
+    (div attr
+      (b :class "counter-tag__specs"
+        :text "TODO//")
+      (b :class "counter-tag__amount"
+        :text "TODO//"))))
+
+(defelem cuisine
+  [{:keys [name img species currency id] :or {currency "¥"} :as att}]
+  (let [price     #(":TODO// construct prices string here")
+        selected? (cell= (seq (check-selected-spec id db__cart)))
+        attr (dissoc attr  :name :img :species :currency)]
+    (article attr
+      (div :class "item__header wrp_ratio--4_3"
+        (div :class "wrp--stretched"
+          (img
+            :class "cuisine__picture"
+            :src img)))
+      (div :class "item__body clearfix"
+        (h2
+          :class "cuisine__title"
+          :text name)
+        (small :class "cuisine__currency"
+          (span :class "cuisine__price"
+            (text price)))
+        (additon-button :class "cuisine__button"
+                        :serve id)
+        (cell= (cond
+                 selected?
+                 (couter-tag :class "counter-tag"
+                             :cid id)))
+        ))))
+
+;; Interface =================================================================
 (html
   (head
-    (title (text "~{site-title}"))
+    (title :text site-title)
     (link
       :href "img/motorbike.png"
       :rel "shortcut icon")
-    (link
+   (link
       :href "stylesheets/main.css"
       :rel "stylesheet")
     (html-meta :charset "utf-8")
@@ -79,6 +139,10 @@
       :name "viewport"))
 
   (body
+    (noscript
+      (div :id "noscript"
+        (p "JavaScript is required to view this page.")))
+
     (div :class "wrapper"
 
       (div :class "slideshow wrp_ratio--golden"
@@ -90,8 +154,8 @@
             (b :class "slideshow__pagination-bullet"))))
 
       (div :class "notice-board"
-        (span :class "notice-board__notice"
-          (text "~{notices}")))
+        (blink :class "notice-board__notice"
+               (cell= notices)))
 
       (a :class "btn-order"
         (span :class "btn-order__label"
@@ -108,10 +172,20 @@
           :class "section cuisine-category"
           :id "pizza-category"
           (header :class "section__header"
-            (h1 :class "section__title"
-              (text "披萨")))
+            (h1
+              :class "section__title"
+              :text "披萨"))
           (div
             :class "section__body item-list clearfix"
+
+            (cuisine :class  "item cuisine"
+                     :id    (str c_id)
+                     :name   c_title
+                     :img    c_img
+                     :spec   c_spec)
+
+            )
+
             (article
               :class "item cuisine"
               :id "cuisine-bacon"
@@ -121,25 +195,29 @@
                     :class "cuisine__pricture"
                     :src "img/Bacon.JPG")))
               (div :class "item__body clearfix"
-                (h2 :class "cuisine__title"
-                  (text "激情培根"))
+                (h2
+                  :class "cuisine__title"
+                  :text "激情培根")
                 (small :class "cuisine__currency"
                   (span :class "cuisine__price"
                     (text "39/59")))
                 (div :class "cuisine__button")
                 (div :class "counter-tag"
-                  (b :class "counter-tag__specs"
-                    (text "8寸"))
-                  (b :class "counter-tag__amount"
-                    (text "2")))))
+                  (b
+                    :class "counter-tag__specs"
+                    :text "8寸")
+                  (b
+                    :class "counter-tag__amount"
+                    :text "2"))))
             (<!-- "注释测试")
             )))
 
       (footer :class "footer"
         (div :class "card card--back wrp_ratio--golden"
           (div :class "wrp--stretched"
-            (h1 :class "card__title icon icon__wechat"
-              (text "关注微信"))
+            (h1
+              :class "card__title icon icon__wechat"
+              :text "关注微信")
 
             (figure
               (img
@@ -148,7 +226,7 @@
                 :alt "喵姆餐厅微信服务号")
               (figcaption :class "clearfix"
                 (h2 (text "~{(:restaurant/name restaurant-meta)}"))
-                (p (text "id: ~{(:restaurant/wechatID restaurant-meta)}"))))
+                (p  (text "id: ~{(:restaurant/wechatID restaurant-meta)}"))))
 
             (figure
               (img
@@ -156,16 +234,19 @@
                 :src "img/QR-1.jpg"
                 :alt "客服微信号")
               (figcaption :class "clearfix"
-                (h2 (text "胖喵"))
-                (p (text "id:miaomu_food"))))))
+                (h2 :text "胖喵")
+                (p  :text "id:miaomu_food")))))
 
         (div :class "card card--front wrp_ratio--golden"
           (div :class "wrp--stretched"
             (ul
-              (li :class "icon icon__phone"
+              (li
+                :class "icon icon__phone"
                 (text "~{(:restaurant/phone restaurant-meta)}"))
-              (li :class "icon icon__location"
+              (li
+                :class "icon icon__location"
                 (text "~{(:restaurant/address restaurant-meta)}"))
-              (li :class "icon icon__timer"
+              (li
+                :class "icon icon__timer"
                 (text "~{(:restaurant/rest-day restaurant-meta)}")))
             (img :src "img/motorbike.png")))))))
