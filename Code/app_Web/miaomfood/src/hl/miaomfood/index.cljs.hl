@@ -43,6 +43,45 @@
                                   :where [?e :restaurant/name]]
                            db))
 
+  (defc= menus (d/q '[:find ?mn
+                      :where [ _   :group/menus ?gm ]
+                             [ ?gm :menu/name  ?mn ] ]
+                 db))
+
+  (defc= categories-of
+    (fn  [menu]
+      (d/q '[:find ?cns
+             :in $, ?mn
+             :where
+             [ ?e  :menu/name       ?mn ]
+             [ ?e  :menu/categories ?mc ]
+             [ ?mc :category/name   ?cn ] ]
+        db, menu)))
+
+  (defc= cuisines-of
+    (fn [category]
+     (d/q '[:find ?cid
+            :in $, ?cn
+            :where
+            [ ?e  :category/name     ?cn  ]
+            [ ?e  :category/cuisines ?cc  ]
+            [ ?cc :cuisine/id        ?cid ] ]
+       db, category)))
+
+  (defc= cuisine-describe-of
+    (fn [cuisine]
+      (d/q '[:find
+             (pull ?cs
+                   [ :cuisine/name
+                     :cuisine/depict
+                     [:cuisine/species [:spec/name
+                                        :spec/price
+                                        :spec/inventory] ]])
+             :in $, ?cid
+             :where
+             [ ?e :cuisine/id ?cid
+               ?e :cuisine/species ?cs]]
+        )))
   )
 
 
@@ -63,14 +102,14 @@
 
 
 ;; Elements =================================================================
-(defelem equal-ratio-container [{:keys [ratio] :or {:ratio "golden"} :as attr} body]
+(defelem equal-ratio-wrap [{:keys [ratio] :or {:ratio "golden"} :as attr} body]
   (let [attr (dissoc attr :ratio)]
     ((div attr) {:class (str "wrp_ratio--" ratio)}
       (div :class "wrp--stretched"
         body))))
 
 (defelem slideshow [{:keys [img_src]}]
-  (equal-ratio-container
+  (equal-ratio-wrap
    :ratio "golden"
    :class "slideshow"
    (img
@@ -98,7 +137,7 @@
         selected? (cell= (or true (seq (check-selected-spec id db__cart))))
         attr (dissoc attr  :name :imgsrc :species :currency)]
     (article attr
-      (equal-ratio-container
+      (equal-ratio-wrap
        :ratio "4_3"
        :class "item__header"
        (img
@@ -196,7 +235,7 @@
           ))
 
       (footer :class "footer"
-        (equal-ratio-container
+        (equal-ratio-wrap
          :ratio "golden"
          :class "card card--back"
          (h1
@@ -220,7 +259,7 @@
              (h2 :text "胖喵")
              (p  :text "id:miaomu_food"))))
 
-        (equal-ratio-container
+        (equal-ratio-wrap
          :ratio "golden"
          :class "card card--front"
          (ul
