@@ -63,24 +63,29 @@
 
 
 ;; Elements =================================================================
-(defelem slideshow
-  [{:keys [img_src]}]
-  (with-init!
-    (div :class "slideshow wrp_ratio--golden"
+(defelem equal-ratio-container [{:keys [ratio] :or {:ratio "golden"} :as attr} body]
+  (let [attr (dissoc attr :ratio)]
+    ((div attr) {:class (str "wrp_ratio--" ratio)}
       (div :class "wrp--stretched"
-        (img :class "slideshow__img wrp--centering" :src img_src)
-        (div :class "slideshow__pagination"
-          (b :class "slideshow__pagination-bullet")
-          (b :class "slideshow__pagination-bullet")
-          (b :class "slideshow__pagination-bullet"))))))
+        body))))
 
-(defelem addition-button
-  [{:keys [serve] :as attr} _]
+(defelem slideshow [{:keys [img_src]}]
+  (equal-ratio-container
+   :ratio "golden"
+   :class "slideshow"
+   (img
+     :src img_src
+     :class  "slideshow__img wrp--centering" )
+   (div :class "slideshow__pagination"
+     (b :class "slideshow__pagination-bullet")
+     (b :class "slideshow__pagination-bullet")
+     (b :class "slideshow__pagination-bullet"))))
+
+(defelem addition-button [{:keys [serve] :as attr} _]
   (let [attr (dissoc attr :serve)]
     ((div :click #("TODO// popup order float panel")) attr)))
 
-(defelem counter-tag
-  [{:keys [cid] :as attr} _]
+(defelem counter-tag [{:keys [cid] :as attr} _]
   (let [ attr (dissoc attr :cid)]
     (div attr
       (b :class "counter-tag__specs"
@@ -88,17 +93,17 @@
       (b :class "counter-tag__amount"
         :text "TODO//"))))
 
-(defelem cuisine
-  [{:keys [name img species currency id] :or {currency "¥"} :as att}]
+(defelem cuisine [{:keys [name imgsrc species currency id] :or {currency "¥"} :as attr}]
   (let [price     #(":TODO// construct prices string here")
-        selected? (cell= (seq (check-selected-spec id db__cart)))
-        attr (dissoc attr  :name :img :species :currency)]
+        selected? (cell= (or true (seq (check-selected-spec id db__cart))))
+        attr (dissoc attr  :name :imgsrc :species :currency)]
     (article attr
-      (div :class "item__header wrp_ratio--4_3"
-        (div :class "wrp--stretched"
-          (img
-            :class "cuisine__picture"
-            :src img)))
+      (equal-ratio-container
+       :ratio "4_3"
+       :class "item__header"
+       (img
+         :class "cuisine__picture"
+         :src imgsrc))
       (div :class "item__body clearfix"
         (h2
           :class "cuisine__title"
@@ -106,13 +111,16 @@
         (small :class "cuisine__currency"
           (span :class "cuisine__price"
             (text price)))
-        (additon-button :class "cuisine__button"
+        (addition-button :class "cuisine__button"
                         :serve id)
         (cell= (cond
                  selected?
-                 (couter-tag :class "counter-tag"
+                 (counter-tag :class "counter-tag"
                              :cid id)))
         ))))
+
+
+
 
 ;; Interface =================================================================
 (html
@@ -145,21 +153,18 @@
 
     (div :class "wrapper"
 
-      (div :class "slideshow wrp_ratio--golden"
-        (div :class "wrp--stretched"
-          (img :class "slideshow__img wrp--centering" :src "img/logo.jpg")
-          (div :class "slideshow__pagination"
-            (b :class "slideshow__pagination-bullet")
-            (b :class "slideshow__pagination-bullet")
-            (b :class "slideshow__pagination-bullet"))))
+      (slideshow
+       :img_src "img/logo.jpg")
 
-      (div :class "notice-board"
-        (blink :class "notice-board__notice"
-               (cell= notices)))
+      (div :class "banner clearfix"
+        (div :class "notice-board"
+          (span :class "notice-board__notice"
+            (cell= notices)))
 
-      (a :class "btn-order"
-        (span :class "btn-order__label"
-          (text "提交订单")))
+        (a :class "btn-order"
+          (span :class "btn-order__label"
+            (text "提交订单"))
+          (img :src "img/notepad.png")))
 
       (nav :class "nav")
 
@@ -177,76 +182,55 @@
               :text "披萨"))
           (div
             :class "section__body item-list clearfix"
+            (let [c_id "JQPG"
+                  c_title "激情培根"
+                  c_img "img/Bacon.JPG"
+                  c_spec "nothing"]
+              (cuisine :class  "item cuisine"
+                       :id     (str c_id)
+                       :name   c_title
+                       :imgsrc    c_img
+                       :species   c_spec)))
 
-            (cuisine :class  "item cuisine"
-                     :id    (str c_id)
-                     :name   c_title
-                     :img    c_img
-                     :spec   c_spec)
-
-            )
-
-            (article
-              :class "item cuisine"
-              :id "cuisine-bacon"
-              (div :class "item__header wrp_ratio--4_3"
-                (div :class "wrp--stretched"
-                  (img
-                    :class "cuisine__pricture"
-                    :src "img/Bacon.JPG")))
-              (div :class "item__body clearfix"
-                (h2
-                  :class "cuisine__title"
-                  :text "激情培根")
-                (small :class "cuisine__currency"
-                  (span :class "cuisine__price"
-                    (text "39/59")))
-                (div :class "cuisine__button")
-                (div :class "counter-tag"
-                  (b
-                    :class "counter-tag__specs"
-                    :text "8寸")
-                  (b
-                    :class "counter-tag__amount"
-                    :text "2"))))
-            (<!-- "注释测试")
-            )))
+          (<!-- "注释测试")
+          ))
 
       (footer :class "footer"
-        (div :class "card card--back wrp_ratio--golden"
-          (div :class "wrp--stretched"
-            (h1
-              :class "card__title icon icon__wechat"
-              :text "关注微信")
+        (equal-ratio-container
+         :ratio "golden"
+         :class "card card--back"
+         (h1
+           :class "card__title icon icon__wechat"
+           :text "关注微信")
+         (figure
+           (img
+             :class "card__img"
+             :src "img/QR-1.jpg"
+             :alt "喵姆餐厅微信服务号")
+           (figcaption :class "clearfix"
+             (h2 (text "~{(:restaurant/name restaurant-meta)}"))
+             (p  (text "id: ~{(:restaurant/wechatID restaurant-meta)}"))))
 
-            (figure
-              (img
-                :class "card__img"
-                :src "img/QR-1.jpg"
-                :alt "喵姆餐厅微信服务号")
-              (figcaption :class "clearfix"
-                (h2 (text "~{(:restaurant/name restaurant-meta)}"))
-                (p  (text "id: ~{(:restaurant/wechatID restaurant-meta)}"))))
+         (figure
+           (img
+             :class "card__img"
+             :src "img/QR-1.jpg"
+             :alt "客服微信号")
+           (figcaption :class "clearfix"
+             (h2 :text "胖喵")
+             (p  :text "id:miaomu_food"))))
 
-            (figure
-              (img
-                :class "card__img"
-                :src "img/QR-1.jpg"
-                :alt "客服微信号")
-              (figcaption :class "clearfix"
-                (h2 :text "胖喵")
-                (p  :text "id:miaomu_food")))))
-
-        (div :class "card card--front wrp_ratio--golden"
-          (div :class "wrp--stretched"
-            (ul
-              (li
-                :class "icon icon__phone"
-                (text "~{(:restaurant/phone restaurant-meta)}"))
-              (li
-                :class "icon icon__location"
-                (text "~{(:restaurant/address restaurant-meta)}"))
-              (li
-                :class "icon icon__timer"
-                (text "~{(:restaurant/rest-day restaurant-meta)}")))
-            (img :src "img/motorbike.png")))))))
+        (equal-ratio-container
+         :ratio "golden"
+         :class "card card--front"
+         (ul
+           (li
+             :class "icon icon__phone"
+             (text "~{(:restaurant/phone restaurant-meta)}"))
+           (li
+             :class "icon icon__location"
+             (text "~{(:restaurant/address restaurant-meta)}"))
+           (li
+             :class "icon icon__timer"
+             (text "~{(:restaurant/rest-day restaurant-meta)}")))
+         (img :src "img/motorbike.png"))))))
