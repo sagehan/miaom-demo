@@ -22,6 +22,7 @@
               :category/cuisines {:db/cardinality :db.cardinality/many
                                   :db/valueType :db.type/ref }
               :cuisine/species   {:db/cardinality :db.cardinality/many
+                                  :db/isComponent true
                                   :db/valueType :db.type/ref }}
       datoms  (cell= rpc/raw-db)
       db (cell= (d/db-with (d/empty-db schema) datoms))]
@@ -50,7 +51,7 @@
 
   (defc= categories-of
     (fn  [menu]
-      (d/q '[:find ?cns
+      (d/q '[:find ?cn
              :in $, ?mn
              :where
              [ ?e  :menu/name       ?mn ]
@@ -68,20 +69,10 @@
             [ ?cc :cuisine/id        ?cid ] ]
        db, category)))
 
-  (defc= cuisine-describe-of
-    (fn [cuisine]
-      (d/q '[:find
-             (pull ?cs
-                   [ :cuisine/name
-                     :cuisine/depict
-                     [:cuisine/species [:spec/name
-                                        :spec/price
-                                        :spec/inventory] ]])
-             :in $, ?cid
-             :where
-             [ ?e :cuisine/id ?cid
-               ?e :cuisine/species ?cs]]
-        )))
+  (defc= cuisine-details-of
+    (fn [cuisine-id]
+      (d/pull db ["*"] cuisine-id)))
+
   )
 
 
@@ -101,12 +92,18 @@
 ;; state transition functions ===============================================
 
 
-;; Elements =================================================================
+;; Helper elements =================================================================
 (defelem equal-ratio-wrap [{:keys [ratio] :or {:ratio "golden"} :as attr} body]
   (let [attr (dissoc attr :ratio)]
     ((div attr) {:class (str "wrp_ratio--" ratio)}
       (div :class "wrp--stretched"
         body))))
+
+;; Component elements =================================================================
+(defelem notice-board []
+  (div :class "notice-board"
+    (span :class "notice-board__notice"
+      (cell= notices))))
 
 (defelem slideshow [{:keys [img_src]}]
   (equal-ratio-wrap
@@ -120,9 +117,26 @@
      (b :class "slideshow__pagination-bullet")
      (b :class "slideshow__pagination-bullet"))))
 
+(defelem navbar []
+  (nav :class "nav"))
+
+(defelem checkout-button [ {:keys [label btn__img]} ]
+  (a :class "btn-order"
+    (span :class "btn-order__label"
+      (text label))
+    (img :src btn__img)))
+
+(defelem checkout-panel []
+  (div :class "checkout-page"))
+
 (defelem addition-button [{:keys [serve] :as attr} _]
   (let [attr (dissoc attr :serve)]
     ((div :click #("TODO// popup order float panel")) attr)))
+
+(defelem addition-panel
+  "TODO// popup panel for add items to shopping cart"
+  []
+  )
 
 (defelem counter-tag [{:keys [cid] :as attr} _]
   (let [ attr (dissoc attr :cid)]
@@ -151,24 +165,69 @@
           (span :class "cuisine__price"
             (text price)))
         (addition-button :class "cuisine__button"
-                        :serve id)
+                         :serve id)
         (cell= (cond
                  selected?
                  (counter-tag :class "counter-tag"
-                             :cid id)))
+                              :cid id)))
         ))))
 
 
+(defelem vCard
+  "TODO:// Finally, and ideally, this page elements should have a
+                   button which will give customer a vCard file after
+                   itself is been clikced. Now, it just a card-style div"
+  []
+  (equal-ratio-wrap
+   :ratio "golden"
+   :class "card card--front"
+   (ul
+     (li
+       :class "icon icon__phone"
+       (text "~{(:restaurant/phone restaurant-meta)}"))
+     (li
+       :class "icon icon__location"
+       (text "~{(:restaurant/address restaurant-meta)}"))
+     (li
+       :class "icon icon__timer"
+       (text "~{(:restaurant/rest-day restaurant-meta)}")))
+   (img :src "img/motorbike.png")))
 
+(defelem social-vCard
+  ""
+  []
+  (equal-ratio-wrap
+   :ratio "golden"
+   :class "card card--back"
+   (h1
+     :class "card__title icon icon__wechat"
+     :text "关注微信")
+   (figure
+     (img
+       :class "card__img"
+       :src "img/QR-1.jpg"
+       :alt "喵姆餐厅微信服务号")
+     (figcaption :class "clearfix"
+       (h2 (text "~{(:restaurant/name restaurant-meta)}"))
+       (p  (text "id: ~{(:restaurant/wechatID restaurant-meta)}"))))
 
-;; Interface =================================================================
+   (figure
+     (img
+       :class "card__img"
+       :src "img/QR-1.jpg"
+       :alt "客服微信号")
+     (figcaption :class "clearfix"
+       (h2 :text "胖喵")
+       (p  :text "id:miaomu_food")))))
+
+;; Page skeleton =================================================================
 (html
   (head
     (title :text site-title)
     (link
       :href "img/motorbike.png"
       :rel "shortcut icon")
-   (link
+    (link
       :href "stylesheets/main.css"
       :rel "stylesheet")
     (html-meta :charset "utf-8")
@@ -189,26 +248,16 @@
     (noscript
       (div :id "noscript"
         (p "JavaScript is required to view this page.")))
-
     (div :class "wrapper"
-
       (slideshow
        :img_src "img/logo.jpg")
-
-      (div :class "banner clearfix"
-        (div :class "notice-board"
-          (span :class "notice-board__notice"
-            (cell= notices)))
-
-        (a :class "btn-order"
-          (span :class "btn-order__label"
-            (text "提交订单"))
-          (img :src "img/notepad.png")))
-
-      (nav :class "nav")
-
-      (div :class "checkout-page")
-
+      (div
+        (<!-- "This wrapper div may finally been removed to Sagittarius!")
+        :class "banner clearfix"
+        (notice-board)
+        (checkout-button :label "提交订单" :btn__img "img/notepad.png"))
+      (navbar)
+      (checkout-panel)
       (section
         :class "section-wrapper clearfix"
         :id "tasty"
@@ -231,45 +280,7 @@
                        :imgsrc    c_img
                        :species   c_spec)))
 
-          (<!-- "注释测试")
-          ))
-
+          (<!-- "注释测试")))
       (footer :class "footer"
-        (equal-ratio-wrap
-         :ratio "golden"
-         :class "card card--back"
-         (h1
-           :class "card__title icon icon__wechat"
-           :text "关注微信")
-         (figure
-           (img
-             :class "card__img"
-             :src "img/QR-1.jpg"
-             :alt "喵姆餐厅微信服务号")
-           (figcaption :class "clearfix"
-             (h2 (text "~{(:restaurant/name restaurant-meta)}"))
-             (p  (text "id: ~{(:restaurant/wechatID restaurant-meta)}"))))
-
-         (figure
-           (img
-             :class "card__img"
-             :src "img/QR-1.jpg"
-             :alt "客服微信号")
-           (figcaption :class "clearfix"
-             (h2 :text "胖喵")
-             (p  :text "id:miaomu_food"))))
-
-        (equal-ratio-wrap
-         :ratio "golden"
-         :class "card card--front"
-         (ul
-           (li
-             :class "icon icon__phone"
-             (text "~{(:restaurant/phone restaurant-meta)}"))
-           (li
-             :class "icon icon__location"
-             (text "~{(:restaurant/address restaurant-meta)}"))
-           (li
-             :class "icon icon__timer"
-             (text "~{(:restaurant/rest-day restaurant-meta)}")))
-         (img :src "img/motorbike.png"))))))
+        (social-vCard)
+        (vCard)))))
