@@ -8,22 +8,23 @@
 
 ;; Cells ====================================================================
 (defc db__cart (d/empty-db
-                {:cuisine/id      {:db/unique :db.unique/identity}
+                {:cuisine/id      {:db/unique      :db.unique/identity }
                  :cuisine/species {:db/cardinality :db.cardinality/many
-                                  :db/valueType :db.type/ref }}))
+                                   :db/valueType   :db.type/ref }}))
 
 ;; Cell formulas ============================================================
 (let [schema {:website/notices   {:db/cardinality :db.cardinality/many
-                                  :db/valueType :db.type/ref }
+                                  :db/valueType   :db.type/ref }
               :group/menus       {:db/cardinality :db.cardinality/many
-                                  :db/valueType :db.type/ref }
+                                  :db/valueType   :db.type/ref }
               :menu/categories   {:db/cardinality :db.cardinality/many
-                                  :db/valueType :db.type/ref }
+                                  :db/valueType   :db.type/ref }
               :category/cuisines {:db/cardinality :db.cardinality/many
-                                  :db/valueType :db.type/ref }
+                                  :db/valueType   :db.type/ref }
+              :cuisine/id        {:db/unique      :db.unique/identity }
               :cuisine/species   {:db/cardinality :db.cardinality/many
                                   :db/isComponent true
-                                  :db/valueType :db.type/ref }}
+                                  :db/valueType   :db.type/ref }}
       datoms  (cell= rpc/raw-db)
       db (cell= (d/db-with (d/empty-db schema) datoms))]
 
@@ -44,14 +45,14 @@
                                   :where [?e :restaurant/name]]
                            db))
 
-  (defc= menus (d/q '[:find ?mn
+  (defc= menus (d/q '[:find [?mn ...]
                       :where [ _   :group/menus ?gm ]
                              [ ?gm :menu/name  ?mn ] ]
                  db))
 
   (defc= categories-of
     (fn  [menu]
-      (d/q '[:find ?cn
+      (d/q '[:find [?cn ...]
              :in $, ?mn
              :where
              [ ?e  :menu/name       ?mn ]
@@ -61,25 +62,25 @@
 
   (defc= cuisines-of
     (fn [category]
-     (d/q '[:find ?cid
-            :in $, ?cn
-            :where
-            [ ?e  :category/name     ?cn  ]
-            [ ?e  :category/cuisines ?cc  ]
-            [ ?cc :cuisine/id        ?cid ] ]
-       db, category)))
+      (d/q '[:find [?cid ...]
+             :in $, ?cn
+             :where
+             [ ?e  :category/name     ?cn  ]
+             [ ?e  :category/cuisines ?cc  ]
+             [ ?cc :cuisine/id        ?cid ] ]
+        db, category)))
 
   (defc= cuisine-details-of
     (fn [cuisine-id]
-      (d/pull db ["*"] cuisine-id)))
+      (d/pull db ["*"] [:cuisine/id cuisine-id])))
 
   )
 
 
-;; state query functions ====================================================
+;; State query functions ====================================================
 (defn check-selected-spec
   "Check the special cuisine's cart status"
-  [cuisines-id db]
+  [ db cuisines-id ]
   (d/q '[:find ?sn ?sq
          :in $ ?cid
          :where [ ?e  :cuisine/id      ?cid ]
@@ -100,10 +101,13 @@
         body))))
 
 ;; Component elements =================================================================
-(defelem notice-board []
-  (div :class "notice-board"
-    (span :class "notice-board__notice"
-      (cell= notices))))
+(defelem billboard [{:keys [greeting interval] :or {interval 3000} :as attr} ]
+  (let [ note  (cell greeting)
+         attr  (dissoc attr :interval :greeting) ]
+    (with-let [elem (div attr (span :class "notice-board__notice" (cell= note )))]
+      (with-init!
+        (with-interval interval
+          (reset! note (rand-nth @notices )))))))
 
 (defelem slideshow [{:keys [img_src]}]
   (equal-ratio-wrap
@@ -120,7 +124,7 @@
 (defelem navbar []
   (nav :class "nav"))
 
-(defelem checkout-button [ {:keys [label btn__img]} ]
+(defelem checkout-button [ {:keys [label btn__img] :or {label "提交订单"} :as attr} ]
   (a :class "btn-order"
     (span :class "btn-order__label"
       (text label))
@@ -146,7 +150,7 @@
       (b :class "counter-tag__amount"
         :text "TODO//"))))
 
-(defelem cuisine [{:keys [name imgsrc species currency id] :or {currency "¥"} :as attr}]
+(defelem cuisine [{:keys [name depict species currency id] :or {currency "¥"} :as attr}]
   (let [price     #(":TODO// construct prices string here")
         selected? (cell= (or true (seq (check-selected-spec id db__cart))))
         attr (dissoc attr  :name :imgsrc :species :currency)]
@@ -156,7 +160,7 @@
        :class "item__header"
        (img
          :class "cuisine__picture"
-         :src imgsrc))
+         :src depict))
       (div :class "item__body clearfix"
         (h2
           :class "cuisine__title"
@@ -173,7 +177,7 @@
         ))))
 
 
-(defelem vCard
+(defelem v-Card
   "TODO:// Finally, and ideally, this page elements should have a
                    button which will give customer a vCard file after
                    itself is been clikced. Now, it just a card-style div"
@@ -220,7 +224,21 @@
        (h2 :text "胖喵")
        (p  :text "id:miaomu_food")))))
 
-;; Page skeleton =================================================================
+;; Node-constructor functions ===============================================
+(defn create-cuisine
+  "Receive a cuisine id, generate a cuisine element"
+  [cid]
+  (let [c       (cell= (cuisine-details-of cid))
+        c_title (cell= (:cuisine/name      c))
+        c_img   (cell= (:cuisine/depict    c))
+        c_spec  (cell= (:cuisine/species   c))  ]
+    (cuisine :class   "item cuisine"
+             :id      cid
+             :name    c_title
+             :depict  c_img
+             :species c_spec )))
+
+;; App skeleton =================================================================
 (html
   (head
     (title :text site-title)
@@ -243,7 +261,6 @@
     (html-meta
       :content "initial-scale=1.0, width=device-width"
       :name "viewport"))
-
   (body
     (noscript
       (div :id "noscript"
@@ -252,10 +269,12 @@
       (slideshow
        :img_src "img/logo.jpg")
       (div
-        (<!-- "This wrapper div may finally been removed to Sagittarius!")
         :class "banner clearfix"
-        (notice-board)
-        (checkout-button :label "提交订单" :btn__img "img/notepad.png"))
+        (<!-- "This wrapper div may finally been removed to Sagittarius!")
+        (billboard
+         :class "notice-board" :greeting "欢迎预订" :interval 5000)
+        (checkout-button
+         :label "提交订单" :btn__img "img/notepad.png"))
       (navbar)
       (checkout-panel)
       (section
@@ -264,23 +283,18 @@
         (section
           :class "section cuisine-category"
           :id "pizza-category"
-          (header :class "section__header"
+          (header
+            :class "section__header"
             (h1
               :class "section__title"
               :text "披萨"))
-          (div
-            :class "section__body item-list clearfix"
-            (let [c_id "JQPG"
-                  c_title "激情培根"
-                  c_img "img/Bacon.JPG"
-                  c_spec "nothing"]
-              (cuisine :class  "item cuisine"
-                       :id     (str c_id)
-                       :name   c_title
-                       :imgsrc    c_img
-                       :species   c_spec)))
+          (let [category "披萨"]
+            (div
+              :class "section__body item-list clearfix"
+              (cell-map create-cuisine
+                        (cell= (cuisines-of category)))))))
 
-          (<!-- "注释测试")))
-      (footer :class "footer"
-        (social-vCard)
-        (vCard)))))
+      (<!-- "注释测试")
+          (footer :class "footer"
+            (social-vCard)
+           (v-Card)))))
