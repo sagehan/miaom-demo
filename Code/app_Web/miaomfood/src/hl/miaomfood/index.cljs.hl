@@ -107,19 +107,32 @@
     (with-let [elem (div attr (span :class "notice-board__notice" (cell= note )))]
       (with-init!
         (with-interval interval
-          (reset! note (rand-nth @notices )))))))
+          (when-let [hasValue (cell= (rand-nth notices))]
+            (reset! note @hasValue)))))))
 
-(defelem slideshow [{:keys [img_src]}]
-  (equal-ratio-wrap
-   :ratio "golden"
-   :class "slideshow"
-   (img
-     :src img_src
-     :class  "slideshow__img wrp--centering" )
-   (div :class "slideshow__pagination"
-     (b :class "slideshow__pagination-bullet")
-     (b :class "slideshow__pagination-bullet")
-     (b :class "slideshow__pagination-bullet"))))
+(defelem slideshow [{
+                     :keys [ imgs interval default_img]
+                     :or   { interval 3000 default_img "img/logo.jpg" }
+                     :as   attr
+                     }]
+  (let [ imgs (cell= (->> (conj [] default_img (not-empty imgs))
+                          (flatten)
+                          (distinct)
+                          (filterv #(not= nil %))))
+         n    (cell= (count imgs))
+         attr (dissoc attr :imgs :interval :default_img ) ]
+    (equal-ratio-wrap
+      attr
+      (div (loop-tpl
+            :bindings [i imgs]
+            (img
+              :class "slideshow__img wrp--centering"
+              :src   i
+              :slide-toggle true )))
+      ((div (loop-tpl
+             :bindings [i (cell= (range n))]
+             ((b :class "slideshow__pagination-bullet" ))))
+       :class "slideshow__pagination" ))))
 
 (defelem navbar []
   (nav :class "nav"))
@@ -154,27 +167,30 @@
   (let [price     #(":TODO// construct prices string here")
         selected? (cell= (or true (seq (check-selected-spec id db__cart))))
         attr (dissoc attr  :name :imgsrc :species :currency)]
-    (article attr
-      (equal-ratio-wrap
-       :ratio "4_3"
-       :class "item__header"
-       (img
-         :class "cuisine__picture"
-         :src depict))
-      (div :class "item__body clearfix"
-        (h2
-          :class "cuisine__title"
-          :text name)
-        (small :class "cuisine__currency"
-          (span :class "cuisine__price"
-            (text price)))
-        (addition-button :class "cuisine__button"
-                         :serve id)
-        (cell= (cond
-                 selected?
-                 (counter-tag :class "counter-tag"
-                              :cid id)))
-        ))))
+    (with-let
+      [elem (article attr
+              (equal-ratio-wrap
+               :ratio "4_3"
+               :class "item__header"
+               (img
+                 :class "cuisine__picture"
+                 :src depict))
+              (div :class "item__body clearfix"
+                (h2
+                  :class "cuisine__title"
+                  :text name)
+                (small :class "cuisine__currency"
+                  (span :class "cuisine__price"
+                    (text price)))
+                (addition-button :class "cuisine__button"
+                                 :serve id)
+                (cell= (cond
+                         selected?
+                         (counter-tag :class "counter-tag"
+                                      :cid id)))))]
+      (with-init!
+        (let [a 0]
+          "")))))
 
 
 (defelem v-Card
@@ -222,7 +238,7 @@
        :alt "客服微信号")
      (figcaption :class "clearfix"
        (h2 :text "胖喵")
-       (p  :text "id:miaomu_food")))))
+       (p  :text "id: 18690890381")))))
 
 ;; Node-constructor functions ===============================================
 (defn create-cuisine
@@ -267,12 +283,15 @@
         (p "JavaScript is required to view this page.")))
     (div :class "wrapper"
       (slideshow
-       :img_src "img/logo.jpg")
+       :class "slideshow"
+       :ratio "golden"
+       :imgs  slides
+       :default_img "img/logo.jpg")
       (div
         :class "banner clearfix"
         (<!-- "This wrapper div may finally been removed to Sagittarius!")
         (billboard
-         :class "notice-board" :greeting "欢迎预订" :interval 5000)
+         :class "notice-board" :greeting "欢迎预订" :interval 3000)
         (checkout-button
          :label "提交订单" :btn__img "img/notepad.png"))
       (navbar)
@@ -288,13 +307,11 @@
             (h1
               :class "section__title"
               :text "披萨"))
-          (let [category "披萨"]
-            (div
-              :class "section__body item-list clearfix"
+          (div
+            :class "section__body item-list clearfix"
+            (let [category "披萨"]
               (cell-map create-cuisine
                         (cell= (cuisines-of category)))))))
-
-      (<!-- "注释测试")
-          (footer :class "footer"
-            (social-vCard)
-           (v-Card)))))
+      (footer :class "footer"
+        (social-vCard)
+        (v-Card)))))
