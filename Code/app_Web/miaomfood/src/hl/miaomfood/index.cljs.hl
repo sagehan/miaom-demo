@@ -96,10 +96,7 @@
 
 ;; Helper functions =================================================================
 (def indexed   (partial map-indexed vector))
-(defn circle-shift-right
-  "Fix me "
-  [xs i j]
-  ())
+
 
 ;; Helper elements =================================================================
 (defelem show-or-hide
@@ -131,26 +128,25 @@
                           (flatten)
                           (distinct)
                           (filterv #(not= nil %))))
-         toggle (cell   [true false false false ])
+         toggle (cell   [ [true] [false] [false] [false] ])
          attr   (dissoc attr :imgs :interval :default_img) ]
     (with-let [elem
                (equal-ratio-wrap
                 attr
                 (div (loop-tpl
-                      :bindings [ [t im] (cell= (map vector toggle imgs)) ]
+                      :bindings [ [[t] im] (cell= (map vector toggle imgs)) ]
                       (img
                         :class  "slideshow__img wrp--centering"
                         :src    im
                         :toggle t)))
                 ((div (loop-tpl
-                       :bindings [t toggle]
+                       :bindings [[t] toggle]
                        ((b :class "pagination__bullet")
                         :class (cell= (when t "pagination__bullet--active")))))
                  :class "slideshow__pagination" ))]
       (with-init!
         (with-interval interval
-          ""
-          )))))
+          (swap! toggle #(into (vector (last %)) (butlast %))))))))
 
 (defelem navbar []
   (nav :class "nav"))
