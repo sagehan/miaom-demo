@@ -94,6 +94,13 @@
 ;; state transition functions ===============================================
 (defn folding! [] #(swap! folding-toggle not))
 
+;; Helper functions =================================================================
+(def indexed   (partial map-indexed vector))
+(defn circle-shift-right
+  "Fix me "
+  [xs i j]
+  ())
+
 ;; Helper elements =================================================================
 (defelem show-or-hide
   [{:keys [state]} children]
@@ -120,24 +127,25 @@
                      :or   { interval 3000 default_img "img/logo.jpg" }
                      :as   attr
                      }]
-  (let [ imgs   (cell= (->> (conj [] (not-empty imgs) default_img)
+  (let [ imgs   (cell= (->> (conj [] default_img (not-empty imgs))
                           (flatten)
                           (distinct)
                           (filterv #(not= nil %))))
-         n      (cell= (count imgs))
+         toggle (cell   [true false false false ])
          attr   (dissoc attr :imgs :interval :default_img) ]
     (with-let [elem
                (equal-ratio-wrap
                 attr
                 (div (loop-tpl
-                      :bindings [i imgs]
+                      :bindings [ [t im] (cell= (map vector toggle imgs)) ]
                       (img
-                        :class "slideshow__img wrp--centering"
-                        :src   i
-                        :toggle true)))
+                        :class  "slideshow__img wrp--centering"
+                        :src    im
+                        :toggle t)))
                 ((div (loop-tpl
-                       :bindings [i (cell= (range n))]
-                       ((b :class "slideshow__pagination-bullet" ))))
+                       :bindings [t toggle]
+                       ((b :class "pagination__bullet")
+                        :class (cell= (when t "pagination__bullet--active")))))
                  :class "slideshow__pagination" ))]
       (with-init!
         (with-interval interval

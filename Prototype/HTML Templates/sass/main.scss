@@ -23,7 +23,6 @@ $price__TagColor          : $gray;
 $counter__TagColor        : $green;
 $counter__TagBorderColor  : $green;
 
-
 /// Background colors
 $item__BackGround       : #ffffff;
 
@@ -225,16 +224,24 @@ img {
     line-height: 0.5em;
     text-align: center;
   }
+}
 
-  &__pagination b {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    @include border-radius(100%);
+.pagination__bullet {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin: 0 4px;
+  opacity: 0.2;
+  border: 1px solid #525151;
+  @include border-radius(100%);
+
+  &--active {
     background: $yellow;
-    margin: 0 4px;
+    opacity: 1;
+    border: 1px solid $yellow;
   }
 }
+
 .banner {
   position: relative;
   height: $banner__height;

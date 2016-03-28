@@ -57,8 +57,8 @@ article, aside, details, figcaption, figure, footer, header, hgroup, main, menu,
 
 @font-face {
   font-family: "icomiaomfood";
-  src: url('icomiaomfood.eot?1456290902');
-  src: url('icomiaomfood.eot?&1456290902#iefix') format('embedded-opentype'), url('icomiaomfood.woff?1456290902') format('woff'), url('icomiaomfood.ttf?1456290902') format('truetype');
+  src: url('icomiaomfood.eot?1456568476');
+  src: url('icomiaomfood.eot?&1456568476#iefix') format('embedded-opentype'), url('icomiaomfood.woff?1456568476') format('woff'), url('icomiaomfood.ttf?1456568476') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
@@ -214,7 +214,7 @@ img {
   right: 2px;
   width: 44px;
   height: 44px;
-  background: no-repeat center/100% url('../img/Add_Button.png?1455554625');
+  background: no-repeat center/100% url('../img/Add_Button.png?1456568476');
 }
 
 .slideshow__pagination {
@@ -225,15 +225,22 @@ img {
   line-height: 0.5em;
   text-align: center;
 }
-.slideshow__pagination b {
+
+.pagination__bullet {
   display: inline-block;
   width: 8px;
   height: 8px;
+  margin: 0 4px;
+  opacity: 0.2;
+  border: 1px solid #525151;
   -moz-border-radius: 100%;
   -webkit-border-radius: 100%;
   border-radius: 100%;
+}
+.pagination__bullet--active {
   background: #FFBA33;
-  margin: 0 4px;
+  opacity: 1;
+  border: 1px solid #FFBA33;
 }
 
 .banner {
