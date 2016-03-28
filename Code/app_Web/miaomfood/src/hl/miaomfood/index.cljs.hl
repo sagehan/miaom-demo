@@ -7,6 +7,7 @@
 (add-initfn! (rpc/fetch-raw-db))
 
 ;; Cells ====================================================================
+(defc folding-toggle true)
 (defc db__cart (d/empty-db
                 {:cuisine/id      {:db/unique      :db.unique/identity }
                  :cuisine/species {:db/cardinality :db.cardinality/many
@@ -91,9 +92,13 @@
 
 
 ;; state transition functions ===============================================
-
+(defn folding! [] #(swap! folding-toggle not))
 
 ;; Helper elements =================================================================
+(defelem show-or-hide
+  [{:keys [state]} children]
+  (map (fn [child] (child :slide-toggle state)) children))
+
 (defelem equal-ratio-wrap [{:keys [ratio] :or {:ratio "golden"} :as attr} body]
   (let [attr (dissoc attr :ratio)]
     ((div attr) {:class (str "wrp_ratio--" ratio)}
@@ -111,28 +116,33 @@
             (reset! note @hasValue)))))))
 
 (defelem slideshow [{
-                     :keys [ imgs interval default_img]
+                     :keys [ imgs interval default_img ]
                      :or   { interval 3000 default_img "img/logo.jpg" }
                      :as   attr
                      }]
-  (let [ imgs (cell= (->> (conj [] default_img (not-empty imgs))
+  (let [ imgs   (cell= (->> (conj [] (not-empty imgs) default_img)
                           (flatten)
                           (distinct)
                           (filterv #(not= nil %))))
-         n    (cell= (count imgs))
-         attr (dissoc attr :imgs :interval :default_img ) ]
-    (equal-ratio-wrap
-      attr
-      (div (loop-tpl
-            :bindings [i imgs]
-            (img
-              :class "slideshow__img wrp--centering"
-              :src   i
-              :slide-toggle true )))
-      ((div (loop-tpl
-             :bindings [i (cell= (range n))]
-             ((b :class "slideshow__pagination-bullet" ))))
-       :class "slideshow__pagination" ))))
+         n      (cell= (count imgs))
+         attr   (dissoc attr :imgs :interval :default_img) ]
+    (with-let [elem
+               (equal-ratio-wrap
+                attr
+                (div (loop-tpl
+                      :bindings [i imgs]
+                      (img
+                        :class "slideshow__img wrp--centering"
+                        :src   i
+                        :toggle true)))
+                ((div (loop-tpl
+                       :bindings [i (cell= (range n))]
+                       ((b :class "slideshow__pagination-bullet" ))))
+                 :class "slideshow__pagination" ))]
+      (with-init!
+        (with-interval interval
+          ""
+          )))))
 
 (defelem navbar []
   (nav :class "nav"))
@@ -168,26 +178,27 @@
         selected? (cell= (or true (seq (check-selected-spec id db__cart))))
         attr (dissoc attr  :name :imgsrc :species :currency)]
     (with-let
-      [elem (article attr
-              (equal-ratio-wrap
-               :ratio "4_3"
-               :class "item__header"
-               (img
-                 :class "cuisine__picture"
-                 :src depict))
-              (div :class "item__body clearfix"
-                (h2
-                  :class "cuisine__title"
-                  :text name)
-                (small :class "cuisine__currency"
-                  (span :class "cuisine__price"
-                    (text price)))
-                (addition-button :class "cuisine__button"
-                                 :serve id)
-                (cell= (cond
-                         selected?
-                         (counter-tag :class "counter-tag"
-                                      :cid id)))))]
+      [elem
+       (article attr
+         (equal-ratio-wrap
+          :ratio "4_3"
+          :class "item__header"
+          (img
+            :class "cuisine__picture"
+            :src depict))
+         (div :class "item__body clearfix"
+           (h2
+             :class "cuisine__title"
+             :text name)
+           (small :class "cuisine__currency"
+             (span :class "cuisine__price"
+               (text price)))
+           (addition-button :class "cuisine__button"
+                            :serve id)
+           (cell= (cond
+                    selected?
+                    (counter-tag :class "counter-tag"
+                                 :cid id)))))]
       (with-init!
         (let [a 0]
           "")))))
@@ -281,12 +292,15 @@
     (noscript
       (div :id "noscript"
         (p "JavaScript is required to view this page.")))
+    (button :click (folding!) "收起")
     (div :class "wrapper"
-      (slideshow
-       :class "slideshow"
-       :ratio "golden"
-       :imgs  slides
-       :default_img "img/logo.jpg")
+      (show-or-hide
+       :state folding-toggle
+       (slideshow
+        :class "slideshow"
+        :ratio "golden"
+        :imgs  (cell ["img/Chicken.JPG" "img/QR-1.jpg" "img/Salad.jpg"])
+        :default_img "img/logo.jpg"))
       (div
         :class "banner clearfix"
         (<!-- "This wrapper div may finally been removed to Sagittarius!")
