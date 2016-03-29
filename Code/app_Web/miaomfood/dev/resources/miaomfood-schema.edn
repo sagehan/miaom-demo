@@ -228,6 +228,7 @@
    [:db/add #db/id[:db.part/user] :db/ident :spec.name/买五赠一]
    [:db/add #db/id[:db.part/user] :db/ident :spec.name/份]
    [:db/add #db/id[:db.part/user] :db/ident :spec.name/对]
+   [:db/add #db/id[:db.part/user] :db/ident :spec.name/杯]
 
    [:db/add #db/id[:db.part/user] :db/ident :currency.Abbr/CNY]
 

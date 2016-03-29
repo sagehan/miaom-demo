@@ -89,8 +89,9 @@
    (serve)
    (watch)
    (speak)
-   (reload)
    (hoplon :pretty-print true :source-map true)
+   (reload)
+   (cljs-repl)
    (cljs)))
 
 (deftask prod

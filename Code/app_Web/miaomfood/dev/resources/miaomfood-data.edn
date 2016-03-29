@@ -9,7 +9,8 @@
                      :notice/content "即刻下单，立刻制餐！"
                      :notice/duration 3}]}
  {:db/id #db/id[:db.part/user -2]
-  :group/menus [#db/id[:db.part/user -3]]}
+  :group/menus [#db/id[:db.part/user -3 ]
+                #db/id[:db.part/user -19]]}
  {:db/id #db/id[:db.part/user -3]
   :menu/name "好吃的"
   :menu/categories [#db/id[:db.part/user -5]
@@ -23,10 +24,11 @@
   :category/name "焗饭"}
  {:db/id #db/id[:db.part/user -7]
   :category/name "沙拉"
-  :category/cuisines [#db/id[:db.part/user 14]]}
+  :category/cuisines [#db/id[:db.part/user -14]]}
  {:db/id #db/id[:db.part/user -8]
   :cuisine/name "激情培根"
   :cuisine/id "JQPG"
+  :cuisine/depict "Bacon.JPG"
   :cuisine/species [{:db/id #db/id[:db.part/user -10]
                      :spec/name :spec.name/八寸
                      :currency/Abbr :currency.Abbr/CNY
@@ -41,6 +43,7 @@
  {:db/id #db/id[:db.part/user -9]
   :cuisine/name "风情夏威夷"
   :cuisine/id "FQXWY"
+  :cuisine/depict "Hawaii.JPG"
   :cuisine/species [{:db/id #db/id[:db.part/user -12]
                      :spec/name :spec.name/八寸
                      :currency/Abbr :currency.Abbr/CNY
@@ -74,4 +77,31 @@
   :restaurant/rest-day :rest-day/周一
   :restaurant/isClosed false
   :db/doc "美味披萨,焗饭,还有各种小吃,乌鲁木齐全城外送!"}
+ {:db/id #db/id[:db.part/user -19]
+  :menu/name "好喝的"
+  :menu/categories [#db/id[:db.part/user -20]]}
+ {:db/id #db/id[:db.part/user -20]
+  :category/name "咖啡"
+  :category/cuisines [#db/id[:db.part/user -21]
+                      #db/id[:db.part/user -22]]}
+ {:db/id #db/id[:db.part/user -21]
+  :cuisine/name "巧克力摩卡"
+  :cuisine/id "QKLNT"
+  :cuisine/depict "Bacon.JPG"
+  :cuisine/species [{:db/id #db/id[:db.part/user -23]
+                     :spec/name :spec.name/杯
+                     :currency/Abbr :currency.Abbr/CNY
+                     :spec/price 28
+                     :spec/inventory 100}
+                    ]}
+ {:db/id #db/id[:db.part/user -22]
+  :cuisine/name "法国芝士咖啡"
+  :cuisine/id "FGZSKF"
+  :cuisine/depict "Bacon.JPG"
+  :cuisine/species [{:db/id #db/id[:db.part/user -24]
+                     :spec/name :spec.name/杯
+                     :currency/Abbr :currency.Abbr/CNY
+                     :spec/price 25
+                     :spec/inventory 100}
+                    ]}
  ]

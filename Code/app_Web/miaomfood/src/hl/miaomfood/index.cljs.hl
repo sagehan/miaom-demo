@@ -1,5 +1,6 @@
 (page "index.html"
       (:require
+       [clojure.string  :as string]
        [datascript.core :as d :refer [q]]
        [javelin.core :refer [cell] :refer-macros [cell= destroy-cell!]]
        [miaomfood.rpc :as rpc]))
@@ -179,9 +180,10 @@
         :text "TODO//"))))
 
 (defelem cuisine [{:keys [name depict species currency id] :or {currency "¥"} :as attr}]
-  (let [price     #(":TODO// construct prices string here")
+  (let [price     (cell= (string/join "/" (sort (map :spec/price species))))
         selected? (cell= (or true (seq (check-selected-spec id db__cart))))
-        attr (dissoc attr  :name :imgsrc :species :currency)]
+        imgsrc    (cell= (str "img/" (first depict)))
+        attr      (dissoc attr  :name :depict :species :currency)]
     (with-let
       [elem
        (article attr
@@ -190,11 +192,11 @@
           :class "item__header"
           (img
             :class "cuisine__picture"
-            :src depict))
+            :src   imgsrc))
          (div :class "item__body clearfix"
            (h2
              :class "cuisine__title"
-             :text name)
+             :text  name)
            (small :class "cuisine__currency"
              (span :class "cuisine__price"
                (text price)))
@@ -275,24 +277,24 @@
   (head
     (title :text site-title)
     (link
-      :href "img/motorbike.png"
-      :rel "shortcut icon")
+      :rel "shortcut icon"
+      :href "img/motorbike.png")
     (link
-      :href "stylesheets/main.css"
-      :rel "stylesheet")
+      :rel "stylesheet"
+      :href "stylesheets/main.css")
     (html-meta :charset "utf-8")
     (html-meta
-      :content "text/html; charset=utf-8"
-      :http-equiv "Content-Type")
+      :http-equiv "Content-Type"
+      :content "text/html; charset=utf-8")
     (html-meta
-      :content "美味披萨,焗饭,还有各种小吃,乌鲁木齐全城外送!"
-      :name "description")
+      :name "description"
+      :content "美味披萨,焗饭,还有各种小吃,乌鲁木齐全城外送!")
     (html-meta
-      :content "喵姆餐厅 喵姆 Miaom 快餐 美味 乌鲁木齐快餐 披萨 焗饭 沙拉 烤翅"
-      :name "keywords")
+      :name "keywords"
+      :content "喵姆餐厅 喵姆 Miaom 快餐 美味 乌鲁木齐快餐 披萨 焗饭 沙拉 烤翅")
     (html-meta
-      :content "initial-scale=1.0, width=device-width"
-      :name "viewport"))
+      :name "viewport"
+      :content "initial-scale=1.0, width=device-width"))
   (body
     (noscript
       (div :id "noscript"
@@ -304,7 +306,7 @@
        (slideshow
         :class "slideshow"
         :ratio "golden"
-        :imgs  (cell ["img/Chicken.JPG" "img/QR-1.jpg" "img/Salad.jpg"])
+        :imgs  (cell ["img/Chicken.JPG" "img/热辣牛肉.JPG" "img/Salad.jpg"])
         :default_img "img/logo.jpg"))
       (div
         :class "banner clearfix"
@@ -315,23 +317,24 @@
          :label "提交订单" :btn__img "img/notepad.png"))
       (navbar)
       (checkout-panel)
-      (section
-        :class "section-wrapper clearfix"
-        :id "tasty"
-        (section
-          :class "section cuisine-category"
-          :id "pizza-category"
-          (header
-            :class "section__header"
-            (h1
-              :class "section__title"
-              :text "披萨"))
-          (div
-            :class "section__body item-list clearfix"
-            (let [category "披萨"]
-              (cell-map create-cuisine
-                        (cell= (cuisines-of category)))))
-          ))
+      (div
+        (loop-tpl
+         :bindings [menu menus]
+         (section
+           :id    menu
+           :class "section-wrapper clearfix"
+           (loop-tpl
+            :bindings [category (cell= (categories-of menu))]
+            (section
+              :id    category
+              :class "section cuisine-category"
+              (header
+                :class "section__header"
+                (h1 :class "section__title" :text category))
+              (div
+                :class "section__body item-list clearfix"
+                (cell-map create-cuisine
+                          (cell= (cuisines-of category)))))))))
       (footer :class "footer"
         (social-vCard)
         (v-Card)))))
