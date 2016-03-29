@@ -139,11 +139,12 @@
                         :class  "slideshow__img wrp--centering"
                         :src    im
                         :toggle t)))
-                ((div (loop-tpl
-                       :bindings [[t] toggle]
-                       ((b :class "pagination__bullet")
-                        :class (cell= (when t "pagination__bullet--active")))))
-                 :class "slideshow__pagination" ))]
+                (div :class "slideshow__pagination"
+                  (loop-tpl
+                   :bindings [[t] toggle]
+                   (span
+                     :class (cell= {:pagination__bullet true
+                                    :pagination__bullet--active t})))))]
       (with-init!
         (with-interval interval
           (swap! toggle #(into (vector (last %)) (butlast %))))))))
@@ -329,7 +330,8 @@
             :class "section__body item-list clearfix"
             (let [category "披萨"]
               (cell-map create-cuisine
-                        (cell= (cuisines-of category)))))))
+                        (cell= (cuisines-of category)))))
+          ))
       (footer :class "footer"
         (social-vCard)
         (v-Card)))))
