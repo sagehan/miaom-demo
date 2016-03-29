@@ -58,6 +58,7 @@
  {:db/id  #db/id[:db.part/user -14]
   :cuisine/name "水果沙拉"
   :cuisine/id "SGSL"
+  :cuisine/depict "Salad.jpg"
   :cuisine/species [{:db/id #db/id[:db.part/user]
                      :spec/name :spec.name/份
                      :spec/price 25

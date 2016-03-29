@@ -155,9 +155,8 @@
 
 (defelem checkout-button [ {:keys [label btn__img] :or {label "提交订单"} :as attr} ]
   (a :class "btn-order"
-    (span :class "btn-order__label"
-      (text label))
-    (img :src btn__img)))
+    (span :class "btn-order__label" :text label)
+    (img  :src btn__img)))
 
 (defelem checkout-panel []
   (div :class "checkout-page"))
@@ -175,14 +174,14 @@
   (let [ attr (dissoc attr :cid)]
     (div attr
       (b :class "counter-tag__specs"
-        :text "TODO//")
+         :text  "TODO//")
       (b :class "counter-tag__amount"
-        :text "TODO//"))))
+         :text  "TODO//"))))
 
 (defelem cuisine [{:keys [name depict species currency id] :or {currency "¥"} :as attr}]
-  (let [price     (cell= (string/join "/" (sort (map :spec/price species))))
-        selected? (cell= (or true (seq (check-selected-spec id db__cart))))
-        imgsrc    (cell= (str "img/" (first depict)))
+  (let [price     (cell=  (string/join "/" (sort (map :spec/price species))))
+        selected? (cell=  (or true (seq (check-selected-spec id db__cart))))
+        imgsrc    (cell=  (str "img/" (first depict)))
         attr      (dissoc attr  :name :depict :species :currency)]
     (with-let
       [elem
@@ -194,14 +193,10 @@
             :class "cuisine__picture"
             :src   imgsrc))
          (div :class "item__body clearfix"
-           (h2
-             :class "cuisine__title"
-             :text  name)
-           (small :class "cuisine__currency"
-             (span :class "cuisine__price"
-               (text price)))
-           (addition-button :class "cuisine__button"
-                            :serve id)
+           (h2    :class "cuisine__title"    :text name)
+           (small :class "cuisine__currency" :text currency)
+           (span  :class "cuisine__price"    :text price)
+           (addition-button :class "cuisine__button" :serve id)
            (cell= (cond
                     selected?
                     (counter-tag :class "counter-tag"
@@ -220,15 +215,9 @@
    :ratio "golden"
    :class "card card--front"
    (ul
-     (li
-       :class "icon icon__phone"
-       (text "~{(:restaurant/phone restaurant-meta)}"))
-     (li
-       :class "icon icon__location"
-       (text "~{(:restaurant/address restaurant-meta)}"))
-     (li
-       :class "icon icon__timer"
-       (text "~{(:restaurant/rest-day restaurant-meta)}")))
+     (li :class "icon icon__phone"    :text (cell= (:restaurant/phone restaurant-meta)))
+     (li :class "icon icon__location" :text (cell= (:restaurant/address restaurant-meta)))
+     (li :class "icon icon__timer"    :text (cell= (:restaurant/rest-day restaurant-meta))))
    (img :src "img/motorbike.png")))
 
 (defelem social-vCard
@@ -237,26 +226,18 @@
   (equal-ratio-wrap
    :ratio "golden"
    :class "card card--back"
-   (h1
-     :class "card__title icon icon__wechat"
-     :text "关注微信")
+   (h1 :class "card__title icon icon__wechat" :text "关注微信")
    (figure
-     (img
-       :class "card__img"
-       :src "img/QR-1.jpg"
-       :alt "喵姆餐厅微信服务号")
+     (img        :class "card__img" :src "img/QR-1.jpg" :alt "喵姆餐厅微信服务号")
      (figcaption :class "clearfix"
-       (h2 (text "~{(:restaurant/name restaurant-meta)}"))
-       (p  (text "id: ~{(:restaurant/wechatID restaurant-meta)}"))))
+       (h2 :text (cell= (:restaurant/name restaurant-meta)))
+       (p  :text (cell= (str "id: " (:restaurant/wechatID restaurant-meta))))))
 
    (figure
-     (img
-       :class "card__img"
-       :src "img/QR-1.jpg"
-       :alt "客服微信号")
+     (img        :class "card__img" :src "img/QR-1.jpg" :alt "客服微信号")
      (figcaption :class "clearfix"
        (h2 :text "胖喵")
-       (p  :text "id: 18690890381")))))
+       (p  :text (cell= (str "id: " (:restaurant/phone restaurant-meta))))))))
 
 ;; Node-constructor functions ===============================================
 (defn create-cuisine
