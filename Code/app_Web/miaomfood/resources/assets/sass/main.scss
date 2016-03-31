@@ -214,6 +214,7 @@ img {
     height: 44px;
     background: no-repeat center/100% image_url("Add_Button.png");
   }
+
 }
 
 .slideshow {
@@ -316,7 +317,6 @@ img {
     font-size: 0.75em;
     line-height: $base__LineHeight;
     height: 20px;
-    margin: 0;
     padding-left: 5px;
     color: $TagBorderColor;
     background: #ffffff;
@@ -324,11 +324,6 @@ img {
 
   &__amount {
     padding-right: 5px;
-
-    &:before {
-      content: "x";
-      padding-right: 1px;
-    }
   }
 }
 
@@ -338,36 +333,38 @@ img {
   top: 0;
   height: 100%;
   width: 100%;
-  background-color: hsla(0, 0, 25, 0.9);
-  opacity: 1;
-  visibility: visible;
-  -webkit-transition: opacity 0.3s 0s, visibility 0s 0.3s;
-  -moz-transition: opacity 0.3s 0s, visibility 0s 0.3s;
-  transition: opacity 0.3s 0s, visibility 0s 0.3s;
+  background-color: hsla(0, 0, 25, 0.95);
+  z-index: 99999;
+  opacity: 0;
+  visibility: hidden;
+  @include transition(visibility 0s 0.5s, opacity 0.5s 0s);
+
+  &.isVisible {
+    opacity: 1;
+    visibility: visible;
+    @include transition(visibility 0s 0s, opacity 0.5s 0s);
+  }
 }
 
 .addition-panel {
   position: relative;
-  width: 99%;
-  max-width: 400px;
-  margin: 50% auto;
+  width: 100%;
+  max-width: 720px;
+  margin: 30% auto;
   background: #FFF;
-  border-radius: .25em .25em .4em .4em;
   text-align: center;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-  -webkit-transform: translateY(-40px);
-  -moz-transform: translateY(-40px);
-  -ms-transform: translateY(-40px);
-  -o-transform: translateY(-40px);
-  transform: translateY(-40px);
   /* Force Hardware Acceleration in WebKit */
   -webkit-backface-visibility: hidden;
-  -webkit-transition-property: -webkit-transform;
-  -moz-transition-property: -moz-transform;
-  transition-property: transform;
-  -webkit-transition-duration: 0.3s;
-  -moz-transition-duration: 0.3s;
-  transition-duration: 0.3s;
+  @include transform(translateY(-40px));
+  @include transition-property(all);
+  @include transition-duration(0.5s);
+
+  &.isVisible {
+    opacity: 1;
+    @include transform(translateY(0));
+    @include transition(translateY 0.5s 0s);
+  }
 }
 
 .footer {

@@ -184,15 +184,16 @@
        :leadingText   spec
        :trailingText ";TODO:"))
 
-(defelem addition-panel [{:keys [cid] :as attr} _]
+(defelem addition-panel [{:keys [cid visible] :as attr} _]
   (let [c        (cell= (cuisine-details-of cid))
         species  (cell= (:cuisine/species c))
         c_title  (cell= (:cuisine/name    c))
         s_names  (cell= (map (comp name :spec/name) species))
-        attr     (dissoc attr :cid)]
+        attr     (dissoc attr :cid :visible)]
     (div attr
       (div
-        :class "addition-panel"
+        :class (cell=  {:addition-panel true
+                        :isVisible visible})
         (h2 :class "cuisine__title" c_title)
         (div :class "addition-panel__minus" "-")
         (div :class "addition-panel__add" "+")
@@ -338,8 +339,16 @@
         (social-vCard)
         (v-Card))
       (cell= (cond (seq adding-pool)
-                   (addition-panel
-                    :class "modal"
-                    :cid   (peek adding-pool)
-                    :click unOrdering!)))
-      (cell= (print adding-pool)))))
+                   (let [v (cell false)]
+                     (with-let
+                       [elem
+                        (addition-panel
+                         :class   (cell= {:modal true
+                                          :isVisible v})
+                         :visible v
+                         :cid     (peek adding-pool)
+                         :click   #(do (reset! v false)
+                                       (with-timeout 250
+                                         (unOrdering!))))]
+                       (with-dom elem
+                         (reset! v true)))))))))
