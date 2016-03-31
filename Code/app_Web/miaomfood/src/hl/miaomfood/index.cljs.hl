@@ -9,10 +9,23 @@
 
 ;; Cells ====================================================================
 (defc folding-toggle true)
+(defc adding-pool nil)
+
 (defc db__cart (d/empty-db
                 {:cuisine/id      {:db/unique      :db.unique/identity }
                  :cuisine/species {:db/cardinality :db.cardinality/many
                                    :db/valueType   :db.type/ref }}))
+
+(def conn__cart (d/conn-from-db @db__cart))
+
+;; state transition functions ===============================================
+(def folding! #(swap! folding-toggle not))
+(defn ordering! [cid] (reset! adding-pool [cid]))
+(def unOrdering! #(reset! adding-pool nil))
+
+;; Helper functions =================================================================
+(def indexed (partial map-indexed vector))
+
 
 ;; Cell formulas ============================================================
 (let [schema {:website/notices   {:db/cardinality :db.cardinality/many
@@ -92,13 +105,6 @@
        db, cuisines-id))
 
 
-;; state transition functions ===============================================
-(defn folding! [] #(swap! folding-toggle not))
-
-;; Helper functions =================================================================
-(def indexed   (partial map-indexed vector))
-
-
 ;; Helper elements =================================================================
 (defelem show-or-hide
   [{:keys [state]} children]
@@ -109,6 +115,13 @@
     ((div attr) {:class (str "wrp_ratio--" ratio)}
       (div :class "wrp--stretched"
         body))))
+
+(defelem tag [{:keys [leadingText trailingText] :as attr}]
+  (let [ attr (dissoc attr :leadingText :trailingText)]
+    ((div :class "tag"
+       (b :class "tag__leading" :text leadingText)
+       (b :class "tag__trailing" :text trailingText))
+     attr)))
 
 ;; Component elements =================================================================
 (defelem billboard [{:keys [greeting interval] :or {interval 3000} :as attr} ]
@@ -161,50 +174,55 @@
 (defelem checkout-panel []
   (div :class "checkout-page"))
 
-(defelem addition-button [{:keys [serve] :as attr} _]
-  (let [attr (dissoc attr :serve)]
-    ((div :click #("TODO// popup order float panel")) attr)))
-
-(defelem addition-panel
-  "TODO// popup panel for add items to shopping cart"
-  []
-  )
-
-(defelem counter-tag [{:keys [cid] :as attr} _]
-  (let [ attr (dissoc attr :cid)]
+(defelem addition-button [{:keys [cid] :as attr} _]
+  (let [attr (dissoc attr :cid)]
     (div attr
-      (b :class "counter-tag__specs"
-         :text  "TODO//")
-      (b :class "counter-tag__amount"
-         :text  "TODO//"))))
+      :click #(ordering! cid))))
+
+(defelem addition-tag [spec]
+  (tag :class        "addition-tag"
+       :leadingText   spec
+       :trailingText ";TODO:"))
+
+(defelem addition-panel [{:keys [cid] :as attr} _]
+  (let [c        (cell= (cuisine-details-of cid))
+        species  (cell= (:cuisine/species c))
+        c_title  (cell= (:cuisine/name    c))
+        s_names  (cell= (map (comp name :spec/name) species))
+        attr     (dissoc attr :cid)]
+    (div attr
+      (div
+        :class "addition-panel"
+        (h2 :class "cuisine__title" c_title)
+        (div :class "addition-panel__minus" "-")
+        (div :class "addition-panel__add" "+")
+        (div (loop-tpl
+              :bindings [spec s_names]
+              (addition-tag spec)))))))
+
+(defelem counter-tag [cid]
+  (tag :class        "counter-tag"
+       :leadingText  "已选"
+       :trailingText ";TODO: " ))
 
 (defelem cuisine [{:keys [name depict species currency id] :or {currency "¥"} :as attr}]
   (let [price     (cell=  (string/join "/" (sort (map :spec/price species))))
         selected? (cell=  (or true (seq (check-selected-spec id db__cart))))
         imgsrc    (cell=  (str "img/" (first depict)))
         attr      (dissoc attr  :name :depict :species :currency)]
-    (with-let
-      [elem
-       (article attr
-         (equal-ratio-wrap
-          :ratio "4_3"
-          :class "item__header"
-          (img
-            :class "cuisine__picture"
-            :src   imgsrc))
-         (div :class "item__body clearfix"
-           (h2    :class "cuisine__title"    :text name)
-           (small :class "cuisine__currency" :text currency)
-           (span  :class "cuisine__price"    :text price)
-           (addition-button :class "cuisine__button" :serve id)
-           (cell= (cond
-                    selected?
-                    (counter-tag :class "counter-tag"
-                                 :cid id)))))]
-      (with-init!
-        (let [a 0]
-          "")))))
-
+    (article attr
+      (equal-ratio-wrap
+       :ratio "4_3"
+       :class "item__header"
+       (img
+         :class "cuisine__picture"
+         :src   imgsrc))
+      (div :class "item__body clearfix"
+        (h2    :class "cuisine__title"    :text name)
+        (small :class "cuisine__currency" :text currency)
+        (span  :class "cuisine__price"    :text price)
+        (addition-button :class "cuisine__button" :cid id)
+        (cell= (cond selected? (counter-tag id  )))))))
 
 (defelem v-Card
   "TODO:// Finally, and ideally, this page elements should have a
@@ -280,7 +298,7 @@
     (noscript
       (div :id "noscript"
         (p "JavaScript is required to view this page.")))
-    (button :click (folding!) "收起")
+    (button :click folding! "收起")
     (div :class "wrapper"
       (show-or-hide
        :state folding-toggle
@@ -298,7 +316,7 @@
          :label "提交订单" :btn__img "img/notepad.png"))
       (navbar)
       (checkout-panel)
-      (div
+      (div :class "menus"
         (loop-tpl
          :bindings [menu menus]
          (section
@@ -318,4 +336,10 @@
                           (cell= (cuisines-of category)))))))))
       (footer :class "footer"
         (social-vCard)
-        (v-Card)))))
+        (v-Card))
+      (cell= (cond (seq adding-pool)
+                   (addition-panel
+                    :class "modal"
+                    :cid   (peek adding-pool)
+                    :click unOrdering!)))
+      (cell= (print adding-pool)))))

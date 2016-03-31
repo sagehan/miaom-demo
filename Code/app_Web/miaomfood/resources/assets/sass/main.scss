@@ -20,8 +20,8 @@ $link__HoverColor         : $yellow;
 $section__TitleColor      : $gray;
 $cuisine__TitleColor      : $base__TypeColor;
 $price__TagColor          : $gray;
-$counter__TagColor        : $green;
-$counter__TagBorderColor  : $green;
+$TagColor: $green;
+$TagBorderColor: $green;
 
 /// Background colors
 $item__BackGround       : #ffffff;
@@ -215,6 +215,7 @@ img {
     background: no-repeat center/100% image_url("Add_Button.png");
   }
 }
+
 .slideshow {
   &__pagination {
     position: absolute;
@@ -256,7 +257,7 @@ img {
 
 
   &__notice {
-    border: 1px solid $counter__TagBorderColor;
+    border: 1px solid $TagBorderColor;
     @include border-radius(16px);
     padding: 0.125rem 0.625rem;
     height: 17px;
@@ -290,20 +291,19 @@ img {
   vertical-align: top;
 }
 
-.counter-tag {
+.tag {
   position: absolute;
   left: 8px;
   bottom: 2px;
   padding-right: 1px;
   height: 22px;
   line-height: $base__LineHeight;
-  background: $counter__TagBorderColor;
+  background: $TagBorderColor;
   @include border-bottom-left-radius(12px);
   @include border-top-left-radius(12px);
   text-align: center;
 
-  &:before {
-    content: "已选";
+  &__leading {
     margin: 5px 5px;
     font-size: 0.75em;
     color: #FFFFFF;
@@ -311,15 +311,14 @@ img {
     line-height: $base__LineHeight;
   }
 
-  &__amount,
-  &__specs {
-    display: inline-block;
+  &__trailing {
+    margin: 5px 5px;
     font-size: 0.75em;
     line-height: $base__LineHeight;
     height: 20px;
     margin: 0;
     padding-left: 5px;
-    color: $counter__TagBorderColor;
+    color: $TagBorderColor;
     background: #ffffff;
   }
 
@@ -331,6 +330,44 @@ img {
       padding-right: 1px;
     }
   }
+}
+
+.modal {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  background-color: hsla(0, 0, 25, 0.9);
+  opacity: 1;
+  visibility: visible;
+  -webkit-transition: opacity 0.3s 0s, visibility 0s 0.3s;
+  -moz-transition: opacity 0.3s 0s, visibility 0s 0.3s;
+  transition: opacity 0.3s 0s, visibility 0s 0.3s;
+}
+
+.addition-panel {
+  position: relative;
+  width: 99%;
+  max-width: 400px;
+  margin: 50% auto;
+  background: #FFF;
+  border-radius: .25em .25em .4em .4em;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  -webkit-transform: translateY(-40px);
+  -moz-transform: translateY(-40px);
+  -ms-transform: translateY(-40px);
+  -o-transform: translateY(-40px);
+  transform: translateY(-40px);
+  /* Force Hardware Acceleration in WebKit */
+  -webkit-backface-visibility: hidden;
+  -webkit-transition-property: -webkit-transform;
+  -moz-transition-property: -moz-transform;
+  transition-property: transform;
+  -webkit-transition-duration: 0.3s;
+  -moz-transition-duration: 0.3s;
+  transition-duration: 0.3s;
 }
 
 .footer {
