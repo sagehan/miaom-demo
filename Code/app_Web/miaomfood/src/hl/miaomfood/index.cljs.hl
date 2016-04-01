@@ -184,24 +184,13 @@
     (div attr
       :click #(ordering! cid))))
 
-(defelem addition-tag [{:keys [cid spec]} _]
-  (let [selected  (cell= (check-selected-spec db__cart cid))
-        quantity  (cell= (->> selected
-                              (filterv #(= spec ((comp name :spec/name) %)) )
-                              (first)
-                              :spec/quantity))
-        added?    (cell= (integer? quantity))]
-    (tag :class        "addition-tag"
-         :leadingText  spec
-         :trailingText quantity
-         :emptyValue?  (cell= (not added?)))))
-
 (defelem addition-panel [{:keys [cid]} _]
-  (let [c        (cell= (cuisine-details-of cid))
-        species  (cell= (:cuisine/species c))
-        c_title  (cell= (:cuisine/name    c))
-        s_names  (cell= (map (comp name :spec/name) species))
-        visible  (cell false)]
+  (let [c         (cell= (cuisine-details-of cid))
+        species   (cell= (:cuisine/species c))
+        c_title   (cell= (:cuisine/name    c))
+        s_names   (cell= (map (comp name :spec/name) species))
+        selected  (cell= (check-selected-spec db__cart cid))
+        visible   (cell false) ]
     (with-let [elem
                (div
                  :class (cell= {:modal true
@@ -212,13 +201,28 @@
                    :class (cell=  {:addition-panel true
                                    :isVisible visible})
                    (h2  :class "cuisine__title" c_title)
-                   (div (loop-tpl
-                         :bindings [spec s_names]
-                         (addition-tag
-                          :cid cid
-                          :spec spec)
-                         (b :class "addition-panel__add" "+")
-                         (b :class "addition-panel__minus" "-")))))]
+                   (div
+                     (loop-tpl
+                      :bindings [spec s_names]
+                      (let [quantity
+                            (cell= (or 0
+                                       (->> selected
+                                            (filterv #(= spec ((comp name :spec/name) %)) )
+                                            (first)
+                                            :spec/quantity)))
+                            added?  (cell= (> 0 quantity)) ]
+                        (div
+                          (tag
+                           :class        "addition-tag"
+                           :leadingText  spec
+                           :trailingText (cell= (if-not (zero? quantity)
+                                                  quantity
+                                                  ""))
+                           :emptyValue?  (cell= (not added?)))
+                          (b :class      "addition-panel__add")
+                          (cell= (cond
+                                   added?
+                                   (b :class "addition-panel__minus")))))))))]
       (with-dom elem
         (reset! visible true)))))
 
