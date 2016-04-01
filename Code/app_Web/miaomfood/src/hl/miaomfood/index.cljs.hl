@@ -196,34 +196,41 @@
                  :class (cell= {:modal true
                                 :isVisible visible})
                  :click #(do (reset! visible false)
-                             (with-timeout 250 (unOrdering!)))
-                 (div
-                   :class (cell=  {:addition-panel true
-                                   :isVisible visible})
-                   (h2  :class "cuisine__title" c_title)
-                   (div
-                     (loop-tpl
-                      :bindings [spec s_names]
-                      (let [quantity
-                            (cell= (or 0
-                                       (->> selected
-                                            (filterv #(= spec ((comp name :spec/name) %)) )
-                                            (first)
-                                            :spec/quantity)))
-                            added?  (cell= (> 0 quantity)) ]
-                        (div
-                          (tag
-                           :class        "addition-tag"
-                           :leadingText  spec
-                           :trailingText (cell= (if-not (zero? quantity)
-                                                  quantity
-                                                  ""))
-                           :emptyValue?  (cell= (not added?)))
-                          (b :class      "addition-panel__add")
-                          (cell= (cond
-                                   added?
-                                   (b :class "addition-panel__minus")))))))))]
+                             (with-timeout 150 (unOrdering!)))
+                 (equal-ratio-wrap
+                  :ratio "golden"
+                  :class (cell=  {:addition-panel true
+                                  :isVisible visible})
+                  (h2  :class "cuisine__title" c_title)
+                  (div
+                    (loop-tpl
+                     :bindings [spec s_names]
+                     (let [quantity
+                           (cell= (or 0
+                                      (->> selected
+                                           (filterv #(= spec ((comp name :spec/name) %)) )
+                                           (first)
+                                           :spec/quantity)))
+                           added?  (cell= (> 0 quantity)) ]
+                       (div
+                         (tag
+                          :class        "addition-tag"
+                          :leadingText  spec
+                          :trailingText (cell= (if-not (zero? quantity)
+                                                 quantity
+                                                 ""))
+                          :emptyValue?  (cell= (not added?)))
+                         (b :class      "addition-panel__add")
+                         (cell= (cond
+                                  added?
+                                  (b :class "addition-panel__minus")))))))))]
+      (with-init!
+        (with-interval 1000
+          (if-not (instance? js/Element (.get (js/jQuery ".modal") 0))
+            (.css (js/jQuery "body") "overflow" "visible"))))
       (with-dom elem
+        (.addEventListener elem "touchmove" #(.preventDefault %))
+        (.css (js/jQuery "body") "overflow" "hidden")
         (reset! visible true)))))
 
 (defelem counter-tag [cid]
