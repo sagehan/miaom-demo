@@ -196,24 +196,31 @@
          :trailingText quantity
          :emptyValue?  (cell= (not added?)))))
 
-(defelem addition-panel [{:keys [cid visible] :as attr} _]
+(defelem addition-panel [{:keys [cid]} _]
   (let [c        (cell= (cuisine-details-of cid))
         species  (cell= (:cuisine/species c))
         c_title  (cell= (:cuisine/name    c))
         s_names  (cell= (map (comp name :spec/name) species))
-        attr     (dissoc attr :cid :visible)]
-    (div attr
-      (div
-        :class (cell=  {:addition-panel true
-                        :isVisible visible})
-        (h2  :class "cuisine__title" c_title)
-        (div :class "addition-panel__minus" "-")
-        (div :class "addition-panel__add" "+")
-        (div (loop-tpl
-              :bindings [spec s_names]
-              (addition-tag
-               :cid cid
-               :spec spec)))))))
+        visible  (cell false)]
+    (with-let [elem
+               (div
+                 :class (cell= {:modal true
+                                :isVisible visible})
+                 :click #(do (reset! visible false)
+                             (with-timeout 250 (unOrdering!)))
+                 (div
+                   :class (cell=  {:addition-panel true
+                                   :isVisible visible})
+                   (h2  :class "cuisine__title" c_title)
+                   (div (loop-tpl
+                         :bindings [spec s_names]
+                         (addition-tag
+                          :cid cid
+                          :spec spec)
+                         (b :class "addition-panel__add" "+")
+                         (b :class "addition-panel__minus" "-")))))]
+      (with-dom elem
+        (reset! visible true)))))
 
 (defelem counter-tag [cid]
   (tag :class        "counter-tag"
@@ -286,20 +293,6 @@
              :depict  c_img
              :species c_spec )))
 
-(defn create-popup []
-  (let [v (cell false)]
-    (with-let
-      [elem (addition-panel
-             :class   (cell= {:modal true
-                              :isVisible v})
-             :visible v
-             :cid     (cell= (peek adding-pool))
-             :click   #(do (reset! v false)
-                           (with-timeout 250
-                             (unOrdering!))))]
-      (with-dom elem
-        (reset! v true)))))
-
 ;; App skeleton =================================================================
 (html
   (head
@@ -366,5 +359,5 @@
       (footer :class "footer"
         (social-vCard)
         (v-Card))
-      (cell= (cond (seq adding-pool)
-                   (create-popup))))))
+      (cell= (when-let [cid (peek adding-pool)]
+               (addition-panel :cid cid ))))))
