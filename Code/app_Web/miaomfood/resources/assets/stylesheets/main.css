@@ -327,6 +327,9 @@ img {
   color: #30AD63;
   background: #ffffff;
 }
+.tag__trailing--empty {
+  background: #FFBA33;
+}
 .tag__amount {
   padding-right: 5px;
 }

@@ -116,11 +116,16 @@
       (div :class "wrp--stretched"
         body))))
 
-(defelem tag [{:keys [leadingText trailingText] :as attr}]
-  (let [ attr (dissoc attr :leadingText :trailingText)]
+(defelem tag [{:keys [leadingText trailingText emptyValue?] :as attr} _]
+  (let [ attr (dissoc attr :leadingText :trailingText :emptyValue?)]
     ((div :class "tag"
-       (b :class "tag__leading" :text leadingText)
-       (b :class "tag__trailing" :text trailingText))
+       (b
+         :class "tag__leading"
+         :text leadingText)
+       (b
+         :class (cell= {:tag__trailing true
+                        :tag__trailing--empty emptyValue?})
+         :text trailingText))
      attr)))
 
 ;; Component elements =================================================================
@@ -179,10 +184,17 @@
     (div attr
       :click #(ordering! cid))))
 
-(defelem addition-tag [spec]
-  (tag :class        "addition-tag"
-       :leadingText   spec
-       :trailingText ";TODO:"))
+(defelem addition-tag [{:keys [cid spec]} _]
+  (let [selected  (cell= (check-selected-spec db__cart cid))
+        quantity  (cell= (->> selected
+                              (filterv #(= spec ((comp name :spec/name) %)) )
+                              (first)
+                              :spec/quantity))
+        added?    (cell= (integer? quantity))]
+    (tag :class        "addition-tag"
+         :leadingText  spec
+         :trailingText quantity
+         :emptyValue?  (cell= (not added?)))))
 
 (defelem addition-panel [{:keys [cid visible] :as attr} _]
   (let [c        (cell= (cuisine-details-of cid))
@@ -194,12 +206,14 @@
       (div
         :class (cell=  {:addition-panel true
                         :isVisible visible})
-        (h2 :class "cuisine__title" c_title)
+        (h2  :class "cuisine__title" c_title)
         (div :class "addition-panel__minus" "-")
         (div :class "addition-panel__add" "+")
         (div (loop-tpl
               :bindings [spec s_names]
-              (addition-tag spec)))))))
+              (addition-tag
+               :cid cid
+               :spec spec)))))))
 
 (defelem counter-tag [cid]
   (tag :class        "counter-tag"
@@ -208,7 +222,7 @@
 
 (defelem cuisine [{:keys [name depict species currency id] :or {currency "¥"} :as attr}]
   (let [price     (cell=  (string/join "/" (sort (map :spec/price species))))
-        selected? (cell=  (or true (seq (check-selected-spec id db__cart))))
+        selected? (cell=  (or true (seq (check-selected-spec db__cart id))))
         imgsrc    (cell=  (str "img/" (first depict)))
         attr      (dissoc attr  :name :depict :species :currency)]
     (article attr
@@ -271,6 +285,20 @@
              :name    c_title
              :depict  c_img
              :species c_spec )))
+
+(defn create-popup []
+  (let [v (cell false)]
+    (with-let
+      [elem (addition-panel
+             :class   (cell= {:modal true
+                              :isVisible v})
+             :visible v
+             :cid     (cell= (peek adding-pool))
+             :click   #(do (reset! v false)
+                           (with-timeout 250
+                             (unOrdering!))))]
+      (with-dom elem
+        (reset! v true)))))
 
 ;; App skeleton =================================================================
 (html
@@ -339,16 +367,4 @@
         (social-vCard)
         (v-Card))
       (cell= (cond (seq adding-pool)
-                   (let [v (cell false)]
-                     (with-let
-                       [elem
-                        (addition-panel
-                         :class   (cell= {:modal true
-                                          :isVisible v})
-                         :visible v
-                         :cid     (peek adding-pool)
-                         :click   #(do (reset! v false)
-                                       (with-timeout 250
-                                         (unOrdering!))))]
-                       (with-dom elem
-                         (reset! v true)))))))))
+                   (create-popup))))))
