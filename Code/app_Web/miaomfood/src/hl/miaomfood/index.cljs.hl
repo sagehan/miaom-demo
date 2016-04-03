@@ -11,10 +11,25 @@
 (defc folding-toggle true)
 (defc adding-pool nil)
 
-(defc db__cart (d/empty-db
-                {:cuisine/id      {:db/unique      :db.unique/identity }
-                 :cuisine/species {:db/cardinality :db.cardinality/many
-                                   :db/valueType   :db.type/ref }}))
+(def datoms [[:db/add -1 :cuisine/id "JQPG"]
+             [:db/add -1 :cuisine/name "激情培根"]
+             [:db/add -1 :cuisine/species -2]
+             [:db/add -1 :cuisine/species -3]
+             [:db/add -2 :spec/name "八寸"]
+             [:db/add -2 :spec/quantity 1]
+             [:db/add -3 :spec/name "十寸"]
+             [:db/add -3 :spec/quantity 2]
+             [:db/add -4 :cuisine/id "QKLMK"]
+             [:db/add -4 :cuisine/name "巧克力摩卡"]
+             [:db/add -4 :cuisine/species -5]
+             [:db/add -5 :spec/name "杯"]
+             [:db/add -5 :spec/quantity 2]])
+
+(defc db__cart (-> (d/empty-db
+                    {:cuisine/id      {:db/unique      :db.unique/identity }
+                     :cuisine/species {:db/cardinality :db.cardinality/many
+                                       :db/valueType   :db.type/ref }})
+                   (d/db-with datoms)))
 
 (def conn__cart (d/conn-from-db @db__cart))
 
@@ -26,6 +41,14 @@
 ;; Helper functions =================================================================
 (def indexed (partial map-indexed vector))
 
+(defn inc-spec [db cid spec]
+  (let [[eid quantity] (d/q '{:find [?e ?q]
+                              :in [$ ?cid ?spec]
+                              :where [[?cid :cuisine/species ?e]
+                                      [?e   :spec/name       ?spec]
+                                      [?e   :spec/quantity   ?q]]}
+                         db cid spec)]
+    [{:db/id  eid :spec/quantity (inc quantity)} ] ))
 
 ;; Cell formulas ============================================================
 (let [schema {:website/notices   {:db/cardinality :db.cardinality/many
@@ -94,15 +117,23 @@
 
 ;; State query functions ====================================================
 (defn check-selected-spec
-  "Check the special cuisine's cart status"
+  "Check the special cuisine's cart status, return a vector of maps"
   [ db cuisines-id ]
-  (d/q '[:find ?sn ?sq
-         :in $ ?cid
-         :where [ ?e  :cuisine/id      ?cid ]
-                [ ?e  :cuisine/species ?cs  ]
-                [ ?cs :spec/name       ?sn  ]
-                [ ?cs :spec/quantity   ?sq  ]]
-       db, cuisines-id))
+  (let [eids
+        (d/q '[:find [?cs ...]
+               :in $ ?cid
+               :where
+               [ ?e  :cuisine/id      ?cid ]
+               [ ?e  :cuisine/species ?cs  ]
+               [ ?cs :spec/name       ?sn  ]
+               [ ?cs :spec/quantity   ?sq  ]]
+          db, cuisines-id) ]
+    (d/pull-many db ["*"] eids)))
+
+;; DB Transaction! =================================================================
+(defn cuisine->cart! [cid spec]
+  (d/transact! conn__cart [
+                           [:db.fn/call inc-spec cid spec]]))
 
 
 ;; Helper elements =================================================================
@@ -190,44 +221,45 @@
         s_names   (cell= (map (comp name :spec/name) species))
         selected  (cell= (check-selected-spec db__cart cid))
         visible   (cell false) ]
-    (with-let [elem
+    (with-let
+      [elem
+       (div
+         :class (cell= {:modal true
+                        :isVisible visible})
+         :click #(do (reset! visible false)
+                             (with-timeout 250 (unOrdering!)))
+         (equal-ratio-wrap
+          :ratio "golden"
+          :class (cell=  {:addition-panel true
+                          :isVisible visible})
+          (div :class "addition-panel__title-wrap"
+            (h2  :class "addition-panel__title" c_title))
+          (div :class "addition-panel__row-wrap"
+            (loop-tpl
+             :bindings [spec s_names]
+             (let [quantity
+                   (cell= (or 0
+                              (->> selected
+                                   (filterv #(= spec ((comp name :spec/name) %)) )
+                                   (first)
+                                   :spec/quantity)))
+                   added? (cell= (> 0 quantity)) ]
                (div
-                 :class (cell= {:modal true
-                                :isVisible visible})
-                 :click #(do (reset! visible false)
-                             (with-timeout 150 (unOrdering!)))
-                 (equal-ratio-wrap
-                  :ratio "golden"
-                  :class (cell=  {:addition-panel true
-                                  :isVisible visible})
-                  (div :class "addition-panel__title-wrap"
-                    (h2  :class "addition-panel__title" c_title))
-                  (div :class "addition-panel__row-wrap"
-                    (loop-tpl
-                     :bindings [spec s_names]
-                     (let [quantity
-                           (cell= (or 0
-                                      (->> selected
-                                           (filterv #(= spec ((comp name :spec/name) %)) )
-                                           (first)
-                                           :spec/quantity)))
-                           added? (cell= (> 0 quantity)) ]
-                       (div
-                         :class   "addition-panel__row"
-                         (tag
-                          :class        (cell= {:addition-tag true
-                                                :tag--isEmpty (cell= (not added?))})
-                          :leadingText  spec
-                          :trailingText (cell= (if-not (zero? quantity)
-                                                 quantity
-                                                 "")))
-                         (div
-                           :class "addition-panel__btn-add"
-                           :click #(";TODO: "))
-                         (div
-                           :class "addition-panel__btn-retract"
-                           :click #(";TODO: ")
-                           :css   (cell= {:visibility (when-not added? "hidden")}) )))))))]
+                 :class   "addition-panel__row"
+                 (tag
+                  :class        (cell= {:addition-tag true
+                                        :tag--isEmpty (cell= (not added?))})
+                  :leadingText  spec
+                  :trailingText (cell= (if-not (zero? quantity)
+                                         quantity
+                                         "")))
+                 (div
+                   :class "addition-panel__btn-add"
+                   :click #(cuisine->cart! cid spec))
+                 (div
+                   :class "addition-panel__btn-retract"
+                   :click #(";TODO: ")
+                   :css   (cell= {:visibility (when-not added? "hidden")}) )))))))]
       (with-init!
         (with-interval 1000
           (if-not (instance? js/Element (.get (js/jQuery ".modal") 0))
@@ -237,14 +269,18 @@
         (.css (js/jQuery "body") "overflow" "hidden")
         (reset! visible true)))))
 
-(defelem counter-tag [cid]
+(defn counter-tag [cid]
   (tag :class        "counter-tag"
        :leadingText  "已选"
-       :trailingText ";TODO: " ))
+       :trailingText (cell= (let [selected (check-selected-spec db__cart cid)]
+                              (->> (map #(str (get % :spec/name)
+                                              " ×"
+                                              (get % :spec/quantity)) selected)
+                                   (string/join ", ")) ))))
 
 (defelem cuisine [{:keys [name depict species currency id] :or {currency "¥"} :as attr}]
   (let [price     (cell=  (string/join "/" (sort (map :spec/price species))))
-        selected? (cell=  (or true (seq (check-selected-spec db__cart id))))
+        selected? (cell=  (seq (check-selected-spec db__cart id)))
         imgsrc    (cell=  (str "img/" (first depict)))
         attr      (dissoc attr  :name :depict :species :currency)]
     (article attr
@@ -259,7 +295,7 @@
         (small :class "cuisine__currency" :text currency)
         (span  :class "cuisine__price"    :text price)
         (addition-button :class "cuisine__button" :cid id)
-        (cell= (cond selected? (counter-tag id  )))))))
+        (cell= (cond selected? (counter-tag id )))))))
 
 (defelem v-Card
   "TODO:// Finally, and ideally, this page elements should have a

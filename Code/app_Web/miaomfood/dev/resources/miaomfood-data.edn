@@ -87,7 +87,7 @@
                       #db/id[:db.part/user -22]]}
  {:db/id #db/id[:db.part/user -21]
   :cuisine/name "巧克力摩卡"
-  :cuisine/id "QKLNT"
+  :cuisine/id "QKLMK"
   :cuisine/depict "Bacon.JPG"
   :cuisine/species [{:db/id #db/id[:db.part/user -23]
                      :spec/name :spec.name/杯
