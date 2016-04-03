@@ -116,15 +116,14 @@
       (div :class "wrp--stretched"
         body))))
 
-(defelem tag [{:keys [leadingText trailingText emptyValue?] :as attr} _]
-  (let [ attr (dissoc attr :leadingText :trailingText :emptyValue?)]
-    ((div :class "tag"
+(defelem tag [{:keys [leadingText trailingText] :as attr} _]
+  (let [ attr (dissoc attr :leadingText :trailingText) ]
+    ((span :class "tag"
        (b
          :class "tag__leading"
          :text leadingText)
        (b
-         :class (cell= {:tag__trailing true
-                        :tag__trailing--empty emptyValue?})
+         :class  "tag__trailing"
          :text trailingText))
      attr)))
 
@@ -201,8 +200,9 @@
                   :ratio "golden"
                   :class (cell=  {:addition-panel true
                                   :isVisible visible})
-                  (h2  :class "cuisine__title" c_title)
-                  (div
+                  (div :class "addition-panel__title-wrap"
+                    (h2  :class "addition-panel__title" c_title))
+                  (div :class "addition-panel__row-wrap"
                     (loop-tpl
                      :bindings [spec s_names]
                      (let [quantity
@@ -211,19 +211,23 @@
                                            (filterv #(= spec ((comp name :spec/name) %)) )
                                            (first)
                                            :spec/quantity)))
-                           added?  (cell= (> 0 quantity)) ]
+                           added? (cell= (> 0 quantity)) ]
                        (div
+                         :class   "addition-panel__row"
                          (tag
-                          :class        "addition-tag"
+                          :class        (cell= {:addition-tag true
+                                                :tag--isEmpty (cell= (not added?))})
                           :leadingText  spec
                           :trailingText (cell= (if-not (zero? quantity)
                                                  quantity
-                                                 ""))
-                          :emptyValue?  (cell= (not added?)))
-                         (b :class      "addition-panel__add")
-                         (cell= (cond
-                                  added?
-                                  (b :class "addition-panel__minus")))))))))]
+                                                 "")))
+                         (div
+                           :class "addition-panel__btn-add"
+                           :click #(";TODO: "))
+                         (div
+                           :class "addition-panel__btn-retract"
+                           :click #(";TODO: ")
+                           :css   (cell= {:visibility (when-not added? "hidden")}) )))))))]
       (with-init!
         (with-interval 1000
           (if-not (instance? js/Element (.get (js/jQuery ".modal") 0))

@@ -40,7 +40,7 @@ $base__TextColor        : hsla(0, 0%, 0%, 1);
 $base__gutter           : 2px;
 $banner__height         : 46px;
 $minimum-window-width   : 320px;
-$percentage_golden-ratio: 61.803398874989484820458%;
+$golden-ratio: 0.61803398874989484820458;
 @mixin columns--2 ($gutter: $base__gutter) {
   position: relative;
   display: inline-block;
@@ -82,7 +82,8 @@ $percentage_golden-ratio: 61.803398874989484820458%;
   height: 0;
   padding-top: $ratio;
 }
-@mixin b--centered {
+
+/*@mixin b--centered {
   display: block;
   position: absolute;
   left: -100%;
@@ -91,7 +92,15 @@ $percentage_golden-ratio: 61.803398874989484820458%;
   bottom: -100%;
   margin: auto;
   height: auto;
+}*/
+
+@mixin b--centered {
+  position: absolute;
+  top:  50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
+
 @mixin clearfix {
   &:before,
   &clearfix:after {
@@ -135,7 +144,7 @@ img {
 }
 
 .clearfix{ @include clearfix; }
-.wrp_ratio--golden:before { @include b--equal-ratio($percentage_golden-ratio);}
+.wrp_ratio--golden:before { @include b--equal-ratio(percentage($golden-ratio));}
 .wrp_ratio--4_3:before { @include b--equal-ratio(75.000%); }
 .wrp--stretched {
   overflow: hidden;
@@ -208,10 +217,10 @@ img {
 
   &__button {
     position: absolute;
-    top: 2px;
-    right: 2px;
-    width: 44px;
-    height: 44px;
+    top: 4px;
+    right: 5px;
+    width: 2em;
+    height: 2em;
     background: no-repeat center/100% image_url("Add_Button.png");
   }
 
@@ -259,7 +268,7 @@ img {
 
   &__notice {
     border: 1px solid $TagBorderColor;
-    @include border-radius(16px);
+    @include border-radius(1em);
     padding: 0.125rem 0.625rem;
     height: 17px;
     line-height: 1.063em;
@@ -267,6 +276,7 @@ img {
     text-align: center;
   }
 }
+
 .btn-order {
   float: right;
   height: 100%;
@@ -274,17 +284,13 @@ img {
 &__label {
   color: $base__ForegroundColor;
   font-size: 1.25em;
-}
-}
-.btn-order img { max-height: 40px; }
-
-.btn-order img {
-  max-height: 40px;
+  }
 }
 
 .btn-order img {
   max-height: 40px;
 }
+
 .item-list {
   /*position: relative;
   width: 100%;*/
@@ -293,41 +299,76 @@ img {
 }
 
 .tag {
-  position: absolute;
-  left: 8px;
-  bottom: 2px;
-  padding-right: 1px;
-  height: 22px;
-  line-height: $base__LineHeight;
-  background: $TagBorderColor;
-  @include border-bottom-left-radius(12px);
-  @include border-top-left-radius(12px);
-  text-align: center;
-
   &__leading {
-    margin: 5px 5px;
-    font-size: 0.75em;
-    color: #FFFFFF;
-    height: 22px;
-    line-height: $base__LineHeight;
+    color: $item__BackGround;
+    background: $TagBorderColor;
+    border: 1px solid $TagBorderColor;
+    @include border-bottom-left-radius(1em);
+    @include border-top-left-radius(1em);
   }
 
   &__trailing {
-    margin: 5px 5px;
-    font-size: 0.75em;
-    line-height: $base__LineHeight;
-    height: 20px;
-    padding-left: 5px;
     color: $TagBorderColor;
-    background: #ffffff;
-
-    &--empty {
-      background: #FFBA33;
-    }
+    background: $item__BackGround;
+    border: 1px solid $TagBorderColor;
   }
 
-  &__amount {
-    padding-right: 5px;
+  &--isEmpty {
+    .tag__leading,
+    .tag__trailing {
+      background: $white;
+      color: $TagBorderColor;
+    }
+
+    .tag__leading {
+      border: 1px dashed $TagBorderColor;
+      border-right: none;
+    }
+
+    .tag__trailing {
+      border: 1px dashed $TagBorderColor;
+      border-left: none;
+    }
+  }
+}
+
+.counter-tag {
+  position: absolute;
+  right: 5px;
+  bottom: 2px;
+
+  .tag__leading,
+  .tag__trailing {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    text-align: center;
+    font-size: 0.75em;
+  }
+}
+
+.addition-tag {
+  display: inline-block;
+  margin: 1.25em 0;
+  text-align: center;
+  vertical-align: middle;
+
+  .tag__leading,
+  .tag__trailing {
+    display: inline-block;
+    vertical-align: middle;
+    height: 2em;
+    line-height: 2em;
+    font-size: 1em;
+    font-weight: bold;
+  }
+
+  .tag__leading {
+    padding-left: 1em;
+    padding-right: 0.5em;
+  }
+
+  .tag__trailing {
+    min-width: 4em;
   }
 }
 
@@ -352,14 +393,10 @@ img {
 
 .addition-panel {
   position: relative;
-  width: 100%;
-  max-width: 720px;
-  margin: 30% auto;
   background: #FFF;
   text-align: center;
+  vertical-align: middle;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-  /* Force Hardware Acceleration in WebKit */
-  -webkit-backface-visibility: hidden;
   @include transform(translateY(-40px));
   @include transition-property(all);
   @include transition-duration(0.5s);
@@ -368,6 +405,40 @@ img {
     opacity: 1;
     @include transform(translateY(0));
     @include transition(translateY 0.5s 0s);
+  }
+
+  &__title-wrap {
+    position: relative;
+  }
+
+  &__title-wrap:before {
+    @include b--equal-ratio(percentage( (1 - $golden-ratio) * (1 - $golden-ratio) ));
+  }
+
+  &__title {
+    @include b--centered;
+
+    color: $cuisine__TitleColor;
+    font-size: 1.25rem;
+    line-height: 1.25rem;
+  }
+
+  &__btn-add,
+  &__btn-retract {
+    display: inline-block;
+    margin-left: 2em;
+    width: 2em;
+    height: 2em;
+    line-height: 2em;
+    vertical-align: middle;
+  }
+
+  &__btn-add {
+    background: no-repeat center/100% image_url("Add_Button_square.png");
+  }
+
+  &__btn-retract {
+    background: no-repeat center/100% image_url("retract.png");
   }
 }
 
@@ -446,6 +517,11 @@ img {
     @include columns--2;
   }
 
+  .addition-panel {
+    width: 100%;
+    margin: 30% auto;
+  }
+
   .footer {
     width: 100%;
   }
@@ -459,8 +535,20 @@ img {
     @include columns--3;
   }
 
+  .addition-panel {
+    max-width: 66.6666666%;
+    margin: 35% auto;
+  }
+
   .footer {
     width: 100%;
+  }
+}
+
+@media screen and (min-width: 480px) and (max-width: 720px) and (orientation: landscape)  {
+  .addition-panel {
+    max-width: 66.6666666%;
+    margin: 0 auto;
   }
 }
 
@@ -498,6 +586,11 @@ img {
     margin-bottom: 8px;
     background-color: $item__BackGround;
     @include columns--2;
+  }
+
+  .addition-panel {
+    max-width: 480px;
+    margin: 320px auto;
   }
 
   .footer {
@@ -541,6 +634,11 @@ img {
     margin-bottom: 8px;
     background-color: $item__BackGround;
     @include columns--3;
+  }
+
+  .addition-panel {
+    max-width: 480px;
+    margin: 480px auto;
   }
 
   .footer {
@@ -593,6 +691,12 @@ which place near the left side of the browser window*/
     margin-bottom: 8px;
     background-color: $item__BackGround;
     @include columns--3;
+  }
+
+
+  .addition-panel {
+    max-width: 480px;
+    margin: 480px auto;
   }
 
   .footer {
