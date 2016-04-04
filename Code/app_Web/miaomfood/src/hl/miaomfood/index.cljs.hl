@@ -42,11 +42,13 @@
 (def indexed (partial map-indexed vector))
 
 (defn inc-spec [db cid spec]
-  (let [[eid quantity] (d/q '{:find [?e ?q]
-                              :in [$ ?cid ?spec]
-                              :where [[?cid :cuisine/species ?e]
-                                      [?e   :spec/name       ?spec]
-                                      [?e   :spec/quantity   ?q]]}
+  (let [[eid quantity] (d/q '[:find [?e ?q]
+                              :in $ ?cid ?spec
+                              :where
+                              [?c :cuisine/id      ?cid]
+                              [?c :cuisine/species ?e]
+                              [?e :spec/name       ?spec]
+                              [?e :spec/quantity   ?q] ]
                          db cid spec)]
     [{:db/id  eid :spec/quantity (inc quantity)} ] ))
 
@@ -226,8 +228,6 @@
        (div
          :class (cell= {:modal true
                         :isVisible visible})
-         :click #(do (reset! visible false)
-                             (with-timeout 250 (unOrdering!)))
          (equal-ratio-wrap
           :ratio "golden"
           :class (cell=  {:addition-panel true
@@ -238,27 +238,29 @@
             (loop-tpl
              :bindings [spec s_names]
              (let [quantity
-                   (cell= (or 0
-                              (->> selected
+                   (cell= (or (->> selected
                                    (filterv #(= spec ((comp name :spec/name) %)) )
                                    (first)
-                                   :spec/quantity)))
-                   added? (cell= (> 0 quantity)) ]
+                                   (:spec/quantity))
+                              0))
+                   added? (cell= (> quantity 0)) ]
                (div
                  :class   "addition-panel__row"
                  (tag
                   :class        (cell= {:addition-tag true
-                                        :tag--isEmpty (cell= (not added?))})
+                                        :tag--isEmpty (not added?)})
                   :leadingText  spec
                   :trailingText (cell= (if-not (zero? quantity)
-                                         quantity
+                                         (str "×" quantity)
                                          "")))
                  (div
                    :class "addition-panel__btn-add"
-                   :click #(cuisine->cart! cid spec))
+                   :click #(do (cuisine->cart! cid spec)
+                               (.log js/console @quantity)))
                  (div
                    :class "addition-panel__btn-retract"
-                   :click #(";TODO: ")
+                   :click #(do (reset! visible false)
+                               (with-timeout 150 (unOrdering!)))
                    :css   (cell= {:visibility (when-not added? "hidden")}) )))))))]
       (with-init!
         (with-interval 1000
@@ -289,13 +291,13 @@
        :class "item__header"
        (img
          :class "cuisine__picture"
-         :src   imgsrc))
+         :src   imgsrc)
+       (cell= (cond selected? (counter-tag id ))))
       (div :class "item__body clearfix"
         (h2    :class "cuisine__title"    :text name)
         (small :class "cuisine__currency" :text currency)
         (span  :class "cuisine__price"    :text price)
-        (addition-button :class "cuisine__button" :cid id)
-        (cell= (cond selected? (counter-tag id )))))))
+        (addition-button :class "cuisine__button" :cid id)))))
 
 (defelem v-Card
   "TODO:// Finally, and ideally, this page elements should have a
@@ -371,7 +373,6 @@
     (noscript
       (div :id "noscript"
         (p "JavaScript is required to view this page.")))
-    (button :click folding! "收起")
     (div :class "wrapper"
       (show-or-hide
        :state folding-toggle

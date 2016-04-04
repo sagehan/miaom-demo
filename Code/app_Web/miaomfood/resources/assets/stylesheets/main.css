@@ -325,15 +325,17 @@ img {
 
 .counter-tag {
   position: absolute;
-  right: 5px;
-  bottom: 2px;
+  left: 0.5em;
+  right: 2px;
+  bottom: 0.5em;
+  opacity: 0.75;
 }
 .counter-tag .tag__leading,
 .counter-tag .tag__trailing {
   padding-left: 0.5em;
   padding-right: 0.5em;
   text-align: center;
-  font-size: 0.8em;
+  font-size: 0.75em;
 }
 
 .addition-tag {
@@ -349,7 +351,7 @@ img {
   height: 2em;
   line-height: 2em;
   font-size: 1em;
-  font-weight: bold;
+  /*font-weight: bold;*/
 }
 .addition-tag .tag__leading {
   padding-left: 1em;
