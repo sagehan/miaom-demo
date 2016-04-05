@@ -8,51 +8,7 @@
 (enable-console-print!)
 (add-initfn! (rpc/fetch-raw-db))
 
-;; Cells ====================================================================
-(defc folding-toggle true)
-(defc adding-pool nil)
-
-(def test-datoms #{(d/datom 1 :cuisine/id "JQPG")
-                   (d/datom 1 :cuisine/name "激情培根")
-                   (d/datom 1 :cuisine/species 2)
-                   (d/datom 1 :cuisine/species 3)
-                   (d/datom 2 :spec/name "八寸")
-                   (d/datom 2 :spec/quantity 1)
-                   (d/datom 3 :spec/name "十寸")
-                   (d/datom 3 :spec/quantity 2)
-                   (d/datom 4 :cuisine/id "QKLMK")
-                   (d/datom 4 :cuisine/name "巧克力摩卡")
-                   (d/datom 4 :cuisine/species 5)
-                   (d/datom 5 :spec/name "杯")
-                   (d/datom 5 :spec/quantity 2)})
-(def  schema__cart {:cuisine/id      {:db/unique      :db.unique/identity }
-                    :cuisine/species {:db/cardinality :db.cardinality/many
-                                      :db/valueType   :db.type/ref }} )
-
-(def  conn__cart (d/conn-from-datoms test-datoms schema__cart) )
-
-(defc db__cart (d/init-db test-datoms schema__cart) )
-
-;; state transition functions ===============================================
-(def folding! #(swap! folding-toggle not))
-(defn ordering! [cid] (reset! adding-pool [cid]))
-(def unOrdering! #(reset! adding-pool nil))
-
-;; Helper functions =================================================================
-(def indexed (partial map-indexed vector))
-
-(defn inc-spec [db cid spec]
-  (let [[eid quantity] (d/q '[:find [?e ?q]
-                              :in $ ?cid ?spec
-                              :where
-                              [?c :cuisine/id      ?cid]
-                              [?c :cuisine/species ?e]
-                              [?e :spec/name       ?spec]
-                              [?e :spec/quantity   ?q] ]
-                         db cid spec)]
-    [{:db/id  eid :spec/quantity (inc quantity)} ] ))
-
-;; Cell formulas ============================================================
+;; Remote DB ============================================================
 (def schema {:website/notices   {:db/cardinality :db.cardinality/many
                                  :db/valueType   :db.type/ref }
              :group/menus       {:db/cardinality :db.cardinality/many
@@ -68,6 +24,7 @@
 (def datoms  (cell= rpc/raw-db) )
 (def db      (cell= (d/db-with (d/empty-db schema) datoms)))
 
+;;===== Query cells =======================
 (defc= site-title (d/q '[:find ?t . :where [_ :website/title ?t]] db))
 
 (defc= notices (d/q '[:find [?n ...]
@@ -114,8 +71,28 @@
   (fn [cuisine-id]
     (d/pull db ["*"] [:cuisine/id cuisine-id])))
 
+;; Local DB ====================================================================
+(def test-datoms #{(d/datom 1 :cuisine/id "JQPG")
+                   (d/datom 1 :cuisine/name "激情培根")
+                   (d/datom 1 :cuisine/species 2)
+                   (d/datom 1 :cuisine/species 3)
+                   (d/datom 2 :spec/name "八寸")
+                   (d/datom 2 :spec/quantity 1)
+                   (d/datom 3 :spec/name "十寸")
+                   (d/datom 3 :spec/quantity 2)
+                   (d/datom 4 :cuisine/id "QKLMK")
+                   (d/datom 4 :cuisine/name "巧克力摩卡")
+                   (d/datom 4 :cuisine/species 5)
+                   (d/datom 5 :spec/name "杯")
+                   (d/datom 5 :spec/quantity 2)})
+(def  schema__cart {:cuisine/id      {:db/unique      :db.unique/identity }
+                    :cuisine/species {:db/cardinality :db.cardinality/many
+                                      :db/valueType   :db.type/ref }} )
+(def conn__cart (d/conn-from-datoms test-datoms schema__cart) )
 
-;; State query functions ====================================================
+(def db__cart (cell (d/init-db test-datoms schema__cart)) )
+
+;;===== Query  ===========================
 (defn check-selected-spec
   "Check the special cuisine's cart status, return a vector of maps"
   [ db cuisines-id ]
@@ -130,10 +107,42 @@
           db, cuisines-id) ]
     (d/pull-many db ["*"] eids)))
 
-;; DB Transaction! =================================================================
-(defn cuisine->cart! [cid spec]
-  (d/transact! conn__cart [[:db.fn/call inc-spec cid spec]]))
+;;===== Transaction! ======================
+(defn inc-spec [db cid cname spec]
+  (let [cuisine (d/entity db [:cuisine/id cid])]
+    (if (nil? cuisine)
+      [{:db/id -1 :cuisine/id cid :cuisine/name cname :cuisine/species {:db/id -2}}
+       {:db/id -2 :spec/name spec :spce/quantity 1}]
+      (if-let [[eid qty] (d/q '[:find [?e ?qty]
+                                  :in $ ?cid ?spec
+                                  :where
+                                  [?c :cuisine/id      ?cid]
+                                  [?c :cuisine/species ?e]
+                                  [?e :spec/name       ?spec]
+                                  [?e :spec/quantity   ?qty] ]
+                             db cid spec)]
+        [{:db/id eid :spec/quantity (inc qty)} ]
+        [{:db/id [:cuisine/id cid]
+          :cuisine/species {:db/id -1}}
+         {:db/id -1 :spec/name spec :spec/quantity 1} ]))))
 
+(defn cuisine->cart! [cid cname spec]
+  (let [{:keys [db-before db-after]}
+        (d/transact! conn__cart [[:db.fn/call inc-spec cid cname spec]])]
+    (do (print db-before)
+        (print db-after))))
+
+;; State cells =====================================================================
+(defc folding-toggle true)
+(defc adding-pool nil)
+
+;;===== State transition functions ==========
+(def folding!    #(swap! folding-toggle not))
+(def ordering!   (fn [cid] (reset! adding-pool [cid])))
+(def unOrdering! #(reset! adding-pool nil))
+
+;; Auxiliary =======================================================================
+(def indexed (partial map-indexed vector))
 
 ;; Helper elements =================================================================
 (defelem show-or-hide
@@ -216,7 +225,7 @@
 (defelem addition-panel [{:keys [cid]} _]
   (let [c         (cell= (cuisine-details-of cid))
         species   (cell= (:cuisine/species c))
-        c_title   (cell= (:cuisine/name    c))
+        cname     (cell= (:cuisine/name    c))
         s_names   (cell= (map (comp name :spec/name) species))
         selected  (cell= (check-selected-spec db__cart cid))
         visible   (cell false) ]
@@ -230,7 +239,7 @@
           :class (cell=  {:addition-panel true
                           :isVisible visible})
           (div :class "addition-panel__title-wrap"
-            (h2  :class "addition-panel__title" c_title))
+            (h2  :class "addition-panel__title" cname))
           (div :class "addition-panel__row-wrap"
             (loop-tpl
              :bindings [spec s_names]
@@ -252,8 +261,7 @@
                                          "")))
                  (div
                    :class "addition-panel__btn-add"
-                   :click #(do (cuisine->cart! cid spec)
-                               (.log js/console @conn__cart)))
+                   :click #(cuisine->cart! cid @cname @spec))
                  (div
                    :class "addition-panel__btn-retract"
                    :click #(do (reset! visible false)
