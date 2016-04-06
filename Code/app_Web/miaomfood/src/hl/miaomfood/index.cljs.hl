@@ -2,6 +2,7 @@
       (:require
        [clojure.string  :as string]
        [datascript.core :as d :refer [q]]
+       [datascript.transit :as dt]
        [javelin.core :refer [cell] :refer-macros [cell= destroy-cell!]]
        [miaomfood.rpc :as rpc]))
 
@@ -24,7 +25,7 @@
 (def datoms  (cell= rpc/raw-db) )
 (def db      (cell= (d/db-with (d/empty-db schema) datoms)))
 
-;;===== Query cells =======================
+;;===== query cells =======================
 (defc= site-title (d/q '[:find ?t . :where [_ :website/title ?t]] db))
 
 (defc= notices (d/q '[:find [?n ...]
@@ -72,25 +73,33 @@
     (d/pull db ["*"] [:cuisine/id cuisine-id])))
 
 ;; Local DB ====================================================================
-(def test-datoms #{(d/datom 1 :cuisine/id "JQPG")
-                   (d/datom 1 :cuisine/name "激情培根")
-                   (d/datom 1 :cuisine/species 2)
-                   (d/datom 1 :cuisine/species 3)
-                   (d/datom 2 :spec/name "八寸")
-                   (d/datom 2 :spec/quantity 1)
-                   (d/datom 3 :spec/name "十寸")
-                   (d/datom 3 :spec/quantity 2)
-                   (d/datom 4 :cuisine/id "QKLMK")
-                   (d/datom 4 :cuisine/name "巧克力摩卡")
-                   (d/datom 4 :cuisine/species 5)
-                   (d/datom 5 :spec/name "杯")
-                   (d/datom 5 :spec/quantity 2)})
+
 (def  schema__cart {:cuisine/id      {:db/unique      :db.unique/identity }
                     :cuisine/species {:db/cardinality :db.cardinality/many
                                       :db/valueType   :db.type/ref }} )
-(def conn__cart (d/conn-from-datoms test-datoms schema__cart) )
+(def conn__cart (d/create-conn schema__cart) )
 
-(def db__cart (cell (d/init-db test-datoms schema__cart)) )
+(def db__cart (cell (d/empty-db)) )
+
+;;===== fresh DB on every transaction!
+(d/listen! conn__cart :fresh #(reset! db__cart (:db-after %)))
+
+;;===== persisting DB between page reloads!
+(defn persist [db]
+  (js/localStorage.setItem "miaomfood/DB" (dt/write-transit-str db)))
+
+(d/listen! conn__cart :persistence
+           (fn [tx-report] (when-let [db (:db-after tx-report)]
+                             (js/setTimeout #(persist db) 0))))
+
+;;===== restoring once persisted DB on page load
+;;      Thanks Nikita Prokopov https://github.com/tonsky/
+(when-let [stored (js/localStorage.getItem "miaomfood/DB")]
+  (let [stored-db (dt/read-transit-str stored)]
+    (when (= (:schema stored-db) schema__cart) ;; check for code update
+      (d/reset-conn! conn__cart stored-db)
+      (persist stored-db)
+      true)))
 
 ;;===== Query  ===========================
 (defn check-selected-spec
@@ -107,7 +116,7 @@
           db, cuisines-id) ]
     (d/pull-many db ["*"] eids)))
 
-;;===== Transaction! ======================
+;;===== transaction! ======================
 (defn inc-spec [db cid cname spec]
   (let [cuisine (d/entity db [:cuisine/id cid])]
     (if (nil? cuisine)
@@ -130,13 +139,14 @@
   (let [{:keys [db-before db-after]}
         (d/transact! conn__cart [[:db.fn/call inc-spec cid cname spec]])]
     (do (print db-before)
-        (print db-after))))
+        (print db-after)
+        (print db__cart))))
 
 ;; State cells =====================================================================
 (defc folding-toggle true)
 (defc adding-pool nil)
 
-;;===== State transition functions ==========
+;;===== state transition functions ==========
 (def folding!    #(swap! folding-toggle not))
 (def ordering!   (fn [cid] (reset! adding-pool [cid])))
 (def unOrdering! #(reset! adding-pool nil))
@@ -296,13 +306,13 @@
        :class "item__header"
        (img
          :class "cuisine__picture"
-         :src   imgsrc)
-       (cell= (cond selected? (counter-tag id ))))
+         :src   imgsrc))
       (div :class "item__body clearfix"
         (h2    :class "cuisine__title"    :text name)
         (small :class "cuisine__currency" :text currency)
         (span  :class "cuisine__price"    :text price)
-        (addition-button :class "cuisine__button" :cid id)))))
+        (addition-button :class "cuisine__button" :cid id)
+        (cell= (cond selected? (counter-tag id )))))))
 
 (defelem v-Card
   "TODO:// Finally, and ideally, this page elements should have a

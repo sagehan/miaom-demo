@@ -10,6 +10,7 @@
                  [ring                      "1.4.0"]
                  [ring/ring-defaults        "0.1.5"]
                  [datascript                "0.15.0"]
+                 [datascript-transit        "0.2.0"]
                  [org.clojure/algo.generic  "0.1.0"]
                  [org.clojure/tools.namespace "0.2.11"]
                  [org.clojure/tools.nrepl   "0.2.12"]
