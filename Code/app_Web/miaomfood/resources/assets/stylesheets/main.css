@@ -1,3 +1,4 @@
+@charset "UTF-8";
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
@@ -56,8 +57,8 @@ article, aside, details, figcaption, figure, footer, header, hgroup, main, menu,
 
 @font-face {
   font-family: "icomiaomfood";
-  src: url('icomiaomfood.eot?1456568476');
-  src: url('icomiaomfood.eot?&1456568476#iefix') format('embedded-opentype'), url('icomiaomfood.woff?1456568476') format('woff'), url('icomiaomfood.ttf?1456568476') format('truetype');
+  src: url('icomiaomfood.eot?1459786719');
+  src: url('icomiaomfood.eot?&1459786719#iefix') format('embedded-opentype'), url('icomiaomfood.woff?1459786719') format('woff'), url('icomiaomfood.ttf?1459786719') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
@@ -219,7 +220,7 @@ img {
   right: 5px;
   width: 2em;
   height: 2em;
-  background: no-repeat center/100% url('../img/Add_Button.png?1459668891');
+  background: no-repeat center/100% url('../img/Add_Button.png?1459786719');
 }
 
 .slideshow__pagination {
@@ -445,10 +446,45 @@ img {
   vertical-align: middle;
 }
 .addition-panel__btn-add {
-  background: no-repeat center/100% url('../img/Add_Button_square.png?1459660485');
+  background: no-repeat center/100% url('../img/Add_Button_square.png?1459786719');
 }
 .addition-panel__btn-retract {
-  background: no-repeat center/100% url('../img/retract.png?1459660426');
+  background: no-repeat center/100% url('../img/retract.png?1459786719');
+}
+
+.miao-button {
+  position: relative;
+  margin: 1em auto;
+  width: 2.75em;
+  max-width: 100%;
+  min-width: 2.75em;
+  min-height: 2.75em;
+  background: no-repeat center/100% url('../img/喵.png?1459937893');
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  -moz-transform: translateY(40px);
+  -ms-transform: translateY(40px);
+  -webkit-transform: translateY(40px);
+  transform: translateY(40px);
+  -moz-transition-property: all;
+  -o-transition-property: all;
+  -webkit-transition-property: all;
+  transition-property: all;
+  -moz-transition-duration: 0.5s;
+  -o-transition-duration: 0.5s;
+  -webkit-transition-duration: 0.5s;
+  transition-duration: 0.5s;
+}
+.miao-button.isVisible {
+  opacity: 1;
+  -moz-transform: translateY(0);
+  -ms-transform: translateY(0);
+  -webkit-transform: translateY(0);
+  transform: translateY(0);
+  -moz-transition: translateY 0.5s 0s;
+  -o-transition: translateY 0.5s 0s;
+  -webkit-transition: translateY 0.5s;
+  -webkit-transition-delay: 0s;
+  transition: translateY 0.5s 0s;
 }
 
 .footer {
@@ -535,6 +571,7 @@ img {
   .addition-panel {
     width: 100%;
     margin: 30% auto;
+    margin-bottom: 0;
   }
 
   .footer {
@@ -560,6 +597,7 @@ img {
   .addition-panel {
     max-width: 66.6666666%;
     margin: 35% auto;
+    margin-bottom: 0;
   }
 
   .footer {
@@ -617,6 +655,7 @@ img {
   .addition-panel {
     max-width: 480px;
     margin: 320px auto;
+    margin-bottom: 0;
   }
 
   .footer {
@@ -672,6 +711,7 @@ img {
   .addition-panel {
     max-width: 480px;
     margin: 480px auto;
+    margin-bottom: 0;
   }
 
   .footer {
@@ -733,6 +773,7 @@ which place near the left side of the browser window*/
   .addition-panel {
     max-width: 480px;
     margin: 480px auto;
+    margin-bottom: 0;
   }
 
   .footer {

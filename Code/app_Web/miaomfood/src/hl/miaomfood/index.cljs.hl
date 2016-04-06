@@ -116,31 +116,52 @@
           db, cuisines-id) ]
     (d/pull-many db ["*"] eids)))
 
+(defn spec-qty-tuple [db cid spec]
+  (d/q '[:find [?e ?qty]
+         :in $ ?cid ?spec
+         :where
+         [?c :cuisine/id      ?cid]
+         [?c :cuisine/species ?e]
+         [?e :spec/name       ?spec]
+         [?e :spec/quantity   ?qty] ]
+    db cid spec))
+
 ;;===== transaction! ======================
-(defn inc-spec [db cid cname spec]
+(defn inc-spec-tx [db cid cname spec]
   (let [cuisine (d/entity db [:cuisine/id cid])]
     (if (nil? cuisine)
       [{:db/id -1 :cuisine/id cid :cuisine/name cname :cuisine/species {:db/id -2}}
        {:db/id -2 :spec/name spec :spce/quantity 1}]
-      (if-let [[eid qty] (d/q '[:find [?e ?qty]
-                                  :in $ ?cid ?spec
-                                  :where
-                                  [?c :cuisine/id      ?cid]
-                                  [?c :cuisine/species ?e]
-                                  [?e :spec/name       ?spec]
-                                  [?e :spec/quantity   ?qty] ]
-                             db cid spec)]
+      (if-let [ [eid qty] (spec-qty-tuple db cid spec) ]
         [{:db/id eid :spec/quantity (inc qty)} ]
         [{:db/id [:cuisine/id cid]
           :cuisine/species {:db/id -1}}
          {:db/id -1 :spec/name spec :spec/quantity 1} ]))))
 
-(defn cuisine->cart! [cid cname spec]
+(defn dec-spec-tx [db cid cname spec]
+  (let [cuisine (d/entity db [:cuisine/id cid])
+        species (:cuisine/species cuisine)
+        count   (count species)]
+    (if (nil? species)
+      true
+      (if-let [ [eid qty] (spec-qty-tuple db cid spec) ]
+        (cond
+          (>  qty 1) [{:db/id eid :spec/quantity (dec qty)} ]
+          (and (== qty 1) (== 1 count)) [[:db.fn/retractEntity eid ]
+                                         [:db.fn/retractEntity [:cuisine/id cid]]]
+          (== qty 1) [[:db.fn/retractEntity eid ]]
+          :else      true)
+        true))))
+
+(defn inc-cuisine! [cid cname spec]
   (let [{:keys [db-before db-after]}
-        (d/transact! conn__cart [[:db.fn/call inc-spec cid cname spec]])]
+        (d/transact! conn__cart [[:db.fn/call inc-spec-tx cid cname spec]])]
     (do (print db-before)
         (print db-after)
         (print db__cart))))
+
+(defn dec-cuisine! [cid cname spec]
+  (d/transact! conn__cart [[:db.fn/call dec-spec-tx cid cname spec]]))
 
 ;; State cells =====================================================================
 (defc folding-toggle true)
@@ -271,12 +292,17 @@
                                          "")))
                  (div
                    :class "addition-panel__btn-add"
-                   :click #(cuisine->cart! cid @cname @spec))
+                   :click #(inc-cuisine! cid @cname @spec))
                  (div
                    :class "addition-panel__btn-retract"
-                   :click #(do (reset! visible false)
-                               (with-timeout 150 (unOrdering!)))
-                   :css   (cell= {:visibility (when-not added? "hidden")}) )))))))]
+                   :click #(dec-cuisine! cid @cname @spec)
+                   :css   (cell= {:visibility (when-not added? "hidden")})
+                   ))))))
+         (div
+           :class (cell= {:miao-button true
+                          :isVisible visible})
+           :click #(do (reset! visible false)
+                       (with-timeout 150 (unOrdering!)))))]
       (with-init!
         (with-interval 1000
           (if-not (instance? js/Element (.get (js/jQuery ".modal") 0))
