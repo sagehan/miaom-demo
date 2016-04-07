@@ -18,6 +18,7 @@
                  [weasel                    "0.7.0"  :scope "test"]
                  [org.clojure/tools.logging "0.3.1"]
                  [ch.qos.logback/logback-classic "1.1.3"]
+                 [cljsjs/hammer             "2.0.4-5"]
                  [environ                   "1.0.2"]
                  [mount                     "0.1.10"]
                  [hoplon/castra             "3.0.0-alpha3"]

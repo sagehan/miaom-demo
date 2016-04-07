@@ -3,6 +3,7 @@
        [clojure.string  :as string]
        [datascript.core :as d :refer [q]]
        [datascript.transit :as dt]
+       [cljsjs.hammer]
        [javelin.core :refer [cell] :refer-macros [cell= destroy-cell!]]
        [miaomfood.rpc :as rpc]))
 
@@ -175,6 +176,12 @@
 ;; Auxiliary =======================================================================
 (def indexed (partial map-indexed vector))
 
+(def cycle-shift-vector-left!
+  (fn [v] (swap! v #(into (into [] (rest %)) (vector (first %))))))
+
+(def cycle-shift-vector-right!
+  (fn [v] (swap! v #(into (vector (peek %)) (pop %)))))
+
 ;; Helper elements =================================================================
 (defelem show-or-hide
   [{:keys [state]} children]
@@ -235,7 +242,11 @@
                                     :pagination__bullet--active t})))))]
       (with-init!
         (with-interval interval
-          (swap! toggle #(into (vector (last %)) (butlast %))))))))
+          (swap! toggle #(into (vector (last %)) (butlast %)))))
+      (with-dom elem
+        (let [ hm-slide (js/Hammer. (.getElementById js/document "slideshow")) ]
+          (.on hm-slide "swipeleft"  #(cycle-shift-vector-left! toggle))
+          (.on hm-slide "swiperight" #(cycle-shift-vector-right! toggle)))))))
 
 (defelem navbar []
   (nav :class "nav"))
@@ -262,13 +273,12 @@
         visible   (cell false) ]
     (with-let
       [elem
-       (div
-         :class (cell= {:modal true
-                        :isVisible visible})
+       (div :class (cell= {:modal     true
+                           :isVisible visible})
          (equal-ratio-wrap
           :ratio "golden"
           :class (cell=  {:addition-panel true
-                          :isVisible visible})
+                          :isVisible      visible})
           (div :class "addition-panel__title-wrap"
             (h2  :class "addition-panel__title" cname))
           (div :class "addition-panel__row-wrap"
@@ -409,7 +419,10 @@
       :content "喵姆餐厅 喵姆 Miaom 快餐 美味 乌鲁木齐快餐 披萨 焗饭 沙拉 烤翅")
     (html-meta
       :name "viewport"
-      :content "initial-scale=1.0, width=device-width"))
+      :content "initial-scale=1.0, width=device-width")
+    (html-meta
+     :name "msapplication-tap-highlight"
+     :content "no"))
   (body
     (noscript
       (div :id "noscript"
@@ -419,6 +432,7 @@
        :state folding-toggle
        (slideshow
         :class "slideshow"
+        :id    "slideshow"
         :ratio "golden"
         :imgs  (cell ["img/Chicken.JPG" "img/热辣牛肉.JPG" "img/Salad.jpg"])
         :default_img "img/logo.jpg"))
@@ -431,7 +445,7 @@
          :label "提交订单" :btn__img "img/notepad.png"))
       (navbar)
       (checkout-panel)
-      (div :class "menus"
+      (div :class "menus" :id "menus"
         (loop-tpl
          :bindings [menu menus]
          (section
