@@ -274,19 +274,6 @@ img {
   text-align: center;
 }
 
-.btn-order {
-  float: right;
-  height: 100%;
-}
-.btn-order__label {
-  color: #FFBA33;
-  font-size: 1.25em;
-}
-
-.btn-order img {
-  max-height: 40px;
-}
-
 .item-list {
   /*position: relative;
   width: 100%;*/
@@ -369,7 +356,7 @@ img {
   height: 100%;
   width: 100%;
   background-color: rgba(64, 64, 64, 0.95);
-  z-index: 99999;
+  z-index: 999999;
   opacity: 0;
   visibility: hidden;
   -moz-transition: visibility 0s 0.5s, opacity 0.5s 0s;
@@ -459,7 +446,7 @@ img {
   max-width: 100%;
   min-width: 2.75em;
   min-height: 2.75em;
-  background: no-repeat center/100% url('../img/喵.png?1459937893');
+  background: no-repeat center/100% url('../img/喵.png?1459938262');
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
   -moz-transform: translateY(40px);
   -ms-transform: translateY(40px);
@@ -485,6 +472,29 @@ img {
   -webkit-transition: translateY 0.5s;
   -webkit-transition-delay: 0s;
   transition: translateY 0.5s 0s;
+}
+
+.checkout-button {
+  float: right;
+  height: 100%;
+  z-index: 999999;
+}
+.checkout-button__label {
+  color: #FFBA33;
+  font-size: 1.25em;
+}
+.checkout-button img {
+  max-height: 40px;
+}
+
+.checkout-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 99999;
+  height: 100%;
+  width: 100%;
+  background: #525151;
 }
 
 .footer {

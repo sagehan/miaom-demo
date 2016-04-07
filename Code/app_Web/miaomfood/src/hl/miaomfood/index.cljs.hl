@@ -75,8 +75,12 @@
 
 ;; Local DB ====================================================================
 
-(def  schema__cart {:cuisine/id      {:db/unique      :db.unique/identity }
+(def  schema__cart {:order/cuisines  {:db/cardinality :db.cardinality/many
+                                      :db/valueType   :db.type/ref
+                                      :db/isComponent true }
+                    :cuisine/id      {:db/unique      :db.unique/identity }
                     :cuisine/species {:db/cardinality :db.cardinality/many
+                                      :db/isComponent true
                                       :db/valueType   :db.type/ref }} )
 (def conn__cart (d/create-conn schema__cart) )
 
@@ -103,7 +107,24 @@
       true)))
 
 ;;===== Query  ===========================
-(defn check-selected-spec
+(defn cart->ceids [ db ]
+  (d/q  '[:find [?ceid ...] :where [?e :order/cuisines ?ceid]] db ))
+
+(defn cart->selected-cuisines
+  "Which cuisines had been added to cart? return a sequential of maps as results"
+  [ db ]
+  (let [items (d/q '[:find ?cid ?cname ?spec ?qty
+                     :where
+                     [?e  :cuisine/id      ?cid   ]
+                     [?e  :cuisine/name    ?cname ]
+                     [?e  :cuisine/species ?cs    ]
+                     [?cs :spec/name       ?spec  ]
+                     [?cs :spec/quantity   ?qty   ]] db )]
+    (for [item items]
+      (let [ [cid cname spec qty] item]
+        {:cuisine/id cid :cuisine/name cname :spec/name spec :spec/quantity qty}))))
+
+(defn cart->selected-species
   "Check the special cuisine's cart status, return a vector of maps"
   [ db cuisines-id ]
   (let [eids
@@ -131,12 +152,13 @@
 (defn inc-spec-tx [db cid cname spec]
   (let [cuisine (d/entity db [:cuisine/id cid])]
     (if (nil? cuisine)
-      [{:db/id -1 :cuisine/id cid :cuisine/name cname :cuisine/species {:db/id -2}}
-       {:db/id -2 :spec/name spec :spce/quantity 1}]
+      [{:db/id -1 :order/cuisines [-2]}
+       {:db/id -2 :cuisine/id cid :cuisine/name cname :cuisine/species [-3]}
+       {:db/id -3 :spec/name spec :spce/quantity 1}]
       (if-let [ [eid qty] (spec-qty-tuple db cid spec) ]
         [{:db/id eid :spec/quantity (inc qty)} ]
         [{:db/id [:cuisine/id cid]
-          :cuisine/species {:db/id -1}}
+          :cuisine/species [-1]}
          {:db/id -1 :spec/name spec :spec/quantity 1} ]))))
 
 (defn dec-spec-tx [db cid cname spec]
@@ -166,10 +188,12 @@
 
 ;; State cells =====================================================================
 (defc folding-toggle true)
+(defc checkout-toggle false)
 (defc adding-pool nil)
 
 ;;===== state transition functions ==========
 (def folding!    #(swap! folding-toggle not))
+(def checkout!   #(swap! checkout-toggle not))
 (def ordering!   (fn [cid] (reset! adding-pool [cid])))
 (def unOrdering! #(reset! adding-pool nil))
 
@@ -252,24 +276,27 @@
   (nav :class "nav"))
 
 (defelem checkout-button [ {:keys [label btn__img] :or {label "提交订单"} :as attr} ]
-  (a :class "btn-order"
-    (span :class "btn-order__label" :text label)
+  (a :class "checkout-button"
+    :click #(checkout!)
+    (span :class "checkout-button__label" :text label)
     (img  :src btn__img)))
 
 (defelem checkout-panel []
-  (div :class "checkout-page"))
+  (let [items        (cell= (not-empty (cart->selected-cuisines db__cart)) )
+        isCartEmpty? (cell= (seq? items)) ]
+      (div :class "checkout-panel")))
 
 (defelem addition-button [{:keys [cid] :as attr} _]
   (let [attr (dissoc attr :cid)]
     (div attr
       :click #(ordering! cid))))
 
-(defelem addition-panel [{:keys [cid]} _]
+(defelem addition-panel [{:keys [cid] :as attr} _]
   (let [c         (cell= (cuisine-details-of cid))
         species   (cell= (:cuisine/species c))
         cname     (cell= (:cuisine/name    c))
         s_names   (cell= (map (comp name :spec/name) species))
-        selected  (cell= (check-selected-spec db__cart cid))
+        selected  (cell= (cart->selected-species db__cart cid))
         visible   (cell false) ]
     (with-let
       [elem
@@ -325,7 +352,7 @@
 (defn counter-tag [cid]
   (tag :class        "counter-tag"
        :leadingText  "已选"
-       :trailingText (cell= (let [selected (check-selected-spec db__cart cid)]
+       :trailingText (cell= (let [selected (cart->selected-species db__cart cid)]
                               (->> (map #(str (get % :spec/name)
                                               " ×"
                                               (get % :spec/quantity)) selected)
@@ -333,7 +360,7 @@
 
 (defelem cuisine [{:keys [name depict species currency id] :or {currency "¥"} :as attr}]
   (let [price     (cell=  (string/join "/" (sort (map :spec/price species))))
-        selected? (cell=  (seq (check-selected-spec db__cart id)))
+        selected? (cell=  (seq (cart->selected-species db__cart id)))
         imgsrc    (cell=  (str "img/" (first depict)))
         attr      (dissoc attr  :name :depict :species :currency)]
     (article attr
@@ -444,7 +471,6 @@
         (checkout-button
          :label "提交订单" :btn__img "img/notepad.png"))
       (navbar)
-      (checkout-panel)
       (div :class "menus" :id "menus"
         (loop-tpl
          :bindings [menu menus]
@@ -466,5 +492,7 @@
       (footer :class "footer"
         (social-vCard)
         (v-Card))
+      (cell= (when checkout-toggle
+               (checkout-panel )))
       (cell= (when-let [cid (peek adding-pool)]
                (addition-panel :cid cid ))))))

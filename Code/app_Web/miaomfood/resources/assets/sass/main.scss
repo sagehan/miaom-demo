@@ -278,20 +278,6 @@ img {
   }
 }
 
-.btn-order {
-  float: right;
-  height: 100%;
-
-&__label {
-  color: $base__ForegroundColor;
-  font-size: 1.25em;
-  }
-}
-
-.btn-order img {
-  max-height: 40px;
-}
-
 .item-list {
   /*position: relative;
   width: 100%;*/
@@ -382,7 +368,7 @@ img {
   height: 100%;
   width: 100%;
   background-color: hsla(0, 0, 25, 0.95);
-  z-index: 99999;
+  z-index: 999999;
   opacity: 0;
   visibility: hidden;
   @include transition(visibility 0s 0.5s, opacity 0.5s 0s);
@@ -463,6 +449,31 @@ img {
     @include transform(translateY(0));
     @include transition(translateY 0.5s 0s);
   }
+}
+
+.checkout-button {
+  float: right;
+  height: 100%;
+  z-index: 999999;
+
+  &__label {
+    color: $base__ForegroundColor;
+    font-size: 1.25em;
+  }
+
+  img {
+    max-height: 40px;
+  }
+}
+
+.checkout-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 99999;
+  height: 100%;
+  width: 100%;
+  background: #525151;
 }
 
 .footer {
