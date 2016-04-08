@@ -228,6 +228,45 @@
          :text trailingText))
      attr)))
 
+(defelem comment-line []
+  (div :text ";TODO: comment-line"))
+
+(defelem radio-group []
+  (div :text ";TODO: radio-group"))
+
+(defelem inline-input []
+  (div :text ";TODO: inline-input"))
+
+(defelem header-table [{:keys [name col-names click-fn] :as attrs}]
+  (div :class "header-table"
+    (table :class "cuisine-header-tbl"
+      (thead (tr (map #(th :scope "col" :text %) col-names))))))
+
+(defelem content-table [{:keys [name row-items click-fn] :as attrs}]
+  (div :class "content-table"
+    (table :class "cuisine-body-tbl"
+      (tbody
+        (loop-tpl
+         :bindings [i row-items ]
+         (let [name    (cell= (:cuisine/name  i) )
+               spec    (cell= (:spec/name     i) )
+               qty     (cell= (:spec/quantity i) )
+               price   (cell= (:spec/price    i) )
+               item    (cell= (str name "(" spec ")") )
+               i-total (cell= (* price qty) )
+               coupon  (cell= ())
+               sum     (cell= ()) ]
+           (tr (map #(td :text %) [ item qty price i-total ])) )))
+      (tfoot
+        (tr
+          (td
+            :text    "优惠码"
+            :colspan 3
+            (input))
+          (td :text ";TODO: "))
+        (tr
+          (td :text "合计") (td) (td) (td :text ";TODO: "))))))
+
 ;; Component elements =================================================================
 (defelem billboard [{:keys [greeting interval] :or {interval 3000} :as attr} ]
   (let [ note  (cell greeting)
@@ -284,7 +323,18 @@
 (defelem checkout-panel []
   (let [items        (cell= (not-empty (cart->selected-cuisines db__cart)) )
         isCartEmpty? (cell= (seq? items)) ]
-      (div :class "checkout-panel")))
+    (div :class "checkout-panel"
+      (div :class "order-container"
+        (div :class "order__cuisines"
+          (header-table  :col-names ["菜品" "数量" "单价" "小计"])
+          (content-table :row-items (cell= (cart->selected-cuisines db__cart))))
+        (comment-line :class "order__comment")
+        (radio-group  :class "order__reserve"
+         :radio-names   ["立即配送" "预定"]
+         :default-radio "立即配送")
+        (inline-input :class "order__customer")
+        (inline-input :class "order__address" )
+        (inline-input :class "order__payment" ) ))))
 
 (defelem addition-button [{:keys [cid] :as attr} _]
   (let [attr (dissoc attr :cid)]
@@ -300,12 +350,10 @@
         visible   (cell false) ]
     (with-let
       [elem
-       (div :class (cell= {:modal     true
-                           :isVisible visible})
+       (div :class (cell= {:modal true, :isVisible visible})
          (equal-ratio-wrap
           :ratio "golden"
-          :class (cell=  {:addition-panel true
-                          :isVisible      visible})
+          :class (cell=  {:addition-panel true, :isVisible visible})
           (div :class "addition-panel__title-wrap"
             (h2  :class "addition-panel__title" cname))
           (div :class "addition-panel__row-wrap"
@@ -321,8 +369,7 @@
                (div
                  :class   "addition-panel__row"
                  (tag
-                  :class        (cell= {:addition-tag true
-                                        :tag--isEmpty (not added?)})
+                  :class        (cell= {:addition-tag true, :tag--isEmpty (not added?)})
                   :leadingText  spec
                   :trailingText (cell= (if-not (zero? quantity)
                                          (str "×" quantity)
@@ -333,11 +380,9 @@
                  (div
                    :class "addition-panel__btn-retract"
                    :click #(dec-cuisine! cid @cname @spec)
-                   :css   (cell= {:visibility (when-not added? "hidden")})
-                   ))))))
+                   :css   (cell= {:visibility (when-not added? "hidden")})) )))))
          (div
-           :class (cell= {:miao-button true
-                          :isVisible visible})
+           :class (cell= {:miao-button true, :isVisible visible})
            :click #(do (reset! visible false)
                        (with-timeout 150 (unOrdering!)))))]
       (with-init!
@@ -364,12 +409,8 @@
         imgsrc    (cell=  (str "img/" (first depict)))
         attr      (dissoc attr  :name :depict :species :currency)]
     (article attr
-      (equal-ratio-wrap
-       :ratio "4_3"
-       :class "item__header"
-       (img
-         :class "cuisine__picture"
-         :src   imgsrc))
+      (equal-ratio-wrap {:class "item__header", :ratio "4_3"}
+         (img :class "cuisine__picture",  :src imgsrc))
       (div :class "item__body clearfix"
         (h2    :class "cuisine__title"    :text name)
         (small :class "cuisine__currency" :text currency)
@@ -394,10 +435,8 @@
 (defelem social-vCard
   ""
   []
-  (equal-ratio-wrap
-   :ratio "golden"
-   :class "card card--back"
-   (h1 :class "card__title icon icon__wechat" :text "关注微信")
+  (equal-ratio-wrap {:class "card card--back", :ratio "golden"}
+     (h1 :class "card__title icon icon__wechat"  :text  "关注微信")
    (figure
      (img        :class "card__img" :src "img/QR-1.jpg" :alt "喵姆餐厅微信服务号")
      (figcaption :class "clearfix"
@@ -489,10 +528,8 @@
                 :class "section__body item-list clearfix"
                 (cell-map create-cuisine
                           (cell= (cuisines-of category)))))))))
-      (footer :class "footer"
-        (social-vCard)
-        (v-Card))
-      (cell= (when checkout-toggle
-               (checkout-panel )))
-      (cell= (when-let [cid (peek adding-pool)]
-               (addition-panel :cid cid ))))))
+      (footer (social-vCard) (v-Card) {:class "footer"} )
+      (cell=  (when checkout-toggle
+                (checkout-panel) ))
+      (cell=  (when-let [cid (peek adding-pool)]
+                (addition-panel :cid cid) )))))

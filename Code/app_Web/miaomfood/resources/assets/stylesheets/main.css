@@ -492,9 +492,53 @@ img {
   top: 0;
   left: 0;
   z-index: 99999;
+  -moz-transition-duration: 0.4s;
+  -o-transition-duration: 0.4s;
+  -webkit-transition-duration: 0.4s;
+  transition-duration: 0.4s;
   height: 100%;
   width: 100%;
   background: #525151;
+}
+
+.order-container {
+  margin-left: 13.75%;
+  background-color: #fafafa;
+}
+
+.header-table {
+  margin-top: 12px;
+}
+.header-table .cuisine-header-tbl {
+  width: 82.5%;
+  table-layout: fixed;
+}
+.header-table .cuisine-header-tbl th {
+  padding: 5px 0;
+  text-align: right;
+  font-weight: 500;
+  font-size: 1em;
+  color: #808080;
+}
+
+.content-table {
+  height: 320px;
+  overflow-x: auto;
+  margin-top: 0px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.content-table .cuisine-body-tbl {
+  width: 82.5%;
+  table-layout: fixed;
+}
+.content-table .cuisine-body-tbl td {
+  padding: 3px 0;
+  text-align: right;
+  vertical-align: middle;
+  font-weight: 300;
+  font-size: 1em;
+  color: #808080;
+  border-bottom: solid 1px rgba(255, 255, 255, 0.1);
 }
 
 .footer {
