@@ -107,12 +107,12 @@
 
 ;;===== restoring once persisted DB on page load
 ;;      Thanks Nikita Prokopov https://github.com/tonsky/
-(when-let [stored (js/localStorage.getItem "miaomfood/DB")]
-  (let [stored-db (dt/read-transit-str stored)]
-    (when (= (:schema stored-db) schema__cart) ;; check for code update
-      (d/reset-conn! conn__cart stored-db)
-      (persist stored-db)
-      true)))
+(comment (when-let [stored (js/localStorage.getItem "miaomfood/DB")]
+           (let [stored-db (dt/read-transit-str stored)]
+             (when (= (:schema stored-db) schema__cart) ;; check for code update
+               (d/reset-conn! conn__cart stored-db)
+               (persist stored-db)
+               true))))
 
 ;;===== Query  ===========================
 (defn cart->ceids [ db ]
@@ -340,6 +340,22 @@
     (span :class "checkout-button__label" :text label)
     (img  :src btn__img)))
 
+(defelem order-page []
+  (div :class "order-page"
+    (div :class "order__cuisines"
+      (header-table  :col-names ["菜品" "单价" "数量" "小计"])
+      (content-table :row-items (cell= (cart->selected-cuisines db__cart))))
+    (comment-line :class "order__comment")
+    (radio-group  :class "order__reserve"
+                  :radio-names   ["立即配送" "预定"]
+                  :default-radio "立即配送")
+    (inline-input :class "order__customer")
+    (inline-input :class "order__address" )
+    (inline-input :class "order__payment" ) ))
+
+(defelem user-page []
+  (div :class "user-page"))
+
 (defelem control-tabs []
   (div))
 
@@ -356,20 +372,21 @@
 
 (defelem checkout-panel []
   (let [items        (cell= (not-empty (cart->selected-cuisines db__cart)) )
-        isCartEmpty? (cell= (seq? items)) ]
+        isCartEmpty? (cell= (not (seq? items)) )
+        hasLogin?    (cell  false)
+        isOrderPage? (cell  true)
+        isUserPage?  (cell= (not isOrderPage?) ) ]
     (div :class "checkout-panel"
       (controller-bar)
-      (div :class "order-container"
-        (div :class "order__cuisines"
-          (header-table  :col-names ["菜品" "单价" "数量" "小计"])
-          (content-table :row-items (cell= (cart->selected-cuisines db__cart))))
-        (comment-line :class "order__comment")
-        (radio-group  :class "order__reserve"
-         :radio-names   ["立即配送" "预定"]
-         :default-radio "立即配送")
-        (inline-input :class "order__customer")
-        (inline-input :class "order__address" )
-        (inline-input :class "order__payment" ) ))))
+      (cell= (cond
+              isOrderPage?
+              (if isCartEmpty?
+                (div :class "empty-reminder"  :text "您还没有添加任何菜品哦！")
+                (order-page) )
+              isUserPage?
+              (if-not hasLogin?
+                (div :class "not-login-reminder" :text "欢迎注册会员，立享优惠!")
+                (user-page) ))))))
 
 (defelem addition-button [{:keys [cid] :as attr} _]
   (let [attr (dissoc attr :cid)]
@@ -451,7 +468,7 @@
         (small :class "cuisine__currency" :text currency)
         (span  :class "cuisine__price"    :text price)
         (addition-button :class "cuisine__button" :cid id)
-        (cell= (cond selected? (counter-tag id )))))))
+        (cell= (when selected? (counter-tag id )))))))
 
 (defelem v-Card
   "TODO:// Finally, and ideally, this page elements should have a
