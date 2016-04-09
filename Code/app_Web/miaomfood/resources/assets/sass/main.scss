@@ -9,19 +9,21 @@ $white      : #fafafa;
 $yellow     : #FFBA33;
 $green      : #30AD63;
 $gray       : #CECED2;
+$gray1      : #808080;
 $black      : #525151;
 
 // config
 /// Typography && Foreground Colors
 $base__ForegroundColor    : $yellow;
 $base__TypeColor          : $black;
+$base__hrColor            : $gray1;
 $link__NormalColor        : $base__ForegroundColor;
 $link__HoverColor         : $yellow;
 $section__TitleColor      : $gray;
 $cuisine__TitleColor      : $base__TypeColor;
 $price__TagColor          : $gray;
-$TagColor: $green;
-$TagBorderColor: $green;
+$TagColor                 : $green;
+$TagBorderColor           : $green;
 
 /// Background colors
 $item__BackGround       : #ffffff;
@@ -133,6 +135,16 @@ body {
 img {
   vertical-align: top;
   max-width: 100%;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+}
+::-webkit-scrollbar-thumb {
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
 }
 
 .wrapper {
@@ -474,11 +486,12 @@ img {
   @include transition-duration(0.4s);
   height: 100%;
   width: 100%;
-  background: #525151;
+  background: $white;
 }
 
 .order-container {
   margin-left: (percentage(44px/320px));
+  margin-right: (percentage(16px/320px));
   background-color: $white;
 }
 
@@ -486,39 +499,67 @@ img {
   margin-top: 12px;
 
   .cuisine-header-tbl {
-    width: 82.5%;
+    width: 100%;
     table-layout: fixed;
 
+    thead {
+      color: $base__TypeColor;
+      border-bottom: 1px solid $base__hrColor;
+      box-shadow: inset 0 1px 1px 0 rgba(0,0,0,0.50);
+    }
+
     th {
-      padding: 5px 0;
+      padding: 5px 5px;
       text-align: right;
       font-weight: 500;
       font-size: 1em;
-      color: #808080;
+      color: $base__hrColor;
+
+      &:first-child {
+        width: 130px;
+        padding-left: 0;
+        text-align: left;
+      }
     }
   }
 }
 
 .content-table {
-  height: 320px;
+  max-height: 320px;
   overflow-x: auto;
-  margin-top: 0px;
+  margin-top: 0;
   border: 1px solid rgba(255, 255, 255, 0.3);
 
   .cuisine-body-tbl {
-    width: 82.5%;
+    width: 100%;
     table-layout: fixed;
 
+    tfoot {
+      border-top: 1px solid $base__hrColor;
+      box-shadow: inset 0 1px 1px 0 rgba(0,0,0,0.50);
+      margin-top: 0.5em;
+    }
+
     td {
-      padding: 3px 0;
+      padding: 0.5em 5px;
       text-align: right;
       vertical-align: middle;
       font-weight: 300;
       font-size: 1em;
       color: #808080;
-      border-bottom: solid 1px rgba(255, 255, 255, 0.1);
+
+      &:first-child {
+        padding-left: 0;
+        width: 130px;
+        text-align: left;
+      }
     }
   }
+}
+
+.coupon-input {
+  margin-left: 1em;
+  text-align: center;
 }
 
 .footer {

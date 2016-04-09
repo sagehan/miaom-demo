@@ -73,6 +73,14 @@
   (fn [cuisine-id]
     (d/pull db ["*"] [:cuisine/id cuisine-id])))
 
+(def spec-price-of
+  (let [get-spec-name (comp name :spec/name)]
+    (fn  [cid spec]
+      (->> (:cuisine/species (@cuisine-details-of cid) )
+           (filter #(= spec (get-spec-name %)) )
+           first
+           :spec/price ))))
+
 ;; Local DB ====================================================================
 
 (def  schema__cart {:order/cuisines  {:db/cardinality :db.cardinality/many
@@ -113,16 +121,17 @@
 (defn cart->selected-cuisines
   "Which cuisines had been added to cart? return a sequential of maps as results"
   [ db ]
-  (let [items (d/q '[:find ?cid ?cname ?spec ?qty
+  (let [items (d/q '[:find ?cid ?cname ?spec ?price ?qty
                      :where
                      [?e  :cuisine/id      ?cid   ]
                      [?e  :cuisine/name    ?cname ]
                      [?e  :cuisine/species ?cs    ]
                      [?cs :spec/name       ?spec  ]
+                     [?cs :spec/price      ?price ]
                      [?cs :spec/quantity   ?qty   ]] db )]
     (for [item items]
-      (let [ [cid cname spec qty] item]
-        {:cuisine/id cid :cuisine/name cname :spec/name spec :spec/quantity qty}))))
+      (let [ [cid cname spec price qty] item]
+        {:cuisine/id cid :cuisine/name cname :spec/name spec :spec/price price :spec/quantity qty}))))
 
 (defn cart->selected-species
   "Check the special cuisine's cart status, return a vector of maps"
@@ -148,18 +157,26 @@
          [?e :spec/quantity   ?qty] ]
     db cid spec))
 
+(defn sum-of-cart [db]
+  (d/q '[:find (sum ?s) .
+         :with ?e
+         :where
+         [?e :spec/price    ?p]
+         [?e :spec/quantity ?q]
+         [(* ?p ?q)         ?s]] db))
+
 ;;===== transaction! ======================
-(defn inc-spec-tx [db cid cname spec]
+(defn inc-spec-tx [db cid cname spec price]
   (let [cuisine (d/entity db [:cuisine/id cid])]
     (if (nil? cuisine)
       [{:db/id -1 :order/cuisines [-2]}
        {:db/id -2 :cuisine/id cid :cuisine/name cname :cuisine/species [-3]}
-       {:db/id -3 :spec/name spec :spce/quantity 1}]
+       {:db/id -3 :spec/name spec :spce/quantity 1 :spec/price price}]
       (if-let [ [eid qty] (spec-qty-tuple db cid spec) ]
         [{:db/id eid :spec/quantity (inc qty)} ]
         [{:db/id [:cuisine/id cid]
           :cuisine/species [-1]}
-         {:db/id -1 :spec/name spec :spec/quantity 1} ]))))
+         {:db/id -1 :spec/name spec :spec/quantity 1 :spec/price price} ]))))
 
 (defn dec-spec-tx [db cid cname spec]
   (let [cuisine (d/entity db [:cuisine/id cid])
@@ -177,11 +194,8 @@
         true))))
 
 (defn inc-cuisine! [cid cname spec]
-  (let [{:keys [db-before db-after]}
-        (d/transact! conn__cart [[:db.fn/call inc-spec-tx cid cname spec]])]
-    (do (print db-before)
-        (print db-after)
-        (print db__cart))))
+  (let [price (spec-price-of cid spec)]
+    (d/transact! conn__cart [[:db.fn/call inc-spec-tx cid cname spec price]]) ))
 
 (defn dec-cuisine! [cid cname spec]
   (d/transact! conn__cart [[:db.fn/call dec-spec-tx cid cname spec]]))
@@ -205,6 +219,8 @@
 
 (def cycle-shift-vector-right!
   (fn [v] (swap! v #(into (vector (peek %)) (pop %)))))
+
+(def get-spec-name (comp name :spec/name))
 
 ;; Helper elements =================================================================
 (defelem show-or-hide
@@ -248,24 +264,28 @@
       (tbody
         (loop-tpl
          :bindings [i row-items ]
-         (let [name    (cell= (:cuisine/name  i) )
+         (let [cid     (cell= (:cuisine/id    i) )
+               name    (cell= (:cuisine/name  i) )
                spec    (cell= (:spec/name     i) )
                qty     (cell= (:spec/quantity i) )
                price   (cell= (:spec/price    i) )
                item    (cell= (str name "(" spec ")") )
-               i-total (cell= (* price qty) )
-               coupon  (cell= ())
-               sum     (cell= ()) ]
-           (tr (map #(td :text %) [ item qty price i-total ])) )))
-      (tfoot
-        (tr
-          (td
-            :text    "优惠码"
-            :colspan 3
-            (input))
-          (td :text ";TODO: "))
-        (tr
-          (td :text "合计") (td) (td) (td :text ";TODO: "))))))
+               subtotal (cell= (* price qty) ) ]
+           (tr
+             :click #(ordering! @cid)
+             (map   #(td :text %) [ item price qty subtotal ]) ))))
+      (let [coupon (cell= ())
+            sum    (cell= (sum-of-cart db__cart)) ]
+        (tfoot
+          (tr
+            (td :text "优惠码" :colspan 3
+              (input
+                :class "coupon-input"
+                :place-holder "LOVE-MIAOM"))
+            (td :text ";TODO: "))
+          (tr
+            (td :text "合计" :colspan 3)
+            (td :text sum) ))))))
 
 ;; Component elements =================================================================
 (defelem billboard [{:keys [greeting interval] :or {interval 3000} :as attr} ]
@@ -326,7 +346,7 @@
     (div :class "checkout-panel"
       (div :class "order-container"
         (div :class "order__cuisines"
-          (header-table  :col-names ["菜品" "数量" "单价" "小计"])
+          (header-table  :col-names ["菜品" "单价" "数量" "小计"])
           (content-table :row-items (cell= (cart->selected-cuisines db__cart))))
         (comment-line :class "order__comment")
         (radio-group  :class "order__reserve"
@@ -345,7 +365,7 @@
   (let [c         (cell= (cuisine-details-of cid))
         species   (cell= (:cuisine/species c))
         cname     (cell= (:cuisine/name    c))
-        s_names   (cell= (map (comp name :spec/name) species))
+        s_names   (cell= (map get-spec-name species))
         selected  (cell= (cart->selected-species db__cart cid))
         visible   (cell false) ]
     (with-let
@@ -361,9 +381,9 @@
              :bindings [spec s_names]
              (let [quantity
                    (cell= (or (->> selected
-                                   (filterv #(= spec ((comp name :spec/name) %)) )
-                                   (first)
-                                   (:spec/quantity))
+                                   (filterv #(= spec (get-spec-name %)) )
+                                   first
+                                   :spec/quantity )
                               0))
                    added? (cell= (> quantity 0)) ]
                (div
