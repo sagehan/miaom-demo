@@ -11,6 +11,7 @@ $green      : #30AD63;
 $gray       : #CECED2;
 $gray1      : #808080;
 $black      : #525151;
+$black1     : #404040;
 
 // config
 /// Typography && Foreground Colors
@@ -26,7 +27,10 @@ $TagColor                 : $green;
 $TagBorderColor           : $green;
 
 /// Background colors
-$item__BackGround       : #ffffff;
+$base__BackGround         : $white;
+$base__ContrastBackGround : $black1;
+$item__BackGround         : #ffffff;
+
 
 /// Typography
 $base__LineHeight       : 1.375em !default;
@@ -265,19 +269,35 @@ img {
   }
 }
 
-.banner {
+.controller-bar {
   position: relative;
   height: $banner__height;
-  width: 100%;
+  width : 100%;
   background-color: hsla(0, 0%, 100%, 0.9);
   margin-top: 0.5em;
   padding: 0.188rem 0.5rem;
+
+  &--stickyOrderTop {
+    position: fixed;
+    top    : 0;
+    right  : 0;
+    z-index: 999999;
+    margin-top  : 0;
+    padding-right: 1em;
+    background-color: $base__ContrastBackGround;
+  }
+
+  &--stickyMenuTop {
+    position: fixed;
+    top    : 0;
+    right  : 0;
+    z-index: 999999;
+  }
 }
 
 .notice-board {
   float: left;
   height: 100%;
-
 
   &__notice {
     border: 1px solid $TagBorderColor;
@@ -287,6 +307,21 @@ img {
     line-height: 1.063em;
     font-size: 0.813em;
     text-align: center;
+  }
+}
+
+.checkout-button {
+  float  : right;
+  height : 100%;
+  z-index: 999999;
+
+  &__label {
+    color: $base__ForegroundColor;
+    font-size: 1.25em;
+  }
+
+  img {
+    max-height: 40px;
   }
 }
 
@@ -463,26 +498,12 @@ img {
   }
 }
 
-.checkout-button {
-  float: right;
-  height: 100%;
-  z-index: 999999;
-
-  &__label {
-    color: $base__ForegroundColor;
-    font-size: 1.25em;
-  }
-
-  img {
-    max-height: 40px;
-  }
-}
-
 .checkout-panel {
   position: fixed;
   top: 0;
   left: 0;
   z-index: 99999;
+  padding-top: $banner__height;
   @include transition-duration(0.4s);
   height: 100%;
   width: 100%;
@@ -684,7 +705,7 @@ img {
     margin-bottom: 0.5em;
   }
 
-  .banner {
+  .controller-bar {
     position: fixed;
     top: 1em;
     right: 1em;
@@ -733,7 +754,7 @@ img {
     margin-bottom: 0.5em;
   }
 
-  .banner {
+  .controller-bar {
     position: fixed;
     top: 1em;
     right: 1em;
@@ -788,7 +809,7 @@ which place near the left side of the browser window*/
     margin-bottom: 0.5em;
   }
 
-  .banner {
+  .controller-bar {
     $banner__width  : calc(1040px - 320px - 3em);
     $banner-offset  : calc(1040px / 2 - 1em);
 

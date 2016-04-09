@@ -261,13 +261,28 @@ img {
   border: 1px solid #FFBA33;
 }
 
-.banner {
+.controller-bar {
   position: relative;
   height: 46px;
   width: 100%;
   background-color: rgba(255, 255, 255, 0.9);
   margin-top: 0.5em;
   padding: 0.188rem 0.5rem;
+}
+.controller-bar--stickyOrderTop {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 999999;
+  margin-top: 0;
+  padding-right: 1em;
+  background-color: #404040;
+}
+.controller-bar--stickyMenuTop {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 999999;
 }
 
 .notice-board {
@@ -284,6 +299,19 @@ img {
   line-height: 1.063em;
   font-size: 0.813em;
   text-align: center;
+}
+
+.checkout-button {
+  float: right;
+  height: 100%;
+  z-index: 999999;
+}
+.checkout-button__label {
+  color: #FFBA33;
+  font-size: 1.25em;
+}
+.checkout-button img {
+  max-height: 40px;
 }
 
 .item-list {
@@ -486,24 +514,12 @@ img {
   transition: translateY 0.5s 0s;
 }
 
-.checkout-button {
-  float: right;
-  height: 100%;
-  z-index: 999999;
-}
-.checkout-button__label {
-  color: #FFBA33;
-  font-size: 1.25em;
-}
-.checkout-button img {
-  max-height: 40px;
-}
-
 .checkout-panel {
   position: fixed;
   top: 0;
   left: 0;
   z-index: 99999;
+  padding-top: 46px;
   -moz-transition-duration: 0.4s;
   -o-transition-duration: 0.4s;
   -webkit-transition-duration: 0.4s;
@@ -711,7 +727,7 @@ img {
     margin-bottom: 0.5em;
   }
 
-  .banner {
+  .controller-bar {
     position: fixed;
     top: 1em;
     right: 1em;
@@ -765,7 +781,7 @@ img {
     margin-bottom: 0.5em;
   }
 
-  .banner {
+  .controller-bar {
     position: fixed;
     top: 1em;
     right: 1em;
@@ -827,7 +843,7 @@ which place near the left side of the browser window*/
     margin-bottom: 0.5em;
   }
 
-  .banner {
+  .controller-bar {
     position: fixed;
     top: 1em;
     right: 50%;

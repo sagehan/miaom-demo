@@ -336,14 +336,29 @@
 
 (defelem checkout-button [ {:keys [label btn__img] :or {label "提交订单"} :as attr} ]
   (a :class "checkout-button"
-    :click #(checkout!)
+     :click #(checkout!)
     (span :class "checkout-button__label" :text label)
     (img  :src btn__img)))
+
+(defelem control-tabs []
+  (div))
+
+(defelem controller-bar []
+  (div :class (cell= {:controller-bar true, :clearfix true,
+                      :controller-bar--stickyOrderTop checkout-toggle } )
+    (cell=  (if-not checkout-toggle
+              (billboard
+               :class "notice-board" :greeting "欢迎预订" :interval 3000)
+              (control-tabs)))
+    (checkout-button
+     :label "订单中心" :btn__img "img/notepad.png")))
+
 
 (defelem checkout-panel []
   (let [items        (cell= (not-empty (cart->selected-cuisines db__cart)) )
         isCartEmpty? (cell= (seq? items)) ]
     (div :class "checkout-panel"
+      (controller-bar)
       (div :class "order-container"
         (div :class "order__cuisines"
           (header-table  :col-names ["菜品" "单价" "数量" "小计"])
@@ -522,13 +537,10 @@
         :ratio "golden"
         :imgs  (cell ["img/Chicken.JPG" "img/热辣牛肉.JPG" "img/Salad.jpg"])
         :default_img "img/logo.jpg"))
-      (div
-        :class "banner clearfix"
-        (<!-- "This wrapper div may finally been removed to Sagittarius!")
-        (billboard
-         :class "notice-board" :greeting "欢迎预订" :interval 3000)
-        (checkout-button
-         :label "提交订单" :btn__img "img/notepad.png"))
+      (cell= (when-not checkout-toggle
+               (controller-bar
+                :class (cell=  {:controller-bar true
+                                :controller-bar--stickyMenuTop ";TODO: "}))))
       (navbar)
       (div :class "menus" :id "menus"
         (loop-tpl
