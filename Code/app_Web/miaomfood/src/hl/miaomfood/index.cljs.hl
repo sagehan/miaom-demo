@@ -107,12 +107,12 @@
 
 ;;===== restoring once persisted DB on page load
 ;;      Thanks Nikita Prokopov https://github.com/tonsky/
-(comment (when-let [stored (js/localStorage.getItem "miaomfood/DB")]
-           (let [stored-db (dt/read-transit-str stored)]
-             (when (= (:schema stored-db) schema__cart) ;; check for code update
-               (d/reset-conn! conn__cart stored-db)
-               (persist stored-db)
-               true))))
+(when-let [stored (js/localStorage.getItem "miaomfood/DB")]
+  (let [stored-db (dt/read-transit-str stored)]
+    (when (= (:schema stored-db) schema__cart) ;; check for code update
+      (d/reset-conn! conn__cart stored-db)
+      (persist stored-db)
+      true)))
 
 ;;===== Query  ===========================
 (defn cart->ceids [ db ]
@@ -244,14 +244,11 @@
          :text trailingText))
      attr)))
 
-(defelem comment-line []
-  (div :text ";TODO: comment-line"))
-
-(defelem radio-group []
-  (div :text ";TODO: radio-group"))
-
-(defelem inline-input []
-  (div :text ";TODO: inline-input"))
+(defelem schedule-picker [ attr ]
+  (fieldset attr
+    (label
+      (input :type "radio" :name "schedule" :value "test")
+      "test")))
 
 (defelem header-table [{:keys [name col-names click-fn] :as attrs}]
   (div :class "header-table"
@@ -278,11 +275,12 @@
             sum    (cell= (sum-of-cart db__cart)) ]
         (tfoot
           (tr
-            (td :text "优惠码" :colspan 3
-              (input
-                :class "coupon-input"
-                :place-holder "LOVE-MIAOM"))
-            (td :text ";TODO: "))
+            (td :colspan 3
+              (label :text "优惠码"
+                (input
+                  :class "coupon-input"
+                  :placeholder "LOVE-MIAOM")))
+            (td :text "-5"))
           (tr
             (td :text "合计" :colspan 3)
             (td :text sum) ))))))
@@ -341,17 +339,36 @@
     (img  :src btn__img)))
 
 (defelem order-page []
-  (div :class "order-page"
-    (div :class "order__cuisines"
-      (header-table  :col-names ["菜品" "单价" "数量" "小计"])
-      (content-table :row-items (cell= (cart->selected-cuisines db__cart))))
-    (comment-line :class "order__comment")
-    (radio-group  :class "order__reserve"
-                  :radio-names   ["立即配送" "预定"]
-                  :default-radio "立即配送")
-    (inline-input :class "order__customer")
-    (inline-input :class "order__address" )
-    (inline-input :class "order__payment" ) ))
+  (let [schedule     (cell "立即送餐")
+        isSchedule?  (cell= (= "预订" schedule))]
+      (div :class "order-page"
+        (div :class "order__cuisines icon icon__cuisines"
+          (header-table  :col-names ["菜品" "单价" "数量" "小计"])
+          (content-table :row-items (cell= (cart->selected-cuisines db__cart))))
+        (fieldset :class "order__comment icon icon__comment"
+          (input  :placeholder "备注" :optional true))
+        (fieldset :class "order__schedule icon icon__schedule"
+          (label  (input
+                    :type  "radio"
+                    :name  "schedule"
+                    :value "立即送餐"
+                    :checked (cell= (= "立即送餐" schedule))
+                    :click   #(do (reset! schedule @%)))
+            "立即送餐" )
+          (label  (input
+                    :type  "radio"
+                    :name  "schedule"
+                    :value "预订"
+                    :checked (cell= (= "预订" schedule ))
+                    :click   #(do (reset! schedule @%)))
+            "预订"))
+        (cell= (when isSchedule?
+                 (schedule-picker :class "schedule-picker icon icon__schedule-picker") ))
+        (fieldset :class "order__customer icon icon__customer"
+          (input  :class "customer__name"      :placeholder "姓名/称呼")
+          (input  :class "customer__phone"     :placeholder "手机" :type "tel") )
+        (fieldset :class "order__address icon icon__address"
+          (textarea :placeholder "地址" ) ))))
 
 (defelem user-page []
   (div :class "user-page"))
@@ -375,18 +392,27 @@
         isCartEmpty? (cell= (not (seq? items)) )
         hasLogin?    (cell  false)
         isOrderPage? (cell  true)
-        isUserPage?  (cell= (not isOrderPage?) ) ]
-    (div :class "checkout-panel"
-      (controller-bar)
-      (cell= (cond
-              isOrderPage?
-              (if isCartEmpty?
-                (div :class "empty-reminder"  :text "您还没有添加任何菜品哦！")
-                (order-page) )
-              isUserPage?
-              (if-not hasLogin?
-                (div :class "not-login-reminder" :text "欢迎注册会员，立享优惠!")
-                (user-page) ))))))
+        isUserPage?  (cell= (not isOrderPage?) )
+        visible?     (cell false) ]
+    (with-let [elem
+               (div :class (cell= {:checkout-panel true, :isVisible visible?} )
+                 (controller-bar)
+                 (cell= (cond
+                          isOrderPage?
+                          (if isCartEmpty?
+                            (div :class "empty-reminder"  :text "您还没有添加任何菜品哦！")
+                            (order-page) )
+                          isUserPage?
+                          (if-not hasLogin?
+                            (div :class "not-login-reminder" :text "欢迎注册会员，立享优惠!")
+                            (user-page) ))))]
+      (with-init!
+        (with-interval 1000
+          (if-not (instance? js/Element (.get (js/jQuery ".checkout-panel") 0))
+            (.css (js/jQuery "body") "overflow" "visible"))))
+      (with-dom elem
+        (.css (js/jQuery "body") "overflow" "hidden")
+        (reset! visible? true)) )))
 
 (defelem addition-button [{:keys [cid] :as attr} _]
   (let [attr (dissoc attr :cid)]
@@ -399,13 +425,13 @@
         cname     (cell= (:cuisine/name    c))
         s_names   (cell= (map get-spec-name species))
         selected  (cell= (cart->selected-species db__cart cid))
-        visible   (cell false) ]
+        visible?  (cell false) ]
     (with-let
       [elem
-       (div :class (cell= {:modal true, :isVisible visible})
+       (div :class (cell= {:modal true, :isVisible visible?} )
          (equal-ratio-wrap
           :ratio "golden"
-          :class (cell=  {:addition-panel true, :isVisible visible})
+          :class (cell=  {:addition-panel true, :isVisible visible?} )
           (div :class "addition-panel__title-wrap"
             (h2  :class "addition-panel__title" cname))
           (div :class "addition-panel__row-wrap"
@@ -434,8 +460,8 @@
                    :click #(dec-cuisine! cid @cname @spec)
                    :css   (cell= {:visibility (when-not added? "hidden")})) )))))
          (div
-           :class (cell= {:miao-button true, :isVisible visible})
-           :click #(do (reset! visible false)
+           :class (cell= {:miao-button true, :isVisible visible?})
+           :click #(do (reset! visible? false)
                        (with-timeout 150 (unOrdering!)))))]
       (with-init!
         (with-interval 1000
@@ -444,7 +470,7 @@
       (with-dom elem
         (.addEventListener elem "touchmove" #(.preventDefault %))
         (.css (js/jQuery "body") "overflow" "hidden")
-        (reset! visible true)))))
+        (reset! visible? true)))))
 
 (defn counter-tag [cid]
   (tag :class        "counter-tag"
@@ -479,9 +505,9 @@
    :ratio "golden"
    :class "card card--front"
    (ul
-     (li :class "icon icon__phone"    :text (cell= (:restaurant/phone restaurant-meta)))
-     (li :class "icon icon__location" :text (cell= (:restaurant/address restaurant-meta)))
-     (li :class "icon icon__timer"    :text (cell= (:restaurant/rest-day restaurant-meta))))
+     (li :class "card__phone icon icon__phone"         :text (cell= (:restaurant/phone restaurant-meta)))
+     (li :class "card__location   icon icon__location" :text (cell= (:restaurant/address restaurant-meta)))
+     (li :class "card__rest-day   icon icon__rest-day" :text (cell= (:restaurant/rest-day restaurant-meta))))
    (img :src "img/motorbike.png")))
 
 (defelem social-vCard
@@ -537,7 +563,7 @@
       :content "喵姆餐厅 喵姆 Miaom 快餐 美味 乌鲁木齐快餐 披萨 焗饭 沙拉 烤翅")
     (html-meta
       :name "viewport"
-      :content "initial-scale=1.0, width=device-width")
+      :content "initial-scale=1.0, width=device-width, maximum-scale=1, user-scalable=0")
     (html-meta
      :name "msapplication-tap-highlight"
      :content "no"))

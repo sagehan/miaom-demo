@@ -12,12 +12,14 @@ $gray       : #CECED2;
 $gray1      : #808080;
 $black      : #525151;
 $black1     : #404040;
+$black2     : #4A4A4A;
 
 // config
 /// Typography && Foreground Colors
 $base__ForegroundColor    : $yellow;
 $base__TypeColor          : $black;
 $base__hrColor            : $gray1;
+$base__OrderTypeColor     : $gray1;
 $link__NormalColor        : $base__ForegroundColor;
 $link__HoverColor         : $yellow;
 $section__TitleColor      : $gray;
@@ -141,9 +143,18 @@ img {
   max-width: 100%;
 }
 
-::-webkit-scrollbar {
-  width: 6px;
+input,
+textarea {
+  background: $white;
+  border: 1px solid #D8D8D8;
+  @include border-radius(3px);
+  font-size: 1em;
+  -webkit-appearance: none;
 }
+
+input[type="radio"] { @include border-radius(100%); }
+
+::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track {
   -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
 }
@@ -169,17 +180,17 @@ img {
 .wrp--centering { @include b--centered; }
 
 .icon {
-  margin: 1em 0.5em;
-
-  &:before {
-    margin-right: 0.5em;
-    font-family: "icomiaomfood";
-  }
+  &:before { font-family: "icomiaomfood"; }
 
   &__wechat:before   { content: "\e901"; }
   &__phone:before    { content: "\e91a"; }
   &__location:before { content: "\e91c"; }
-  &__timer:before    { content: "\e90b"; }
+  &__rest-day:before    { content: "\e90b"; }
+  &__cuisines:before { content: "\e912"; }
+  &__comment:before  { content: "\e92c"; }
+  &__schedule-picker:before { content: "\e921"; }
+  &__customer:before { content: "\e92f"; }
+  &__address:before  { content: "\e91c"; }
 }
 
 .section__title {
@@ -239,7 +250,6 @@ img {
     height: 2em;
     background: no-repeat center/100% image_url("Add_Button.png");
   }
-
 }
 
 .slideshow {
@@ -508,16 +518,37 @@ img {
   height: 100%;
   width: 100%;
   background: $white;
+
+  &.isVisible {
+    opacity: 1;
+    @include transform(translateY(0));
+    @include transition(translateY 0.5s 0s);
+  }
 }
 
 .order-page {
-  margin-left: (percentage(44px/320px));
-  margin-right: (percentage(16px/320px));
+  margin-left: percentage(44px/320px);
+  margin-right: percentage(16px/320px);
+  margin-top: 0.75em;
   background-color: $white;
 }
 
+.order__cuisines {
+  position: relative;
+  margin-top: 0.75em;
+  color: $base__TypeColor;
+
+  &:before {
+    position: absolute;
+    left: -1.3125em;
+    top : 5px;
+    font-size  : 1.25em;
+    font-weight: 100;
+  }
+}
+
 .header-table {
-  margin-top: 12px;
+  margin-top: 0.75em;
 
   .cuisine-header-tbl {
     width: 100%;
@@ -526,20 +557,20 @@ img {
     thead {
       color: $base__TypeColor;
       border-bottom: 1px solid $base__hrColor;
-      box-shadow: inset 0 1px 1px 0 rgba(0,0,0,0.50);
-    }
+      box-shadow: inset 0 1px 1px 0 rgba(0, 0, 0, 0.50);
 
-    th {
-      padding: 5px 5px;
-      text-align: right;
-      font-weight: 500;
-      font-size: 1em;
-      color: $base__hrColor;
+      th {
+        padding: 5px 5px;
+        text-align: right;
+        font-weight: 500;
+        font-size: 1em;
+        color: $base__OrderTypeColor;
 
-      &:first-child {
-        width: 130px;
-        padding-left: 0;
-        text-align: left;
+        &:first-child {
+          width: 130px;
+          padding-left: 0;
+          text-align: left;
+        }
       }
     }
   }
@@ -555,24 +586,30 @@ img {
     width: 100%;
     table-layout: fixed;
 
+    tbody td { padding: 0.5em   5px; }
+    tfoot td { padding: 0.375em 5px; }
+
+    tbody,
+    tfoot {
+      td {
+        text-align: right;
+        vertical-align: middle;
+        font-weight: 300;
+        font-size: 1em;
+        color: #808080;
+
+        &:first-child {
+          padding-left: 0;
+          width: 130px;
+          text-align: left;
+        }
+      }
+    }
     tfoot {
       border-top: 1px solid $base__hrColor;
-      box-shadow: inset 0 1px 1px 0 rgba(0,0,0,0.50);
-      margin-top: 0.5em;
-    }
 
-    td {
-      padding: 0.5em 5px;
-      text-align: right;
-      vertical-align: middle;
-      font-weight: 300;
-      font-size: 1em;
-      color: #808080;
-
-      &:first-child {
-        padding-left: 0;
-        width: 130px;
-        text-align: left;
+      tr:last-child td  {
+        font-weight: 500;
       }
     }
   }
@@ -580,7 +617,100 @@ img {
 
 .coupon-input {
   margin-left: 1em;
+  padding: 0;
+  font-size: 1em;
   text-align: center;
+  color: $base__OrderTypeColor;
+  max-width: percentage(152px / (320px - 44px - 16px) );
+}
+
+.order__comment {
+  position: relative;
+  color: $base__OrderTypeColor;
+
+  input {
+    width: 100%;
+    margin-top: 0.375em;
+    padding: 0;
+    padding-bottom: 1px;
+    border-width: 0;
+    background: $white;
+    border-bottom: 1px dotted #979797;
+  }
+
+  &:before {
+    position: absolute;
+    left: -1.3125em;
+    top : 5px;
+    font-size  : 1.25em;
+  }
+}
+
+.order__schedule {
+  position: relative;
+  margin-top: 1em;
+  color: $base__OrderTypeColor;
+  font-weight: 500;
+
+  label {
+    margin-right: 2em;
+
+    input {
+      margin-right: 0.5em;
+    }
+  }
+}
+
+.schedule-picker {
+  position: relative;
+  margin-top: 1em;
+  color: $base__OrderTypeColor;
+
+  &:before {
+    position: absolute;
+    left: -1.3125em;
+    font-size  : 1.25em;
+    font-weight: 100;
+  }
+}
+
+.order__customer {
+  position: relative;
+  margin-top: 0.75em;
+  color: $base__OrderTypeColor;
+
+  &:before {
+    position: absolute;
+    left: -1.3125em;
+    top : 5px;
+    font-size  : 1.25em;
+    font-weight: 100;
+  }
+
+  .customer__name {
+    max-width: percentage(120px / (320px - 44px - 16px) );
+    margin-right: 0.75em;
+  }
+  .customer__phone {
+    max-width: percentage(120px / (320px - 44px - 16px) );
+  }
+}
+
+.order__address {
+  position: relative;
+  margin-top: 0.75em;
+  width: 100%;
+  color: $base__OrderTypeColor;
+
+  textarea {min-width: 100%;}
+
+  &:before {
+    position: absolute;
+    left: -1.3125em;
+    top : 5px;
+    font-size  : 1.25em;
+    font-weight: 100;
+  }
 }
 
 .footer {
@@ -597,6 +727,14 @@ img {
   text-align: center;
   margin-top: 0.5em;
   background-color: #000;
+
+  .card__title {
+    margin: 1em 0.5em;
+
+    &:before {
+      margin-right: 0.5em;
+    }
+  }
 }
 
 .card--back figure {
@@ -637,6 +775,18 @@ img {
   width: 100%;
   margin-top: 0.5em;
   background-color: #000;
+
+  .card__phone,
+  .card__location,
+  .card__rest-day {
+    margin: 1em 0.5em;
+  }
+
+  .card__phone:before,
+  .card__location:before,
+  .card__rest-day:before  {
+    margin-right: 0.5em;
+  }
 }
 
 .card--front img {

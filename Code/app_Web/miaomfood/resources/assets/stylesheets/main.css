@@ -104,6 +104,23 @@ img {
   max-width: 100%;
 }
 
+input,
+textarea {
+  background: #fafafa;
+  border: 1px solid #D8D8D8;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  border-radius: 3px;
+  font-size: 1em;
+  -webkit-appearance: none;
+}
+
+input[type="radio"] {
+  -moz-border-radius: 100%;
+  -webkit-border-radius: 100%;
+  border-radius: 100%;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -162,11 +179,7 @@ img {
   transform: translate(-50%, -50%);
 }
 
-.icon {
-  margin: 1em 0.5em;
-}
 .icon:before {
-  margin-right: 0.5em;
   font-family: "icomiaomfood";
 }
 .icon__wechat:before {
@@ -178,8 +191,23 @@ img {
 .icon__location:before {
   content: "\e91c";
 }
-.icon__timer:before {
+.icon__rest-day:before {
   content: "\e90b";
+}
+.icon__cuisines:before {
+  content: "\e912";
+}
+.icon__comment:before {
+  content: "\e92c";
+}
+.icon__schedule-picker:before {
+  content: "\e921";
+}
+.icon__customer:before {
+  content: "\e92f";
+}
+.icon__address:before {
+  content: "\e91c";
 }
 
 .section__title {
@@ -528,15 +556,41 @@ img {
   width: 100%;
   background: #fafafa;
 }
+.checkout-panel.isVisible {
+  opacity: 1;
+  -moz-transform: translateY(0);
+  -ms-transform: translateY(0);
+  -webkit-transform: translateY(0);
+  transform: translateY(0);
+  -moz-transition: translateY 0.5s 0s;
+  -o-transition: translateY 0.5s 0s;
+  -webkit-transition: translateY 0.5s;
+  -webkit-transition-delay: 0s;
+  transition: translateY 0.5s 0s;
+}
 
 .order-page {
   margin-left: 13.75%;
   margin-right: 5%;
+  margin-top: 0.75em;
   background-color: #fafafa;
 }
 
+.order__cuisines {
+  position: relative;
+  margin-top: 0.75em;
+  color: #525151;
+}
+.order__cuisines:before {
+  position: absolute;
+  left: -1.3125em;
+  top: 5px;
+  font-size: 1.25em;
+  font-weight: 100;
+}
+
 .header-table {
-  margin-top: 12px;
+  margin-top: 0.75em;
 }
 .header-table .cuisine-header-tbl {
   width: 100%;
@@ -547,14 +601,14 @@ img {
   border-bottom: 1px solid #808080;
   box-shadow: inset 0 1px 1px 0 rgba(0, 0, 0, 0.5);
 }
-.header-table .cuisine-header-tbl th {
+.header-table .cuisine-header-tbl thead th {
   padding: 5px 5px;
   text-align: right;
   font-weight: 500;
   font-size: 1em;
   color: #808080;
 }
-.header-table .cuisine-header-tbl th:first-child {
+.header-table .cuisine-header-tbl thead th:first-child {
   width: 130px;
   padding-left: 0;
   text-align: left;
@@ -570,28 +624,122 @@ img {
   width: 100%;
   table-layout: fixed;
 }
-.content-table .cuisine-body-tbl tfoot {
-  border-top: 1px solid #808080;
-  box-shadow: inset 0 1px 1px 0 rgba(0, 0, 0, 0.5);
-  margin-top: 0.5em;
+.content-table .cuisine-body-tbl tbody td {
+  padding: 0.5em   5px;
 }
-.content-table .cuisine-body-tbl td {
-  padding: 0.5em 5px;
+.content-table .cuisine-body-tbl tfoot td {
+  padding: 0.375em 5px;
+}
+.content-table .cuisine-body-tbl tbody td,
+.content-table .cuisine-body-tbl tfoot td {
   text-align: right;
   vertical-align: middle;
   font-weight: 300;
   font-size: 1em;
   color: #808080;
 }
-.content-table .cuisine-body-tbl td:first-child {
+.content-table .cuisine-body-tbl tbody td:first-child,
+.content-table .cuisine-body-tbl tfoot td:first-child {
   padding-left: 0;
   width: 130px;
   text-align: left;
 }
+.content-table .cuisine-body-tbl tfoot {
+  border-top: 1px solid #808080;
+}
+.content-table .cuisine-body-tbl tfoot tr:last-child td {
+  font-weight: 500;
+}
 
 .coupon-input {
   margin-left: 1em;
+  padding: 0;
+  font-size: 1em;
   text-align: center;
+  color: #808080;
+  max-width: 58.46154%;
+}
+
+.order__comment {
+  position: relative;
+  color: #808080;
+}
+.order__comment input {
+  width: 100%;
+  margin-top: 0.375em;
+  padding: 0;
+  padding-bottom: 1px;
+  border-width: 0;
+  background: #fafafa;
+  border-bottom: 1px dotted #979797;
+}
+.order__comment:before {
+  position: absolute;
+  left: -1.3125em;
+  top: 5px;
+  font-size: 1.25em;
+}
+
+.order__schedule {
+  position: relative;
+  margin-top: 1em;
+  color: #808080;
+  font-weight: 500;
+}
+.order__schedule label {
+  margin-right: 2em;
+}
+.order__schedule label input {
+  margin-right: 0.5em;
+}
+
+.schedule-picker {
+  position: relative;
+  margin-top: 1em;
+  color: #808080;
+}
+.schedule-picker:before {
+  position: absolute;
+  left: -1.3125em;
+  font-size: 1.25em;
+  font-weight: 100;
+}
+
+.order__customer {
+  position: relative;
+  margin-top: 0.75em;
+  color: #808080;
+}
+.order__customer:before {
+  position: absolute;
+  left: -1.3125em;
+  top: 5px;
+  font-size: 1.25em;
+  font-weight: 100;
+}
+.order__customer .customer__name {
+  max-width: 46.15385%;
+  margin-right: 0.75em;
+}
+.order__customer .customer__phone {
+  max-width: 46.15385%;
+}
+
+.order__address {
+  position: relative;
+  margin-top: 0.75em;
+  width: 100%;
+  color: #808080;
+}
+.order__address textarea {
+  min-width: 100%;
+}
+.order__address:before {
+  position: absolute;
+  left: -1.3125em;
+  top: 5px;
+  font-size: 1.25em;
+  font-weight: 100;
 }
 
 .footer {
@@ -608,6 +756,12 @@ img {
   text-align: center;
   margin-top: 0.5em;
   background-color: #000;
+}
+.card--back .card__title {
+  margin: 1em 0.5em;
+}
+.card--back .card__title:before {
+  margin-right: 0.5em;
 }
 
 .card--back figure {
@@ -648,6 +802,16 @@ img {
   width: 100%;
   margin-top: 0.5em;
   background-color: #000;
+}
+.card--front .card__phone,
+.card--front .card__location,
+.card--front .card__rest-day {
+  margin: 1em 0.5em;
+}
+.card--front .card__phone:before,
+.card--front .card__location:before,
+.card--front .card__rest-day:before {
+  margin-right: 0.5em;
 }
 
 .card--front img {
