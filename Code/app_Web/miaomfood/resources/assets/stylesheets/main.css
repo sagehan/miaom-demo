@@ -111,14 +111,30 @@ textarea {
   -moz-border-radius: 3px;
   -webkit-border-radius: 3px;
   border-radius: 3px;
+  padding: 2px 5px;
   font-size: 1em;
-  -webkit-appearance: none;
+  /*-webkit-appearance: none;*/
 }
 
 input[type="radio"] {
   -moz-border-radius: 100%;
   -webkit-border-radius: 100%;
   border-radius: 100%;
+}
+
+.form-cell {
+  display: inline-block;
+}
+.form-cell.isInvalid .customer__name, .form-cell.isInvalid .customer__phone {
+  border: 1px solid #a94442;
+  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+.form-cell.isInvalid .customer__name:focus, .form-cell.isInvalid .customer__phone:focus {
+  -moz-box-shadow: inset 0 0 2px #a94442;
+  -webkit-box-shadow: inset 0 0 2px #a94442;
+  box-shadow: inset 0 0 2px #a94442;
 }
 
 ::-webkit-scrollbar {
@@ -209,7 +225,16 @@ input[type="radio"] {
 .icon__address:before {
   content: "\e91c";
 }
+.icon__payment:before {
+  content: "\e919";
+}
 
+/*
+.icon__payment:before  {
+  content: "¥";
+  font-family: $base__font-family;
+}
+*/
 .section__title {
   color: #CECED2;
   font-size: 1em;
@@ -599,7 +624,7 @@ input[type="radio"] {
 .header-table .cuisine-header-tbl thead {
   color: #525151;
   border-bottom: 1px solid #808080;
-  box-shadow: inset 0 1px 1px 0 rgba(0, 0, 0, 0.5);
+  /*box-shadow: inset 0 1px 1px 0 rgba(0, 0, 0, 0.50);*/
 }
 .header-table .cuisine-header-tbl thead th {
   padding: 5px 5px;
@@ -663,6 +688,7 @@ input[type="radio"] {
 .order__comment {
   position: relative;
   color: #808080;
+  width: 100%;
 }
 .order__comment input {
   width: 100%;
@@ -680,16 +706,26 @@ input[type="radio"] {
   font-size: 1.25em;
 }
 
-.order__schedule {
+.order__schedule,
+.order__payment {
   position: relative;
   margin-top: 1em;
   color: #808080;
   font-weight: 500;
 }
-.order__schedule label {
+.order__schedule:before,
+.order__payment:before {
+  position: absolute;
+  left: -1.3125em;
+  font-size: 1.25em;
+  font-weight: 100;
+}
+.order__schedule label,
+.order__payment label {
   margin-right: 2em;
 }
-.order__schedule label input {
+.order__schedule label input,
+.order__payment label input {
   margin-right: 0.5em;
 }
 
@@ -717,12 +753,15 @@ input[type="radio"] {
   font-size: 1.25em;
   font-weight: 100;
 }
-.order__customer .customer__name {
-  max-width: 46.15385%;
+.order__customer .form-cell {
+  max-width: 45.38462%;
   margin-right: 0.75em;
 }
+.order__customer .customer__name {
+  max-width: 100%;
+}
 .order__customer .customer__phone {
-  max-width: 46.15385%;
+  max-width: 100%;
 }
 
 .order__address {
@@ -731,8 +770,21 @@ input[type="radio"] {
   width: 100%;
   color: #808080;
 }
+.order__address .form-cell.isInvalid {
+  border: 1px solid #a94442;
+  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+.order__address .form-cell.isInvalid:focus {
+  -moz-box-shadow: inset 0 0 2px #a94442;
+  -webkit-box-shadow: inset 0 0 2px #a94442;
+  box-shadow: inset 0 0 2px #a94442;
+}
 .order__address textarea {
   min-width: 100%;
+  max-width: 100%;
+  max-height: 3em;
 }
 .order__address:before {
   position: absolute;
@@ -740,6 +792,23 @@ input[type="radio"] {
   top: 5px;
   font-size: 1.25em;
   font-weight: 100;
+}
+
+.btn__submit {
+  display: block;
+  position: absolute;
+  right: 1em;
+  /*background-color: $yellow;*/
+  /*border-color: $yellow;*/
+  background-image: linear-gradient(-180deg, #f2f2f2 0%, #d4d4d4 100%);
+  /*box-shadow: 0px 0px 1px 0px rgba(0,0,0,0.20);*/
+  border-radius: 0.5em;
+  font-size: 20px;
+  color: #FAB327;
+  line-height: 28px;
+}
+.btn__submit--disabled {
+  color: #525151;
 }
 
 .footer {

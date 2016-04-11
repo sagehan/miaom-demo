@@ -15,6 +15,8 @@ $black1     : #404040;
 $black2     : #4A4A4A;
 
 // config
+/// Input
+$base__InvalidAlertColor  : #a94442;
 /// Typography && Foreground Colors
 $base__ForegroundColor    : $yellow;
 $base__TypeColor          : $black;
@@ -148,11 +150,27 @@ textarea {
   background: $white;
   border: 1px solid #D8D8D8;
   @include border-radius(3px);
+  padding: 2px 5px;
   font-size: 1em;
-  -webkit-appearance: none;
+  /*-webkit-appearance: none;*/
 }
 
 input[type="radio"] { @include border-radius(100%); }
+
+.form-cell {
+  display: inline-block;
+
+  &.isInvalid .customer__name,
+  &.isInvalid .customer__phone {
+    border: 1px solid $base__InvalidAlertColor;
+    @include box-shadow(inset 0 1px 1px rgba(0,0,0,0.075));
+  }
+
+  &.isInvalid .customer__name:focus,
+  &.isInvalid .customer__phone:focus {
+    @include box-shadow(inset 0 0 2px $base__InvalidAlertColor);
+  }
+}
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track {
@@ -191,7 +209,15 @@ input[type="radio"] { @include border-radius(100%); }
   &__schedule-picker:before { content: "\e921"; }
   &__customer:before { content: "\e92f"; }
   &__address:before  { content: "\e91c"; }
+  &__payment:before  { content: "\e919"; }
 }
+
+/*
+.icon__payment:before  {
+  content: "¥";
+  font-family: $base__font-family;
+}
+*/
 
 .section__title {
   color: $section__TitleColor;
@@ -557,7 +583,7 @@ input[type="radio"] { @include border-radius(100%); }
     thead {
       color: $base__TypeColor;
       border-bottom: 1px solid $base__hrColor;
-      box-shadow: inset 0 1px 1px 0 rgba(0, 0, 0, 0.50);
+      /*box-shadow: inset 0 1px 1px 0 rgba(0, 0, 0, 0.50);*/
 
       th {
         padding: 5px 5px;
@@ -627,6 +653,7 @@ input[type="radio"] { @include border-radius(100%); }
 .order__comment {
   position: relative;
   color: $base__OrderTypeColor;
+  width: 100%;
 
   input {
     width: 100%;
@@ -646,11 +673,22 @@ input[type="radio"] { @include border-radius(100%); }
   }
 }
 
-.order__schedule {
+.order__schedule,
+.order__payment {
   position: relative;
   margin-top: 1em;
   color: $base__OrderTypeColor;
   font-weight: 500;
+
+  &:before {
+    position: absolute;
+    left: -1.3125em;
+    font-size  : 1.25em;
+    font-weight: 100;
+  }
+
+  .form-cell {
+  }
 
   label {
     margin-right: 2em;
@@ -687,12 +725,16 @@ input[type="radio"] { @include border-radius(100%); }
     font-weight: 100;
   }
 
-  .customer__name {
-    max-width: percentage(120px / (320px - 44px - 16px) );
+  .form-cell {
+    max-width: percentage(118px / (320px - 44px - 16px) );
     margin-right: 0.75em;
   }
+
+  .customer__name {
+    max-width: 100%;
+  }
   .customer__phone {
-    max-width: percentage(120px / (320px - 44px - 16px) );
+    max-width: 100%;
   }
 }
 
@@ -702,7 +744,20 @@ input[type="radio"] { @include border-radius(100%); }
   width: 100%;
   color: $base__OrderTypeColor;
 
-  textarea {min-width: 100%;}
+  .form-cell.isInvalid {
+    border: 1px solid $base__InvalidAlertColor;
+    @include box-shadow(inset 0 1px 1px rgba(0,0,0,0.075));
+  }
+
+  .form-cell.isInvalid:focus {
+    @include box-shadow(inset 0 0 2px $base__InvalidAlertColor);
+  }
+
+  textarea {
+    min-width : 100%;
+    max-width : 100%;
+    max-height: 3em;
+  }
 
   &:before {
     position: absolute;
@@ -710,6 +765,24 @@ input[type="radio"] { @include border-radius(100%); }
     top : 5px;
     font-size  : 1.25em;
     font-weight: 100;
+  }
+}
+
+.btn__submit {
+  display: block;
+  position: absolute;
+  right: 1em;
+  /*background-color: $yellow;*/
+  /*border-color: $yellow;*/
+  background-image: linear-gradient(-180deg, #F2F2F2 0%, #D4D4D4 100%);
+  /*box-shadow: 0px 0px 1px 0px rgba(0,0,0,0.20);*/
+  border-radius: 0.5em;
+  font-size: 20px;
+  color: #FAB327;
+  line-height: 28px;
+
+  &--disabled {
+    color: $base__TypeColor;
   }
 }
 
@@ -987,7 +1060,6 @@ which place near the left side of the browser window*/
     background-color: $item__BackGround;
     @include columns--3;
   }
-
 
   .addition-panel {
     max-width: 480px;

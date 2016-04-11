@@ -210,9 +210,15 @@
 (def checkout!   #(swap! checkout-toggle not))
 (def ordering!   (fn [cid] (reset! adding-pool [cid])))
 (def unOrdering! #(reset! adding-pool nil))
+(defn submit-order [_]
+  (js/alert (str ";TODO: ")))
 
 ;; Auxiliary =======================================================================
 (def indexed (partial map-indexed vector))
+
+(def validate-presence? #(seq %))
+
+(def validate-regexp #(fn [v] (re-matches % (or v ""))))
 
 (def cycle-shift-vector-left!
   (fn [v] (swap! v #(into (into [] (rest %)) (vector (first %))))))
@@ -221,6 +227,14 @@
   (fn [v] (swap! v #(into (vector (peek %)) (pop %)))))
 
 (def get-spec-name (comp name :spec/name))
+
+(defn comp-validator [cell validator]
+  {:valid? (if (validator cell) true false)
+   :value cell})
+
+;;===== Form validators =============
+(def form-name-valid?  (validate-regexp #"^[a-zA-Z\u4e00-\u9fa5]{2,8}$") )
+(def form-phone-valid? (validate-regexp #"^1[3|5|7|8|][0-9]{9}$") )
 
 ;; Helper elements =================================================================
 (defelem show-or-hide
@@ -244,11 +258,25 @@
          :text trailingText))
      attr)))
 
+(defelem cell-input [{:keys [cell] :as attr}]
+  (let [evaluate #(do! (.-currentTarget %) :value)
+        attr     (dissoc attr :cell)]
+    (input attr
+      :value cell
+      :input #(reset! cell (evaluate %)) )))
+
+(defelem cell-input-wrap [{:keys [valid?] :as attr} kids]
+  (let [dirty? #(not (nil? %))
+        attr   (dissoc attr :valid?) ]
+    ((div attr kids)
+     :class (cell= {:form-cell true
+                    :isInvalid (and (dirty? (:value valid?)) (not (:valid? valid?)))}) )))
+
 (defelem schedule-picker [ attr ]
   (fieldset attr
-    (label
-      (input :type "radio" :name "schedule" :value "test")
-      "test")))
+    (cell-input-wrap
+     (label "test")
+     (input :type "radio" :name "schedule" :value "test"))))
 
 (defelem header-table [{:keys [name col-names click-fn] :as attrs}]
   (div :class "header-table"
@@ -332,43 +360,108 @@
 (defelem navbar []
   (nav :class "nav"))
 
-(defelem checkout-button [ {:keys [label btn__img] :or {label "提交订单"} :as attr} ]
+(defelem checkout-button [ {:keys [label btn__img] :or {label "订单中心"} :as attr} ]
   (a :class "checkout-button"
      :click #(checkout!)
     (span :class "checkout-button__label" :text label)
     (img  :src btn__img)))
 
 (defelem order-page []
-  (let [schedule     (cell "立即送餐")
-        isSchedule?  (cell= (= "预订" schedule))]
-      (div :class "order-page"
-        (div :class "order__cuisines icon icon__cuisines"
-          (header-table  :col-names ["菜品" "单价" "数量" "小计"])
-          (content-table :row-items (cell= (cart->selected-cuisines db__cart))))
-        (fieldset :class "order__comment icon icon__comment"
-          (input  :placeholder "备注" :optional true))
+  (let [comment        (cell nil)
+        username       (cell nil)
+        phone          (cell nil)
+        address        (cell nil)
+        payment-radio  (cell "cash")
+        schedule-radio (cell "immediate")
+        isSchedule?    (cell= (= "schedule" schedule-radio))
+        isPhoneValid?    (cell= (comp-validator phone form-phone-valid?))
+        isusernameValid? (cell= (comp-validator username form-name-valid?))
+        isAddressValid?  (cell= (comp-validator address validate-presence?))
+        isDisabled?   (cell= (not
+                              (and (:valid? isPhoneValid?    )
+                                   (:valid? isusernameValid? )
+                                   (:valid? isAddressValid?  ) ))) ]
+    (div :class "order-page"
+      (div :class "order__cuisines icon icon__cuisines"
+        (header-table  :col-names ["菜品" "单价" "数量" "小计"])
+        (content-table :row-items (cell= (cart->selected-cuisines db__cart))))
+      (form :submit submit-order
+        (cell-input-wrap :class "order__comment icon icon__comment"
+                         (cell-input :type "text" :placeholder "备注" :cell comment))
         (fieldset :class "order__schedule icon icon__schedule"
-          (label  (input
-                    :type  "radio"
-                    :name  "schedule"
-                    :value "立即送餐"
-                    :checked (cell= (= "立即送餐" schedule))
-                    :click   #(do (reset! schedule @%)))
-            "立即送餐" )
-          (label  (input
-                    :type  "radio"
-                    :name  "schedule"
-                    :value "预订"
-                    :checked (cell= (= "预订" schedule ))
-                    :click   #(do (reset! schedule @%)))
-            "预订"))
+          (cell-input-wrap
+           (label
+             (input
+               :type  "radio"
+               :name  "ifSchedule"
+               :value "schedule"
+               :click  #(reset! schedule-radio @%)
+               :checked (cell= (= "schedule" schedule-radio))) "预订"))
+          (cell-input-wrap
+           (label
+             (input
+               :type  "radio"
+               :name  "ifSchedule"
+               :value  "immediate"
+               :click #(reset! schedule-radio @%)
+               :checked (cell= (= "immediate" schedule-radio))) "立即送餐")))
         (cell= (when isSchedule?
                  (schedule-picker :class "schedule-picker icon icon__schedule-picker") ))
         (fieldset :class "order__customer icon icon__customer"
-          (input  :class "customer__name"      :placeholder "姓名/称呼")
-          (input  :class "customer__phone"     :placeholder "手机" :type "tel") )
+          (cell-input-wrap
+           :valid? (cell= (comp-validator username form-name-valid?))
+           (cell-input
+            :class "customer__name"
+            :cell  username
+            :type  "text"
+            :placeholder "姓名/称呼" ))
+          (cell-input-wrap
+           :valid? (cell= (comp-validator phone form-phone-valid?))
+           (cell-input
+            :class "customer__phone"
+            :cell  phone
+            :type  "tel"
+            :placeholder "手机")))
         (fieldset :class "order__address icon icon__address"
-          (textarea :placeholder "地址" ) ))))
+          (let [dirty?   #(not (nil? %))
+                evaluate #(do! (.-currentTarget %) :value)
+                valid?   (cell= (comp-validator address validate-presence?)) ]
+            (textarea
+              :class (cell= {:form-cell true
+                             :isInvalid (and (dirty? (:value valid?)) (not (:valid? valid?)))})
+              :value address
+              :input #(reset! address (evaluate %))
+              :placeholder "地址" )) )
+        (fieldset :class "order__payment icon icon__payment"
+          (cell-input-wrap
+           (label
+             (input
+               :type  "radio"
+               :name  "payment"
+               :value  "wechat"
+               :click #(reset! payment-radio @%)
+               :checked (cell= (= "wechat" payment-radio))) "微信支付"))
+          (cell-input-wrap
+           (label
+             (input
+               :type  "radio"
+               :name  "payment"
+               :value "alipay"
+               :click  #(reset! payment-radio @%)
+               :checked (cell= (= "alipay" payment-radio))) "支付宝"))
+          (cell-input-wrap
+           (label
+             (input
+               :type  "radio"
+               :name  "payment"
+               :value "cash"
+               :click  #(reset! payment-radio @%)
+               :checked (cell= (= "cash" payment-radio))) "到付"))
+          (button
+            :class (cell= {:btn__submit true
+                           :btn__submit--disabled isDisabled? })
+            :type "submit"
+            :disabled isDisabled? "确认订单"))))))
 
 (defelem user-page []
   (div :class "user-page"))
@@ -505,7 +598,7 @@
    :ratio "golden"
    :class "card card--front"
    (ul
-     (li :class "card__phone icon icon__phone"         :text (cell= (:restaurant/phone restaurant-meta)))
+     (li :class "card__phone      icon icon__phone"    :text (cell= (:restaurant/phone restaurant-meta)))
      (li :class "card__location   icon icon__location" :text (cell= (:restaurant/address restaurant-meta)))
      (li :class "card__rest-day   icon icon__rest-day" :text (cell= (:restaurant/rest-day restaurant-meta))))
    (img :src "img/motorbike.png")))
