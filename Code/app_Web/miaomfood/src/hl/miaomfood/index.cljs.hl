@@ -115,8 +115,11 @@
       true)))
 
 ;;===== Query  ===========================
-(defn cart->ceids [ db ]
-  (d/q  '[:find [?ceid ...] :where [?e :order/cuisines ?ceid]] db ))
+(defn cart->ceids [db]
+  (d/q '[:find [?ceid ...] :where [?e :order/cuisines ?ceid]] db))
+
+(defn cart->kv-input [db k]
+  (d/q '[:find [?eid ?v] :in $ ?k :where [?eid ?k ?v] ] db, k))
 
 (defn cart->selected-cuisines
   "Which cuisines had been added to cart? return a sequential of maps as results"
@@ -157,7 +160,7 @@
          [?e :spec/quantity   ?qty] ]
     db cid spec))
 
-(defn sum-of-cart [db]
+(defn sum-of-items [db]
   (d/q '[:find (sum ?s) .
          :with ?e
          :where
@@ -193,12 +196,30 @@
           :else      true)
         true))))
 
+(defn add-input-tx [db k v]
+  (if-let [[eid _] (cart->kv-input db k) ]
+    [[:db.fn/retractEntity eid]
+     [:db/add -1 k v]]
+    [[:db/add -1 k v]] ))
+
 (defn inc-cuisine! [cid cname spec]
   (let [price (spec-price-of cid spec)]
     (d/transact! conn__cart [[:db.fn/call inc-spec-tx cid cname spec price]]) ))
 
 (defn dec-cuisine! [cid cname spec]
-  (d/transact! conn__cart [[:db.fn/call dec-spec-tx cid cname spec]]))
+  (d/transact! conn__cart [[:db.fn/call dec-spec-tx cid cname spec]] ))
+
+(defn add-comment! [comment]
+  (d/transact! conn__cart [[:db.fn/call add-input-tx :order/comment comment]] ))
+
+(defn add-username! [name]
+  (d/transact! conn__cart [[:db.fn/call add-input-tx :customer/username name]] ))
+
+(defn add-phone! [phone]
+  (d/transact! conn__cart [[:db.fn/call add-input-tx :customer/phone phone]] ))
+
+(defn add-address! [address]
+  (d/transact! conn__cart [[:db.fn/call add-input-tx :customer/streetAddress address]] ))
 
 ;; State cells =====================================================================
 (defc folding-toggle true)
@@ -210,7 +231,7 @@
 (def checkout!   #(swap! checkout-toggle not))
 (def ordering!   (fn [cid] (reset! adding-pool [cid])))
 (def unOrdering! #(reset! adding-pool nil))
-(defn submit-order [_]
+(defn submit-order! [_]
   (js/alert (str ";TODO: ")))
 
 ;; Auxiliary =======================================================================
@@ -250,20 +271,13 @@
 (defelem tag [{:keys [leadingText trailingText] :as attr} _]
   (let [ attr (dissoc attr :leadingText :trailingText) ]
     ((span :class "tag"
-       (b
-         :class "tag__leading"
-         :text leadingText)
-       (b
-         :class  "tag__trailing"
-         :text trailingText))
-     attr)))
+       (b :class "tag__leading"  :text leadingText )
+       (b :class "tag__trailing" :text trailingText) ) attr)))
 
 (defelem cell-input [{:keys [cell] :as attr}]
   (let [evaluate #(do! (.-currentTarget %) :value)
         attr     (dissoc attr :cell)]
-    (input attr
-      :value cell
-      :input #(reset! cell (evaluate %)) )))
+    (input attr :value cell)))
 
 (defelem cell-input-wrap [{:keys [valid?] :as attr} kids]
   (let [dirty? #(not (nil? %))
@@ -299,8 +313,8 @@
            (tr
              :click #(ordering! @cid)
              (map   #(td :text %) [ item price qty subtotal ]) ))))
-      (let [coupon (cell= ())
-            sum    (cell= (sum-of-cart db__cart)) ]
+      (let [coupon (cell= nil)
+            sumall (cell= (sum-of-items db__cart)) ]
         (tfoot
           (tr
             (td :colspan 3
@@ -311,7 +325,7 @@
             (td :text "-5"))
           (tr
             (td :text "合计" :colspan 3)
-            (td :text sum) ))))))
+            (td :text sumall) ))))))
 
 ;; Component elements =================================================================
 (defelem billboard [{:keys [greeting interval] :or {interval 3000} :as attr} ]
@@ -367,10 +381,10 @@
     (img  :src btn__img)))
 
 (defelem order-page []
-  (let [comment        (cell nil)
-        username       (cell nil)
-        phone          (cell nil)
-        address        (cell nil)
+  (let [comment        (cell= (second (cart->kv-input db__cart :order/comment)))
+        username       (cell= (second (cart->kv-input db__cart :customer/username)))
+        phone          (cell= (second (cart->kv-input db__cart :customer/phone)))
+        address        (cell= (second (cart->kv-input db__cart :customer/streetAddress)))
         payment-radio  (cell "cash")
         schedule-radio (cell "immediate")
         isSchedule?    (cell= (= "schedule" schedule-radio))
@@ -385,9 +399,9 @@
       (div :class "order__cuisines icon icon__cuisines"
         (header-table  :col-names ["菜品" "单价" "数量" "小计"])
         (content-table :row-items (cell= (cart->selected-cuisines db__cart))))
-      (form :submit submit-order
+      (form :submit submit-order!
         (cell-input-wrap :class "order__comment icon icon__comment"
-                         (cell-input :type "text" :placeholder "备注" :cell comment))
+         (input :placeholder "备注" :value comment :change #(add-comment! @%)))
         (fieldset :class "order__schedule icon icon__schedule"
           (cell-input-wrap
            (label
@@ -408,30 +422,12 @@
         (cell= (when isSchedule?
                  (schedule-picker :class "schedule-picker icon icon__schedule-picker") ))
         (fieldset :class "order__customer icon icon__customer"
-          (cell-input-wrap
-           :valid? (cell= (comp-validator username form-name-valid?))
-           (cell-input
-            :class "customer__name"
-            :cell  username
-            :type  "text"
-            :placeholder "姓名/称呼" ))
-          (cell-input-wrap
-           :valid? (cell= (comp-validator phone form-phone-valid?))
-           (cell-input
-            :class "customer__phone"
-            :cell  phone
-            :type  "tel"
-            :placeholder "手机")))
-        (fieldset :class "order__address icon icon__address"
-          (let [dirty?   #(not (nil? %))
-                evaluate #(do! (.-currentTarget %) :value)
-                valid?   (cell= (comp-validator address validate-presence?)) ]
-            (textarea
-              :class (cell= {:form-cell true
-                             :isInvalid (and (dirty? (:value valid?)) (not (:valid? valid?)))})
-              :value address
-              :input #(reset! address (evaluate %))
-              :placeholder "地址" )) )
+          (cell-input-wrap :valid? (cell= (comp-validator username form-name-valid?))
+            (input :class "customer__name" :value  username :change #(add-username! @%) :placeholder "姓名/称呼" ))
+          (cell-input-wrap :valid? (cell= (comp-validator phone form-phone-valid?))
+            (input :class "customer__phone" :value  phone :change #(add-phone! @%) :type "tel" :placeholder "手机")))
+        (cell-input-wrap :class "order__address icon icon__address"
+          (textarea :value address :change #(add-address! @%) :placeholder "地址" ) )
         (fieldset :class "order__payment icon icon__payment"
           (cell-input-wrap
            (label

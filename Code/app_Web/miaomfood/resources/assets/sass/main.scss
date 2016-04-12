@@ -537,13 +537,15 @@ input[type="radio"] { @include border-radius(100%); }
 .checkout-panel {
   position: fixed;
   top: 0;
+  bottom: 0;
   left: 0;
+  right: 0;
   z-index: 99999;
   padding-top: $banner__height;
   @include transition-duration(0.4s);
-  height: 100%;
-  width: 100%;
   background: $white;
+  overflow-y: scroll;
+  overflow-x: hidden;
 
   &.isVisible {
     opacity: 1;
@@ -772,6 +774,8 @@ input[type="radio"] { @include border-radius(100%); }
   display: block;
   position: absolute;
   right: 1em;
+  margin-top: 1em;
+  margin-bottom: 3em;
   /*background-color: $yellow;*/
   /*border-color: $yellow;*/
   background-image: linear-gradient(-180deg, #F2F2F2 0%, #D4D4D4 100%);
