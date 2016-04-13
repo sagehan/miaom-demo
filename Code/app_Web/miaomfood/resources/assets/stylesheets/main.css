@@ -113,28 +113,17 @@ textarea {
   border-radius: 3px;
   padding: 2px 5px;
   font-size: 1em;
-  /*-webkit-appearance: none;*/
+  -webkit-appearance: none;
 }
 
-input[type="radio"] {
-  -moz-border-radius: 100%;
-  -webkit-border-radius: 100%;
-  border-radius: 100%;
-}
-
-.form-cell {
-  display: inline-block;
-}
-.form-cell.isInvalid .customer__name, .form-cell.isInvalid .customer__phone {
+.is-invalid input {
   border: 1px solid #a94442;
   -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
   -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
 }
-.form-cell.isInvalid .customer__name:focus, .form-cell.isInvalid .customer__phone:focus {
-  -moz-box-shadow: inset 0 0 2px #a94442;
-  -webkit-box-shadow: inset 0 0 2px #a94442;
-  box-shadow: inset 0 0 2px #a94442;
+.is-invalid input:focus {
+  /*@include box-shadow(inset 0 0 2px $base__InvalidAlertColor);*/
 }
 
 ::-webkit-scrollbar {
@@ -216,10 +205,10 @@ input[type="radio"] {
 .icon__comment:before {
   content: "\e92c";
 }
-.icon__schedule-picker:before {
+.icon__schedule:before {
   content: "\e921";
 }
-.icon__customer:before {
+.icon__user:before {
   content: "\e92f";
 }
 .icon__address:before {
@@ -458,7 +447,7 @@ input[type="radio"] {
   -webkit-transition-delay: 0.5s, 0s;
   transition: visibility 0s 0.5s, opacity 0.5s 0s;
 }
-.modal.isVisible {
+.modal.is-visible {
   opacity: 1;
   visibility: visible;
   -moz-transition: visibility 0s 0s, opacity 0.5s 0s;
@@ -487,7 +476,7 @@ input[type="radio"] {
   -webkit-transition-duration: 0.5s;
   transition-duration: 0.5s;
 }
-.addition-panel.isVisible {
+.addition-panel.is-visible {
   opacity: 1;
   -moz-transform: translateY(0);
   -ms-transform: translateY(0);
@@ -554,7 +543,7 @@ input[type="radio"] {
   -webkit-transition-duration: 0.5s;
   transition-duration: 0.5s;
 }
-.miao-button.isVisible {
+.miao-button.is-visible {
   opacity: 1;
   -moz-transform: translateY(0);
   -ms-transform: translateY(0);
@@ -583,7 +572,7 @@ input[type="radio"] {
   overflow-y: scroll;
   overflow-x: hidden;
 }
-.checkout-panel.isVisible {
+.checkout-panel.is-visible {
   opacity: 1;
   -moz-transform: translateY(0);
   -ms-transform: translateY(0);
@@ -687,11 +676,6 @@ input[type="radio"] {
   max-width: 58.46154%;
 }
 
-.order__comment {
-  position: relative;
-  color: #808080;
-  width: 100%;
-}
 .order__comment input {
   width: 100%;
   margin-top: 0.375em;
@@ -701,99 +685,57 @@ input[type="radio"] {
   background: #fafafa;
   border-bottom: 1px dotted #979797;
 }
-.order__comment:before {
-  position: absolute;
-  left: -1.3125em;
-  top: 5px;
-  font-size: 1.25em;
-}
 
+.order__comment,
 .order__schedule,
-.order__payment {
-  position: relative;
-  margin-top: 1em;
-  color: #808080;
-  font-weight: 500;
-}
-.order__schedule:before,
-.order__payment:before {
-  position: absolute;
-  left: -1.3125em;
-  font-size: 1.25em;
-  font-weight: 100;
-}
-.order__schedule label,
-.order__payment label {
-  margin-right: 2em;
-}
-.order__schedule label input,
-.order__payment label input {
-  margin-right: 0.5em;
-}
-
-.schedule-picker {
-  position: relative;
-  margin-top: 1em;
-  color: #808080;
-}
-.schedule-picker:before {
-  position: absolute;
-  left: -1.3125em;
-  font-size: 1.25em;
-  font-weight: 100;
-}
-
-.order__customer {
-  position: relative;
-  margin-top: 0.75em;
-  color: #808080;
-}
-.order__customer:before {
-  position: absolute;
-  left: -1.3125em;
-  top: 5px;
-  font-size: 1.25em;
-  font-weight: 100;
-}
-.order__customer .form-cell {
-  max-width: 45.38462%;
-  margin-right: 0.75em;
-}
-.order__customer .customer__name {
-  max-width: 100%;
-}
-.order__customer .customer__phone {
-  max-width: 100%;
-}
-
+.schedule-picker,
+.order__payment,
+.customer__name,
+.customer__phone,
 .order__address {
   position: relative;
   margin-top: 0.75em;
   width: 100%;
+  height: 1.5em;
   color: #808080;
+  font-weight: 500;
 }
-.order__address .form-cell.isInvalid {
-  border: 1px solid #a94442;
-  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+.order__comment:before,
+.order__schedule:before,
+.schedule-picker:before,
+.order__payment:before,
+.customer__name:before,
+.customer__phone:before,
+.order__address:before {
+  position: absolute;
+  left: -1.3125em;
+  font-size: 1.25em;
+  font-weight: 100;
 }
-.order__address .form-cell.isInvalid:focus {
-  -moz-box-shadow: inset 0 0 2px #a94442;
-  -webkit-box-shadow: inset 0 0 2px #a94442;
-  box-shadow: inset 0 0 2px #a94442;
+
+.order__address {
+  height: 3em;
 }
 .order__address textarea {
   min-width: 100%;
   max-width: 100%;
   max-height: 3em;
 }
-.order__address:before {
-  position: absolute;
-  left: -1.3125em;
-  top: 5px;
-  font-size: 1.25em;
-  font-weight: 100;
+
+.btn__radio {
+  float: left;
+  text-align: center;
+  margin-right: 1em;
+  padding: 2px 0.5em;
+  border: 1px dashed #CECED2;
+  -moz-border-radius: 0.25em;
+  -webkit-border-radius: 0.25em;
+  border-radius: 0.25em;
+  color: #D8D8D8;
+}
+.btn__radio.is-selected {
+  border: 1px solid #30AD63;
+  color: #525151;
 }
 
 .btn__submit {
@@ -801,18 +743,18 @@ input[type="radio"] {
   position: absolute;
   right: 1em;
   margin-top: 1em;
-  margin-bottom: 3em;
   /*background-color: $yellow;*/
   /*border-color: $yellow;*/
   background-image: linear-gradient(-180deg, #f2f2f2 0%, #d4d4d4 100%);
-  /*box-shadow: 0px 0px 1px 0px rgba(0,0,0,0.20);*/
-  border-radius: 0.5em;
+  -moz-border-radius: 0.25em;
+  -webkit-border-radius: 0.25em;
+  border-radius: 0.25em;
   font-size: 20px;
   color: #FAB327;
   line-height: 28px;
 }
 .btn__submit--disabled {
-  color: #525151;
+  color: #D8D8D8;
 }
 
 .footer {
