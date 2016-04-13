@@ -11,18 +11,18 @@
 (add-initfn! (rpc/fetch-raw-db))
 
 ;; Remote DB ============================================================
-(def schema {:website/notices   {:db/cardinality :db.cardinality/many
-                                 :db/valueType   :db.type/ref }
-             :group/menus       {:db/cardinality :db.cardinality/many
-                                 :db/valueType   :db.type/ref }
-             :menu/categories   {:db/cardinality :db.cardinality/many
-                                 :db/valueType   :db.type/ref }
-             :category/cuisines {:db/cardinality :db.cardinality/many
-                                 :db/valueType   :db.type/ref }
-             :cuisine/id        {:db/unique      :db.unique/identity }
-             :cuisine/species   {:db/cardinality :db.cardinality/many
-                                 :db/isComponent true
-                                 :db/valueType   :db.type/ref }} )
+(def schema {:website/notices   {:db/valueType   :db.type/ref
+                                 :db/cardinality :db.cardinality/many }
+             :group/menus       {:db/valueType   :db.type/ref
+                                 :db/cardinality :db.cardinality/many }
+             :menu/categories   {:db/valueType   :db.type/ref
+                                 :db/cardinality :db.cardinality/many }
+             :category/cuisines {:db/valueType   :db.type/ref
+                                 :db/cardinality :db.cardinality/many }
+             :cuisine/id        {:db/unique      :db.unique/identity  }
+             :cuisine/species   {:db/isComponent true
+                                 :db/valueType   :db.type/ref
+                                 :db/cardinality :db.cardinality/many } })
 (def datoms  (cell= rpc/raw-db) )
 (def db      (cell= (d/db-with (d/empty-db schema) datoms)))
 
@@ -35,19 +35,26 @@
                       [?ns :notice/content ?n]]
                  db))
 
-(defc= restaurant-meta (d/q '[:find (pull ?e [:restaurant/name
-                                              :restaurant/phone
-                                              :restaurant/address
-                                              :restaurant/wechatID
-                                              :restaurant/rest-day
-                                              :restaurant/isClosed ]) .
-                              :where [?e :restaurant/name]]
-                         db))
+(defc= slide-imgs ["img/Chicken.JPG" "img/热辣牛肉.JPG" "img/Salad.jpg"])
+
+(defc= restaurant-meta
+  (d/q '[:find (pull ?e
+                     [:restaurant/name
+                      :restaurant/phone
+                      :restaurant/address
+                      :restaurant/wechatID
+                      :restaurant/rest-day
+                      :restaurant/isClosed ]) .
+         :where [?e :restaurant/name] ] db))
+
+(defc= restaurant-tel     (:restaurant/phone restaurant-meta))
+(defc= restaurant-address (:restaurant/address restaurant-meta))
+(defc= restaurant-restday (:restaurant/rest-day restaurant-meta))
 
 (defc= menus (d/q '[:find [?mn ...]
-                    :where [ _   :group/menus ?gm ]
-                    [ ?gm :menu/name  ?mn ] ]
-               db))
+                    :where
+                    [ _   :group/menus ?gm ]
+                    [ ?gm :menu/name   ?mn ] ] db))
 
 (defc= categories-of
   (fn  [menu]
@@ -56,8 +63,7 @@
            :where
            [ ?e  :menu/name       ?mn ]
            [ ?e  :menu/categories ?mc ]
-           [ ?mc :category/name   ?cn ] ]
-      db, menu)))
+           [ ?mc :category/name   ?cn ] ] db, menu)))
 
 (defc= cuisines-of
   (fn [category]
@@ -66,36 +72,31 @@
            :where
            [ ?e  :category/name     ?cn  ]
            [ ?e  :category/cuisines ?cc  ]
-           [ ?cc :cuisine/id        ?cid ] ]
-      db, category)))
+           [ ?cc :cuisine/id        ?cid ] ] db, category)))
 
 (defc= cuisine-details-of
-  (fn [cuisine-id]
-    (d/pull db ["*"] [:cuisine/id cuisine-id])))
+  (fn [cuisine-id] (d/pull db ["*"] [:cuisine/id cuisine-id])))
 
-(def spec-price-of
+(defn spec-price-of  [cid spec]
   (let [get-spec-name (comp name :spec/name)]
-    (fn  [cid spec]
-      (->> (:cuisine/species (@cuisine-details-of cid) )
-           (filter #(= spec (get-spec-name %)) )
-           first
-           :spec/price ))))
+    (->> (:cuisine/species (@cuisine-details-of cid) )
+         (filter #(= spec (get-spec-name %)) )
+         first
+         :spec/price )))
 
 ;; Local DB ====================================================================
-
-(def  schema__cart {:order/cuisines  {:db/cardinality :db.cardinality/many
+(def  schema__cart {:order/cuisines  {:db/isComponent true
                                       :db/valueType   :db.type/ref
-                                      :db/isComponent true }
-                    :cuisine/id      {:db/unique      :db.unique/identity }
-                    :cuisine/species {:db/cardinality :db.cardinality/many
-                                      :db/isComponent true
-                                      :db/valueType   :db.type/ref }} )
-(def conn__cart (d/create-conn schema__cart) )
-
-(def db__cart (cell (d/empty-db)) )
+                                      :db/cardinality :db.cardinality/many }
+                    :cuisine/id      {:db/unique      :db.unique/identity  }
+                    :cuisine/species {:db/isComponent true
+                                      :db/valueType   :db.type/ref
+                                      :db/cardinality :db.cardinality/many } })
+(def  conn__cart (d/create-conn schema__cart) )
+(defc db__cart  (d/empty-db) )
 
 ;;===== fresh DB on every transaction!
-(d/listen! conn__cart :fresh #(reset! db__cart (:db-after %)))
+(d/listen! conn__cart :freshDB #(reset! db__cart (:db-after %)))
 
 ;;===== persisting DB between page reloads!
 (defn persist [db]
@@ -109,7 +110,7 @@
 ;;      Thanks Nikita Prokopov https://github.com/tonsky/
 (when-let [stored (js/localStorage.getItem "miaomfood/DB")]
   (let [stored-db (dt/read-transit-str stored)]
-    (when (= (:schema stored-db) schema__cart) ;; check for code update
+    (when (= (:schema stored-db) schema__cart)
       (d/reset-conn! conn__cart stored-db)
       (persist stored-db)
       true)))
@@ -146,27 +147,31 @@
                [ ?e  :cuisine/id      ?cid ]
                [ ?e  :cuisine/species ?cs  ]
                [ ?cs :spec/name       ?sn  ]
-               [ ?cs :spec/quantity   ?sq  ]]
-          db, cuisines-id) ]
-    (d/pull-many db ["*"] eids)))
+               [ ?cs :spec/quantity   ?sq  ] ] db, cuisines-id) ]
+    (d/pull-many db ["*"] eids) ))
 
 (defn spec-qty-tuple [db cid spec]
   (d/q '[:find [?e ?qty]
          :in $ ?cid ?spec
          :where
-         [?c :cuisine/id      ?cid]
-         [?c :cuisine/species ?e]
-         [?e :spec/name       ?spec]
-         [?e :spec/quantity   ?qty] ]
-    db cid spec))
+         [?c :cuisine/id      ?cid  ]
+         [?c :cuisine/species ?e    ]
+         [?e :spec/name       ?spec ]
+         [?e :spec/quantity   ?qty  ] ] db cid spec))
 
 (defn sum-of-items [db]
   (d/q '[:find (sum ?s) .
          :with ?e
          :where
-         [?e :spec/price    ?p]
-         [?e :spec/quantity ?q]
-         [(* ?p ?q)         ?s]] db))
+         [?e :spec/price    ?p ]
+         [?e :spec/quantity ?q ]
+         [(* ?p ?q)         ?s ] ] db))
+
+(defc= selected-items (cart->selected-cuisines db__cart))
+(defc= order-comment (second (cart->kv-input db__cart :order/comment)))
+(defc= customer-name (second (cart->kv-input db__cart :customer/username)))
+(defc= customer-tel  (second (cart->kv-input db__cart :customer/phone)))
+(defc= customer-addr (second (cart->kv-input db__cart :customer/streetAddress)))
 
 ;;===== transaction! ======================
 (defn inc-spec-tx [db cid cname spec price]
@@ -198,8 +203,7 @@
 
 (defn add-input-tx [db k v]
   (if-let [[eid _] (cart->kv-input db k) ]
-    [[:db.fn/retractEntity eid]
-     [:db/add -1 k v]]
+    [[:db.fn/retractEntity eid] [:db/add -1 k v]]
     [[:db/add -1 k v]] ))
 
 (defn inc-cuisine! [cid cname spec]
@@ -222,17 +226,16 @@
   (d/transact! conn__cart [[:db.fn/call add-input-tx :customer/streetAddress address]] ))
 
 ;; State cells =====================================================================
-(defc folding-toggle true)
+(defc fold-toggle true)
 (defc checkout-toggle false)
 (defc adding-pool nil)
 
 ;;===== state transition functions ==========
-(def folding!    #(swap! folding-toggle not))
-(def checkout!   #(swap! checkout-toggle not))
-(def ordering!   (fn [cid] (reset! adding-pool [cid])))
-(def unOrdering! #(reset! adding-pool nil))
-(defn submit-order! [_]
-  (js/alert (str ";TODO: ")))
+(defn folding!      [] (swap! fold-toggle not))
+(defn checkout!     [] (swap! checkout-toggle not))
+(defn ordering!  [cid] (reset! adding-pool [cid]))
+(defn unOrdering!   [] (reset! adding-pool nil))
+(defn submit-order! [] (js/alert (str ";TODO: ")))
 
 ;; Auxiliary =======================================================================
 (def indexed (partial map-indexed vector))
@@ -258,46 +261,39 @@
 (def form-phone-valid? (validate-regexp #"^1[3|5|7|8|][0-9]{9}$") )
 
 ;; Helper elements =================================================================
-(defelem show-or-hide
-  [{:keys [state]} children]
-  (map (fn [child] (child :slide-toggle state)) children))
+(defelem show-or-hide [{:keys [state]} kids]
+  (map (fn [child] (child :slide-toggle state)) kids))
 
-(defelem equal-ratio-wrap [{:keys [ratio] :or {:ratio "golden"} :as attr} body]
-  (let [attr (dissoc attr :ratio)]
-    ((div attr) {:class (str "wrp_ratio--" ratio)}
-      (div :class "wrp--stretched"
-        body))))
+(defelem equal-ratio-wrap [{:keys [ratio] :or {:ratio "golden"} :as attrs} body]
+  (let [attr (dissoc attrs :ratio)]
+    ((div attrs) {:class (str "wrp_ratio--" ratio)}
+      (div :class "wrp--stretched" body) )))
 
-(defelem tag [{:keys [leadingText trailingText] :as attr} _]
-  (let [ attr (dissoc attr :leadingText :trailingText) ]
+(defelem tag [{:keys [leadingText trailingText] :as attrs} _]
+  (let [ attrs (dissoc attrs :leadingText :trailingText) ]
     ((span :class "tag"
        (b :class "tag__leading"  :text leadingText )
-       (b :class "tag__trailing" :text trailingText) ) attr)))
+       (b :class "tag__trailing" :text trailingText) ) attrs)))
 
-(defelem cell-input [{:keys [cell] :as attr}]
-  (let [evaluate #(do! (.-currentTarget %) :value)
-        attr     (dissoc attr :cell)]
-    (input attr :value cell)))
-
-(defelem cell-input-wrap [{:keys [valid?] :as attr} kids]
+(defelem input-wrap [{:keys [valid?] :as attrs} kids]
   (let [dirty? #(not (nil? %))
-        attr   (dissoc attr :valid?) ]
-    ((div attr kids)
+        attrs   (dissoc attrs :valid?) ]
+    ((div attrs kids)
      :class (cell= {:form-cell true
                     :isInvalid (and (dirty? (:value valid?)) (not (:valid? valid?)))}) )))
 
-(defelem schedule-picker [ attr ]
-  (fieldset attr
-    (cell-input-wrap
+(defelem schedule-picker [ attrs ]
+  (fieldset attrs
+    (input-wrap
      (label "test")
      (input :type "radio" :name "schedule" :value "test"))))
 
-(defelem header-table [{:keys [name col-names click-fn] :as attrs}]
+(defelem header-table [{:keys [name col-names click-fn] :as attrss}]
   (div :class "header-table"
     (table :class "cuisine-header-tbl"
       (thead (tr (map #(th :scope "col" :text %) col-names))))))
 
-(defelem content-table [{:keys [name row-items click-fn] :as attrs}]
+(defelem content-table [{:keys [name row-items click-fn] :as attrss}]
   (div :class "content-table"
     (table :class "cuisine-body-tbl"
       (tbody
@@ -328,10 +324,10 @@
             (td :text sumall) ))))))
 
 ;; Component elements =================================================================
-(defelem billboard [{:keys [greeting interval] :or {interval 3000} :as attr} ]
-  (let [ note  (cell greeting)
-         attr  (dissoc attr :interval :greeting) ]
-    (with-let [elem (div attr (span :class "notice-board__notice" (cell= note )))]
+(defelem billboard [{:keys [greeting interval] :or {interval 3000} :as attrs} ]
+  (let [ note   (cell greeting)
+         attrs  (dissoc attrs :interval :greeting) ]
+    (with-let [elem (div attrs (span :class "notice-board__notice" note ))]
       (with-init!
         (with-interval interval
           (when-let [hasValue (cell= (rand-nth notices))]
@@ -340,17 +336,15 @@
 (defelem slideshow [{
                      :keys [ imgs interval default_img ]
                      :or   { interval 3000 default_img "img/logo.jpg" }
-                     :as   attr
-                     }]
+                     :as   attrs }]
   (let [ imgs   (cell= (->> (conj [] default_img (not-empty imgs))
                           (flatten)
                           (distinct)
                           (filterv #(not= nil %))))
          toggle (cell   [ [true] [false] [false] [false] ])
-         attr   (dissoc attr :imgs :interval :default_img) ]
+         attrs  (dissoc attrs :imgs :interval :default_img) ]
     (with-let [elem
-               (equal-ratio-wrap
-                attr
+               (equal-ratio-wrap attrs
                 (div (loop-tpl
                       :bindings [ [[t] im] (cell= (map vector toggle imgs)) ]
                       (img
@@ -374,17 +368,17 @@
 (defelem navbar []
   (nav :class "nav"))
 
-(defelem checkout-button [ {:keys [label btn__img] :or {label "订单中心"} :as attr} ]
+(defelem checkout-button [ {:keys [label btn__img] :or {label "订单中心"} :as attrs} ]
   (a :class "checkout-button"
      :click #(checkout!)
     (span :class "checkout-button__label" :text label)
     (img  :src btn__img)))
 
 (defelem order-page []
-  (let [comment        (cell= (second (cart->kv-input db__cart :order/comment)))
-        username       (cell= (second (cart->kv-input db__cart :customer/username)))
-        phone          (cell= (second (cart->kv-input db__cart :customer/phone)))
-        address        (cell= (second (cart->kv-input db__cart :customer/streetAddress)))
+  (let [comment        order-comment
+        username       customer-name
+        phone          customer-tel
+        address        customer-addr
         payment-radio  (cell "cash")
         schedule-radio (cell "immediate")
         isSchedule?    (cell= (= "schedule" schedule-radio))
@@ -398,38 +392,38 @@
     (div :class "order-page"
       (div :class "order__cuisines icon icon__cuisines"
         (header-table  :col-names ["菜品" "单价" "数量" "小计"])
-        (content-table :row-items (cell= (cart->selected-cuisines db__cart))))
+        (content-table :row-items selected-items))
       (form :submit submit-order!
-        (cell-input-wrap :class "order__comment icon icon__comment"
+        (input-wrap :class "order__comment icon icon__comment"
          (input :placeholder "备注" :value comment :change #(add-comment! @%)))
         (fieldset :class "order__schedule icon icon__schedule"
-          (cell-input-wrap
-           (label
-             (input
-               :type  "radio"
-               :name  "ifSchedule"
-               :value "schedule"
-               :click  #(reset! schedule-radio @%)
-               :checked (cell= (= "schedule" schedule-radio))) "预订"))
-          (cell-input-wrap
+          (input-wrap
            (label
              (input
                :type  "radio"
                :name  "ifSchedule"
                :value  "immediate"
                :click #(reset! schedule-radio @%)
-               :checked (cell= (= "immediate" schedule-radio))) "立即送餐")))
+               :checked (cell= (= "immediate" schedule-radio))) "立即送餐"))
+          (input-wrap
+           (label
+             (input
+               :type  "radio"
+               :name  "ifSchedule"
+               :value "schedule"
+               :click  #(reset! schedule-radio @%)
+               :checked (cell= (= "schedule" schedule-radio))) "预订")))
         (cell= (when isSchedule?
                  (schedule-picker :class "schedule-picker icon icon__schedule-picker") ))
         (fieldset :class "order__customer icon icon__customer"
-          (cell-input-wrap :valid? (cell= (comp-validator username form-name-valid?))
+          (input-wrap :valid? (cell= (comp-validator username form-name-valid?))
             (input :class "customer__name" :value  username :change #(add-username! @%) :placeholder "姓名/称呼" ))
-          (cell-input-wrap :valid? (cell= (comp-validator phone form-phone-valid?))
+          (input-wrap :valid? (cell= (comp-validator phone form-phone-valid?))
             (input :class "customer__phone" :value  phone :change #(add-phone! @%) :type "tel" :placeholder "手机")))
-        (cell-input-wrap :class "order__address icon icon__address"
+        (input-wrap :class "order__address icon icon__address"
           (textarea :value address :change #(add-address! @%) :placeholder "地址" ) )
         (fieldset :class "order__payment icon icon__payment"
-          (cell-input-wrap
+          (input-wrap
            (label
              (input
                :type  "radio"
@@ -437,7 +431,7 @@
                :value  "wechat"
                :click #(reset! payment-radio @%)
                :checked (cell= (= "wechat" payment-radio))) "微信支付"))
-          (cell-input-wrap
+          (input-wrap
            (label
              (input
                :type  "radio"
@@ -445,7 +439,7 @@
                :value "alipay"
                :click  #(reset! payment-radio @%)
                :checked (cell= (= "alipay" payment-radio))) "支付宝"))
-          (cell-input-wrap
+          (input-wrap
            (label
              (input
                :type  "radio"
@@ -463,7 +457,8 @@
   (div :class "user-page"))
 
 (defelem control-tabs []
-  (div))
+  (div :class "control-tabs"
+    ))
 
 (defelem controller-bar []
   (div :class (cell= {:controller-bar true, :clearfix true,
@@ -472,12 +467,10 @@
               (billboard
                :class "notice-board" :greeting "欢迎预订" :interval 3000)
               (control-tabs)))
-    (checkout-button
-     :label "订单中心" :btn__img "img/notepad.png")))
-
+    (checkout-button :label "订单中心" :btn__img "img/notepad.png")))
 
 (defelem checkout-panel []
-  (let [items        (cell= (not-empty (cart->selected-cuisines db__cart)) )
+  (let [items        (cell= (not-empty selected-items) )
         isCartEmpty? (cell= (not (seq? items)) )
         hasLogin?    (cell  false)
         isOrderPage? (cell  true)
@@ -503,12 +496,11 @@
         (.css (js/jQuery "body") "overflow" "hidden")
         (reset! visible? true)) )))
 
-(defelem addition-button [{:keys [cid] :as attr} _]
-  (let [attr (dissoc attr :cid)]
-    (div attr
-      :click #(ordering! cid))))
+(defelem addition-button [{:keys [cid] :as attrs} _]
+  (let [attr (dissoc attrs :cid)]
+    (div attrs :click #(ordering! cid))))
 
-(defelem addition-panel [{:keys [cid] :as attr} _]
+(defelem addition-panel [{:keys [cid] :as attrs} _]
   (let [c         (cell= (cuisine-details-of cid))
         species   (cell= (:cuisine/species c))
         cname     (cell= (:cuisine/name    c))
@@ -570,12 +562,12 @@
                                               (get % :spec/quantity)) selected)
                                    (string/join ", ")) ))))
 
-(defelem cuisine [{:keys [name depict species currency id] :or {currency "¥"} :as attr}]
+(defelem cuisine [{:keys [name depict species currency id] :or {currency "¥"} :as attrs}]
   (let [price     (cell=  (string/join "/" (sort (map :spec/price species))))
         selected? (cell=  (seq (cart->selected-species db__cart id)))
         imgsrc    (cell=  (str "img/" (first depict)))
-        attr      (dissoc attr  :name :depict :species :currency)]
-    (article attr
+        attrs      (dissoc attrs  :name :depict :species :currency)]
+    (article attrs
       (equal-ratio-wrap {:class "item__header", :ratio "4_3"}
          (img :class "cuisine__picture",  :src imgsrc))
       (div :class "item__body clearfix"
@@ -585,23 +577,19 @@
         (addition-button :class "cuisine__button" :cid id)
         (cell= (when selected? (counter-tag id )))))))
 
-(defelem v-Card
+(defelem business-card
   "TODO:// Finally, and ideally, this page elements should have a
                    button which will give customer a vCard file after
                    itself is been clikced. Now, it just a card-style div"
   []
-  (equal-ratio-wrap
-   :ratio "golden"
-   :class "card card--front"
+  (equal-ratio-wrap {:class "card card--front", :ratio "golden"}
    (ul
-     (li :class "card__phone      icon icon__phone"    :text (cell= (:restaurant/phone restaurant-meta)))
-     (li :class "card__location   icon icon__location" :text (cell= (:restaurant/address restaurant-meta)))
-     (li :class "card__rest-day   icon icon__rest-day" :text (cell= (:restaurant/rest-day restaurant-meta))))
+     (li :class "card__phone     icon icon__phone"    :text restaurant-tel)
+     (li :class "card__location  icon icon__location" :text restaurant-address)
+     (li :class "card__rest-day  icon icon__rest-day" :text restaurant-restday))
    (img :src "img/motorbike.png")))
 
-(defelem social-vCard
-  ""
-  []
+(defelem social-card []
   (equal-ratio-wrap {:class "card card--back", :ratio "golden"}
      (h1 :class "card__title icon icon__wechat"  :text  "关注微信")
    (figure
@@ -609,7 +597,6 @@
      (figcaption :class "clearfix"
        (h2 :text (cell= (:restaurant/name restaurant-meta)))
        (p  :text (cell= (str "id: " (:restaurant/wechatID restaurant-meta))))))
-
    (figure
      (img        :class "card__img" :src "img/QR-1.jpg" :alt "客服微信号")
      (figcaption :class "clearfix"
@@ -620,54 +607,34 @@
 (defn create-cuisine
   "Receive a cuisine id, generate a cuisine element"
   [cid]
-  (let [c       (cell= (cuisine-details-of cid))
-        c_title (cell= (:cuisine/name      c))
-        c_img   (cell= (:cuisine/depict    c))
-        c_spec  (cell= (:cuisine/species   c))  ]
-    (cuisine :class   "item cuisine"
-             :id      cid
-             :name    c_title
-             :depict  c_img
-             :species c_spec )))
+  (let [c    (cell= (cuisine-details-of cid) )
+        name (cell= (:cuisine/name        c) )
+        img  (cell= (:cuisine/depict      c) )
+        spec (cell= (:cuisine/species     c) ) ]
+    (cuisine :class "item cuisine" :id cid, :name name, :depict img, :species spec )))
 
 ;; App skeleton =================================================================
 (html
   (head
     (title :text site-title)
-    (link
-      :rel "shortcut icon"
-      :href "img/motorbike.png")
-    (link
-      :rel "stylesheet"
-      :href "stylesheets/main.css")
+    (link  :rel "shortcut icon" :href "img/motorbike.png")
+    (link  :rel "stylesheet"    :href "stylesheets/main.css")
     (html-meta :charset "utf-8")
-    (html-meta
-      :http-equiv "Content-Type"
-      :content "text/html; charset=utf-8")
-    (html-meta
-      :name "description"
-      :content "美味披萨,焗饭,还有各种小吃,乌鲁木齐全城外送!")
-    (html-meta
-      :name "keywords"
-      :content "喵姆餐厅 喵姆 Miaom 快餐 美味 乌鲁木齐快餐 披萨 焗饭 沙拉 烤翅")
-    (html-meta
-      :name "viewport"
-      :content "initial-scale=1.0, width=device-width, maximum-scale=1, user-scalable=0")
-    (html-meta
-     :name "msapplication-tap-highlight"
-     :content "no"))
+    (html-meta :name "description" :content "美味披萨,焗饭,还有各种小吃,乌鲁木齐全城外送!")
+    (html-meta :name "keywords"    :content "喵姆餐厅 喵姆 Miaom 快餐 美味 乌鲁木齐快餐 披萨 焗饭 沙拉 烤翅")
+    (html-meta :name "viewport"    :content "initial-scale=1.0, width=device-width, maximum-scale=1, user-scalable=0")
+    (html-meta :name "msapplication-tap-highlight" :content "no")
+    (html-meta :http-equiv "Content-Type" :content "text/html; charset=utf-8"))
   (body
-    (noscript
-      (div :id "noscript"
-        (p "JavaScript is required to view this page.")))
+    (noscript (div :id "noscript" (p "JavaScript is required to view this page.")))
     (div :class "wrapper"
       (show-or-hide
-       :state folding-toggle
+       :state fold-toggle
        (slideshow
         :class "slideshow"
         :id    "slideshow"
         :ratio "golden"
-        :imgs  (cell ["img/Chicken.JPG" "img/热辣牛肉.JPG" "img/Salad.jpg"])
+        :imgs  slide-imgs
         :default_img "img/logo.jpg"))
       (cell= (when-not checkout-toggle
                (controller-bar
@@ -675,7 +642,7 @@
                                 :controller-bar--stickyMenuTop ";TODO: "}))))
       (navbar)
       (div :class "menus" :id "menus"
-        (loop-tpl
+ (loop-tpl
          :bindings [menu menus]
          (section
            :id    menu
@@ -690,9 +657,10 @@
                 (h1 :class "section__title" :text category))
               (div
                 :class "section__body item-list clearfix"
-                (cell-map create-cuisine
-                          (cell= (cuisines-of category)))))))))
-      (footer (social-vCard) (v-Card) {:class "footer"} )
+                (cell-map create-cuisine (cell= (cuisines-of category))) ))))))
+      (footer :class "footer"
+        (social-card)
+        (business-card) )
       (cell=  (when checkout-toggle
                 (checkout-panel) ))
       (cell=  (when-let [cid (peek adding-pool)]
