@@ -215,7 +215,7 @@ textarea {
   content: "\e91c";
 }
 .icon__payment:before {
-  content: "\e919";
+  content: "\e918";
 }
 
 /*
@@ -354,6 +354,119 @@ textarea {
 }
 .checkout-button img {
   max-height: 40px;
+}
+
+.nav {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  z-index: 99999;
+  font-size: 1.125em;
+  font-weight: 200;
+  line-height: 1.5em;
+  background-color: rgba(50, 45, 52, 0.95);
+  -moz-transform: translateY(100%);
+  -ms-transform: translateY(100%);
+  -webkit-transform: translateY(100%);
+  transform: translateY(100%);
+  -moz-transition-duration: 0.5s;
+  -o-transition-duration: 0.5s;
+  -webkit-transition-duration: 0.5s;
+  transition-duration: 0.5s;
+}
+.nav.is-pullup {
+  -moz-transform: translateY(0);
+  -ms-transform: translateY(0);
+  -webkit-transform: translateY(0);
+  transform: translateY(0);
+  -moz-transition-duration: 0.5s;
+  -o-transition-duration: 0.5s;
+  -webkit-transition-duration: 0.5s;
+  transition-duration: 0.5s;
+}
+.nav__hd {
+  position: absolute;
+  top: -2.75em;
+  padding: 2.5px 1em;
+  width: 100%;
+  height: 2.75em;
+  color: #FFBA33;
+  background-color: rgba(50, 45, 52, 0.95);
+  -moz-box-shadow: 0px -1px 1px 0px rgba(0, 0, 0, 0.5);
+  -webkit-box-shadow: 0px -1px 1px 0px rgba(0, 0, 0, 0.5);
+  box-shadow: 0px -1px 1px 0px rgba(0, 0, 0, 0.5);
+}
+.nav__hd:before {
+  content: "";
+  display: block;
+  position: absolute;
+  height: 21px;
+  width: 66px;
+  left: 50%;
+  top: -20px;
+  transform: translateX(-50%);
+  z-index: 99998;
+  background-image: url('../img/doroid.svg?1460656292');
+}
+.nav__bd {
+  overflow: hidden;
+  padding: 0.25em;
+  padding-bottom: 1em;
+  color: #fafafa;
+}
+.nav li {
+  line-height: 2em;
+  text-align: center;
+}
+
+.nav__menu,
+.nav__tasty,
+.nav__drink {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.nav__tasty {
+  left: 5%;
+}
+.nav__tasty:after {
+  content: "";
+  display: inline-block;
+  vertical-align: middle;
+  width: 2.2em;
+  height: 2.2em;
+  background: no-repeat center/50% url('../img/ico_tasty.png?1460700003');
+}
+
+.nav__drink {
+  right: 5%;
+}
+.nav__drink:before {
+  content: "";
+  display: inline-block;
+  vertical-align: middle;
+  width: 2.2em;
+  height: 2.2em;
+  background: no-repeat center/50% url('../img/ico_drink.png?1460700031');
+}
+
+.nav__menu {
+  left: 50%;
+  transform: translate(-50%, -60%);
+  font-size: 1.25em;
+}
+
+.nav__bd a li {
+  color: #fafafa;
+}
+.nav__bd .tasty-list {
+  float: left;
+  width: 50%;
+}
+.nav__bd .drink-list {
+  float: right;
+  width: 50%;
 }
 
 .item-list {
@@ -726,12 +839,14 @@ textarea {
   float: left;
   text-align: center;
   margin-right: 1em;
-  padding: 2px 0.5em;
+  padding: 1px 0.5em;
   border: 1px dashed #CECED2;
   -moz-border-radius: 0.25em;
   -webkit-border-radius: 0.25em;
   border-radius: 0.25em;
+  font-size: 1em;
   color: #D8D8D8;
+  background-color: #fafafa;
 }
 .btn__radio.is-selected {
   border: 1px solid #30AD63;

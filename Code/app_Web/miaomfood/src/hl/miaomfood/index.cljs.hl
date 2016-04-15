@@ -201,10 +201,13 @@
           :else      true)
         true))))
 
-(defn add-input-tx [db k v]
+(defn form-input-tx [db k v]
   (if-let [[eid _] (cart->kv-input db k) ]
     [[:db.fn/retractEntity eid] [:db/add -1 k v]]
     [[:db/add -1 k v]] ))
+
+(defn order-submit-tx [db]
+  [])
 
 (defn inc-cuisine! [cid cname spec]
   (let [price (spec-price-of cid spec)]
@@ -214,19 +217,20 @@
   (d/transact! conn__cart [[:db.fn/call dec-spec-tx cid cname spec]] ))
 
 (defn add-comment! [comment]
-  (d/transact! conn__cart [[:db.fn/call add-input-tx :order/comment comment]] ))
+  (d/transact! conn__cart [[:db.fn/call form-input-tx :order/comment comment]] ))
 
 (defn add-username! [name]
-  (d/transact! conn__cart [[:db.fn/call add-input-tx :customer/username name]] ))
+  (d/transact! conn__cart [[:db.fn/call form-input-tx :customer/username name]] ))
 
 (defn add-phone! [phone]
-  (d/transact! conn__cart [[:db.fn/call add-input-tx :customer/phone phone]] ))
+  (d/transact! conn__cart [[:db.fn/call form-input-tx :customer/phone phone]] ))
 
 (defn add-address! [address]
-  (d/transact! conn__cart [[:db.fn/call add-input-tx :customer/streetAddress address]] ))
+  (d/transact! conn__cart [[:db.fn/call form-input-tx :customer/streetAddress address]] ))
 
 ;; State cells =====================================================================
 (defc fold-toggle true)
+(defc pullup-toggle false)
 (defc checkout-toggle false)
 (defc schedule?  false)
 (defc delay-days 0)
@@ -236,6 +240,7 @@
 
 ;;===== state transition functions ==========
 (def folding!     #(swap!  fold-toggle not))
+(def pull-up!     #(do (folding!) (swap! pullup-toggle not)))
 (def checkout!    #(swap!  checkout-toggle not))
 (def schedule!    #(reset! schedule? true))
 (def today!       #(reset! delay-days 0))
@@ -243,7 +248,7 @@
 (def unSchedule!  #(reset! schedule? false))
 (def ordering!    #(reset! adding-pool [%]))
 (def unOrdering!  #(reset! adding-pool nil))
-(defn submit-order! [] (js/alert (str ";TODO: ")))
+(def submit-order! #(js/alert (str ";TODO: ")))
 
 ;; Auxiliary =======================================================================
 (def indexed (partial map-indexed vector))
@@ -299,12 +304,6 @@
     ((div attrs kids)
      :class (cell= {:form-cell true
                     :is-invalid (and (dirty? (:value valid?)) (not (:valid? valid?)))}) )))
-
-(defelem schedule-picker [ attrs ]
-  (fieldset attrs
-    (input-wrap
-     (label "test")
-     (input :type "radio" :name "schedule" :value "test"))))
 
 (defelem header-table [{:keys [name col-names click-fn] :as attrss}]
   (div :class "header-table"
@@ -372,7 +371,21 @@
           (.on hm-slide "swiperight" #(cycle-shift-vector-right! toggle)))))))
 
 (defelem navbar []
-  (nav :class "nav"))
+  (let [[tasty drink] ["好吃的" "好喝的"]
+        ts (cell= (categories-of tasty))
+        ds (cell= (categories-of drink))
+        my-li  #(->> (li %) (a {:href (str "#" %)}) ) ]
+    (nav :class (cell= {:nav true :is-pullup pullup-toggle})
+      (div :class "nav__hd"
+        (div :class "nav__menu" :text "菜单" :click #'pull-up!)
+        (ul
+          (a :href "#好吃的"
+           (li :class "nav__tasty" :data-cate "tasty" :href #(str "#" tasty) :text tasty))
+          (a :href "#好喝的"
+           (li :class "nav__drink" :data-cate "drink" :href #(str "#" drink) :text drink)) ))
+      (div :class "nav__bd"
+        (ul :class "tasty-list" (cell= (map my-li ts)) )
+        (ul :class "drink-list" (cell= (map my-li ds)) ) ))))
 
 (defelem checkout-button [ {:keys [label btn__img] :or {label "订单中心"} :as attrs} ]
   (a :class "checkout-button"
@@ -388,11 +401,11 @@
     (input-wrap :class "order__comment icon icon__comment"
       (input :placeholder "备注" :value  order-comment :change #(add-comment! @%)))
     (div :class "order__schedule icon icon__schedule"
-      (span :class (cell= {:btn__radio true, :is-selected (not schedule?)}) :click #(unSchedule!) "立即送餐")
-      (span :class (cell= {:btn__radio true, :is-selected schedule? })      :click #(schedule!)   "预订"))
+      (button :class (cell= {:btn__radio true, :is-selected (not schedule?)}) :click #(unSchedule!) "立即送餐")
+      (button :class (cell= {:btn__radio true, :is-selected schedule? })      :click #(schedule!)   "预订"))
     (div :class "schedule-picker" :toggle (cell= schedule?)
-      (span :class (cell= {:btn__radio true, :is-selected (== 0 delay-days)}) :click #(today!)    "今天")
-      (span :class (cell= {:btn__radio true, :is-selected (== 1 delay-days)}) :click #(tomorrow!) "明天")
+      (button :class (cell= {:btn__radio true, :is-selected (== 0 delay-days)}) :click #(today!)    "今天")
+      (button :class (cell= {:btn__radio true, :is-selected (== 1 delay-days)}) :click #(tomorrow!) "明天")
       (input :class "schedule-time" :value schedule-time :change #() :type "time"))
     (input-wrap :class "customer__name icon icon__user" :valid? is-username-valid?
       (input :value  customer-name :change #(add-username! @%) :placeholder "姓名/称呼" ))
@@ -400,10 +413,10 @@
       (input :value customer-tel :change #(add-phone! @%) :type "tel" :placeholder "手机"))
     (input-wrap :class "order__address icon icon__address"
       (textarea :value customer-addr :change #(add-address! @%) :placeholder "地址" ) )
-    (ul :class "order__payment icon icon__payment"
-      (li :class (cell= {:btn__radio true, :is-selected (= payment :cash  )}) :click #(reset! payment :cash)   "到付")
-      (li :class (cell= {:btn__radio true, :is-selected (= payment :wechat)}) :click #(reset! payment :wechat) "微信支付")
-      (li :class (cell= {:btn__radio true, :is-selected (= payment :alipay)}) :click #(reset! payment :alipay) "支付宝"))
+    (div :class "order__payment icon icon__payment"
+      (button :class (cell= {:btn__radio true, :is-selected (= payment :cash  )}) :click #(reset! payment :cash)   "到付")
+      (button :class (cell= {:btn__radio true, :is-selected (= payment :wechat)}) :click #(reset! payment :wechat) "微信支付")
+      (button :class (cell= {:btn__radio true, :is-selected (= payment :alipay)}) :click #(reset! payment :alipay) "支付宝"))
     (button :class (cell= {:btn__submit true, :btn__submit--disabled disabled? }) :disabled disabled? :click #(submit-order!)
       "确认订单") ))
 
