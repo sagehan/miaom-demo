@@ -98,8 +98,9 @@
 (d/listen! conn__cart :freshDB #(reset! db__cart (:db-after %)))
 
 ;;===== persisting DB between page reloads!
+(defonce storeage-name "miaomfood/DB")
 (defn persist [db]
-  (js/localStorage.setItem "miaomfood/DB" (dt/write-transit-str db)))
+  (js/localStorage.setItem storeage-name (dt/write-transit-str db)))
 
 (d/listen! conn__cart :persistence
            (fn [tx-report] (when-let [db (:db-after tx-report)]
@@ -107,7 +108,7 @@
 
 ;;===== restoring once persisted DB on page load
 ;;      Thanks Nikita Prokopov https://github.com/tonsky/
-(when-let [stored (js/localStorage.getItem "miaomfood/DB")]
+(when-let [stored (js/localStorage.getItem storeage-name)]
   (let [stored-db (dt/read-transit-str stored)]
     (when (= (:schema stored-db) schema__cart)
       (d/reset-conn! conn__cart stored-db)
@@ -179,7 +180,7 @@
     (if (nil? cuisine)
       [{:db/id 0  :order/cuisines [-2]}
        {:db/id -2 :cuisine/id cid :cuisine/name cname :cuisine/species [-3]}
-       {:db/id -3 :spec/name spec :spce/quantity 1 :spec/price price}]
+       {:db/id -3 :spec/name spec :spec/quantity 1 :spec/price price}]
       (if-let [ [eid qty] (spec-qty-tuple db cid spec) ]
         [{:db/id eid :spec/quantity (inc qty)} ]
         [{:db/id [:cuisine/id cid]
@@ -191,7 +192,7 @@
         species (:cuisine/species cuisine)
         count   (count species)]
     (if (nil? species)
-      nil
+      true
       (if-let [ [eid qty] (spec-qty-tuple db cid spec) ]
         (cond
           (>  qty 1) [{:db/id eid :spec/quantity (dec qty)} ]
@@ -226,13 +227,11 @@
   (d/transact! conn__cart [[:db.fn/call form-input-tx :customer/phone phone]] ))
 
 (defn add-address! [address]
-  (d/transact! conn__cart [[:db.fn/call form-input-tx :customer/streetAddress
-                            address]]))
+  (d/transact! conn__cart [[:db.fn/call form-input-tx :customer/streetAddress address]]))
 
 (defn submit-order! []
-  (js/alert (vector (order-submit-tx @db__cart)))
-  (reset! db__cart (d/empty-db))
-  (js/alert ""))
+  (rpc/submit-order! (vector (order-submit-tx @db__cart)))
+  (do (reset! db__cart (d/empty-db)) (js/localStorage.removeItem storeage-name)))
 
 ;; State cells =====================================================================
 (defc fold-toggle true)
@@ -267,8 +266,6 @@
 
 (def cycle-shift-vector-right!
   (fn [v] (swap! v #(into (vector (peek %)) (pop %)))))
-
-;(def get-spec-name (comp name :spec/name))
 
 (defn comp-item [m] (str (:cuisine/name m) "(" (name (:spec/name m)) ")"))
 
@@ -411,7 +408,7 @@
     (div :class "schedule-picker" :toggle (cell= schedule?)
       (button :class (cell= {:btn__radio true, :is-selected (== 0 delay-days)}) :click #(today!)    "今天")
       (button :class (cell= {:btn__radio true, :is-selected (== 1 delay-days)}) :click #(tomorrow!) "明天")
-      (input :class "schedule-time" :value schedule-time :change #() :type "time"))
+      (input :class "schedule-time" :value nil :change #() :type "time"))
     (input-wrap :class "customer__name icon icon__user" :valid? is-username-valid?
       (input :value  customer-name :change #(add-username! @%) :placeholder "姓名/称呼" ))
     (input-wrap :class "customer__phone icon icon__phone" :valid? is-phone-valid?
@@ -442,8 +439,7 @@
     (checkout-button :label "订单中心" :btn__img "img/notepad.png")))
 
 (defelem checkout-panel []
-  (let [items        (cell= (not-empty selected-items) )
-        isCartEmpty? (cell= (-> selected-items not-empty seq? not))
+  (let [isCartEmpty? (cell= (-> selected-items not-empty seq? not))
         hasLogin?    (cell  false)
         isOrderPage? (cell  true)
         isUserPage?  (cell= (not isOrderPage?) )
