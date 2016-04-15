@@ -77,13 +77,13 @@
   (fn [cuisine-id] (d/pull db ["*"] [:cuisine/id cuisine-id])))
 
 (defn spec-price-of  [cid spec]
-  (let [get-spec-name (comp name :spec/name)]
-    (->> (:cuisine/species (@cuisine-details-of cid) )
-         (filter #(= spec (get-spec-name %)) )
-         first
-         :spec/price )))
+  (->> (:cuisine/species (@cuisine-details-of cid) )
+       (filter #(= spec (:spec/name %)) )
+       first
+       :spec/price ))
 
 ;; Local DB ====================================================================
+;; Entity with id=0 is used for storing the current editing order information!
 (def  schema__cart {:order/cuisines  {:db/isComponent true
                                       :db/valueType   :db.type/ref
                                       :db/cardinality :db.cardinality/many }
@@ -166,7 +166,7 @@
          [?e :spec/quantity ?q ]
          [(* ?p ?q)         ?s ] ] db))
 
-(defc= selected-items (cart->selected-cuisines db__cart))
+(defc= selected-items (not-empty (cart->selected-cuisines db__cart)))
 (defc= order-total    (sum-of-items db__cart))
 (defc= order-comment (second (cart->kv-input db__cart :order/comment)))
 (defc= customer-name (second (cart->kv-input db__cart :customer/username)))
@@ -177,7 +177,7 @@
 (defn inc-spec-tx [db cid cname spec price]
   (let [cuisine (d/entity db [:cuisine/id cid])]
     (if (nil? cuisine)
-      [{:db/id -1 :order/cuisines [-2]}
+      [{:db/id 0  :order/cuisines [-2]}
        {:db/id -2 :cuisine/id cid :cuisine/name cname :cuisine/species [-3]}
        {:db/id -3 :spec/name spec :spce/quantity 1 :spec/price price}]
       (if-let [ [eid qty] (spec-qty-tuple db cid spec) ]
@@ -191,7 +191,7 @@
         species (:cuisine/species cuisine)
         count   (count species)]
     (if (nil? species)
-      true
+      nil
       (if-let [ [eid qty] (spec-qty-tuple db cid spec) ]
         (cond
           (>  qty 1) [{:db/id eid :spec/quantity (dec qty)} ]
@@ -203,11 +203,11 @@
 
 (defn form-input-tx [db k v]
   (if-let [[eid _] (cart->kv-input db k) ]
-    [[:db.fn/retractEntity eid] [:db/add -1 k v]]
-    [[:db/add -1 k v]] ))
+    [[:db.fn/retractAttribute 0 k] [:db/add 0 k v]]
+    [[:db/add 0 k v]] ))
 
 (defn order-submit-tx [db]
-  [])
+  (let [raw (d/pull db ["*"] 0)] raw))
 
 (defn inc-cuisine! [cid cname spec]
   (let [price (spec-price-of cid spec)]
@@ -226,7 +226,13 @@
   (d/transact! conn__cart [[:db.fn/call form-input-tx :customer/phone phone]] ))
 
 (defn add-address! [address]
-  (d/transact! conn__cart [[:db.fn/call form-input-tx :customer/streetAddress address]] ))
+  (d/transact! conn__cart [[:db.fn/call form-input-tx :customer/streetAddress
+                            address]]))
+
+(defn submit-order! []
+  (js/alert (vector (order-submit-tx @db__cart)))
+  (reset! db__cart (d/empty-db))
+  (js/alert ""))
 
 ;; State cells =====================================================================
 (defc fold-toggle true)
@@ -248,7 +254,6 @@
 (def unSchedule!  #(reset! schedule? false))
 (def ordering!    #(reset! adding-pool [%]))
 (def unOrdering!  #(reset! adding-pool nil))
-(def submit-order! #(js/alert (str ";TODO: ")))
 
 ;; Auxiliary =======================================================================
 (def indexed (partial map-indexed vector))
@@ -263,9 +268,9 @@
 (def cycle-shift-vector-right!
   (fn [v] (swap! v #(into (vector (peek %)) (pop %)))))
 
-(def get-spec-name (comp name :spec/name))
+;(def get-spec-name (comp name :spec/name))
 
-(defn comp-item [m] (str (:cuisine/name m) "(" (:spec/name m) ")"))
+(defn comp-item [m] (str (:cuisine/name m) "(" (name (:spec/name m)) ")"))
 
 (defn item-subtotal [m] (* (:spec/price m) (:spec/quantity m)))
 
@@ -397,7 +402,7 @@
   (div :class "order-page"
     (div :class "order__cuisines icon icon__cuisines"
       (header-table  :col-names ["菜品" "单价" "数量" "小计"])
-      (content-table :row-items selected-items))
+      (cell= (when-not (nil? selected-items) (content-table :row-items selected-items))))
     (input-wrap :class "order__comment icon icon__comment"
       (input :placeholder "备注" :value  order-comment :change #(add-comment! @%)))
     (div :class "order__schedule icon icon__schedule"
@@ -417,7 +422,7 @@
       (button :class (cell= {:btn__radio true, :is-selected (= payment :cash  )}) :click #(reset! payment :cash)   "到付")
       (button :class (cell= {:btn__radio true, :is-selected (= payment :wechat)}) :click #(reset! payment :wechat) "微信支付")
       (button :class (cell= {:btn__radio true, :is-selected (= payment :alipay)}) :click #(reset! payment :alipay) "支付宝"))
-    (button :class (cell= {:btn__submit true, :btn__submit--disabled disabled? }) :disabled disabled? :click #(submit-order!)
+    (button :class (cell= {:btn__submit true, :btn__submit--disabled disabled? }) :disabled disabled? :click #'submit-order!
       "确认订单") ))
 
 (defelem user-page []
@@ -438,7 +443,7 @@
 
 (defelem checkout-panel []
   (let [items        (cell= (not-empty selected-items) )
-        isCartEmpty? (cell= (not (seq? items)) )
+        isCartEmpty? (cell= (-> selected-items not-empty seq? not))
         hasLogin?    (cell  false)
         isOrderPage? (cell  true)
         isUserPage?  (cell= (not isOrderPage?) )
@@ -469,9 +474,9 @@
 
 (defelem addition-panel [{:keys [cid] :as attrs} _]
   (let [c         (cell= (cuisine-details-of cid))
-        species   (cell= (:cuisine/species c))
         cname     (cell= (:cuisine/name    c))
-        s_names   (cell= (map get-spec-name species))
+        species   (cell= (:cuisine/species c))
+        s_names   (cell= (map :spec/name species))
         selected  (cell= (cart->selected-species db__cart cid))
         visible?  (cell false) ]
     (with-let
@@ -487,7 +492,7 @@
              :bindings [spec s_names]
              (let [quantity
                    (cell= (or (->> selected
-                                   (filterv #(= spec (get-spec-name %)) )
+                                   (filterv #(= spec (:spec/name %)) )
                                    first
                                    :spec/quantity )
                               0))
@@ -496,7 +501,7 @@
                  :class   "addition-panel__row"
                  (tag
                   :class        (cell= {:addition-tag true, :tag--isEmpty (not added?)})
-                  :leadingText  spec
+                  :leadingText  (cell= (name spec))
                   :trailingText (cell= (if-not (zero? quantity)
                                          (str "×" quantity)
                                          "")))
@@ -524,7 +529,7 @@
   (tag :class        "counter-tag"
        :leadingText  "已选"
        :trailingText (cell= (let [selected (cart->selected-species db__cart cid)]
-                              (->> (map #(str (get % :spec/name)
+                              (->> (map #(str (name (get % :spec/name))
                                               " ×"
                                               (get % :spec/quantity)) selected)
                                    (string/join ", ")) ))))

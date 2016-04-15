@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="66px" height="21px" viewBox="0 0 66 21" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <!-- Generator: Sketch 3.4.4 (17249) - http://www.bohemiancoding.com/sketch -->
+    <title>Path</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <filter x="-50%" y="-50%" width="200%" height="200%" filterUnits="objectBoundingBox" id="filter-1">
+            <feOffset dx="0" dy="-1" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="0.5" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.35 0" in="shadowBlurOuter1" type="matrix" result="shadowMatrixOuter1"></feColorMatrix>
+            <feMerge>
+                <feMergeNode in="shadowMatrixOuter1"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+            </feMerge>
+        </filter>
+    </defs>
+    <g id="Smartphone" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="WebPage---Menu" sketch:type="MSArtboardGroup" transform="translate(-127.000000, -306.000000)" filter="url(#filter-1)" fill-opacity="0.949999988" fill="#312C33">
+            <g id="Menus" sketch:type="MSLayerGroup" transform="translate(0.000000, 308.000000)">
+                <g id="Category" sketch:type="MSShapeGroup">
+                    <g id="handle">
+                        <path d="M191.263947,18.0068893 C184.924099,7.22442258 173.295488,0 160,0 C146.704512,0 135.075901,7.22442258 128.736053,18.0068893 L131.4163,18.0069021 C137.495175,8.55359192 148.026525,2.303271 160,2.303271 C171.973475,2.303271 182.504825,8.55359192 188.5837,18.0069021 L191.263955,18.0069021 Z M184.195143,18.0069021 C179.003714,10.1688218 170.105479,5 160,5 C149.894521,5 140.996286,10.1688218 135.804857,18.0069021 L184.195143,18.0069021 Z" id="Path"></path>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
