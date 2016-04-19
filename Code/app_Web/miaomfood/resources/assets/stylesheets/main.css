@@ -94,8 +94,9 @@ html {
 
 body {
   margin: 0;
+  /*padding-bottom: $nav-hd__height;*/
   color: black;
-  background-color: #fafafa;
+  background: #fafafa;
   font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", Helvetica, sans-serif;
 }
 
@@ -143,7 +144,6 @@ textarea {
   width: 100%;
   min-width: 320px;
   margin: 0 auto;
-  padding: 0 0 1rem;
 }
 
 .clearfix:before, .clearfixclearfix:after {
@@ -218,12 +218,6 @@ textarea {
   content: "\e918";
 }
 
-/*
-.icon__payment:before  {
-  content: "¥";
-  font-family: $base__font-family;
-}
-*/
 .section__title {
   color: #CECED2;
   font-size: 1em;
@@ -233,13 +227,20 @@ textarea {
   padding: 0.125rem 0.5rem;
 }
 
-.slideshow,
-.item__header {
+.slideshow {
   position: relative;
   width: 100%;
 }
 
-.item__body {
+.item {
+  margin-bottom: 8px;
+  background: #ffffff;
+}
+.item .item__header {
+  position: relative;
+  width: 100%;
+}
+.item .item__body {
   position: relative;
   padding: 2px 2px 0 8px;
   height: 76px;
@@ -386,10 +387,10 @@ textarea {
 }
 .nav__hd {
   position: absolute;
-  top: -2.75em;
-  padding: 2.5px 1em;
+  top: -2.75rem;
+  padding: 0 1em;
   width: 100%;
-  height: 2.75em;
+  height: 2.75rem;
   color: #FFBA33;
   background-color: rgba(50, 45, 52, 0.95);
   -moz-box-shadow: 0px -1px 1px 0px rgba(0, 0, 0, 0.5);
@@ -410,12 +411,11 @@ textarea {
 }
 .nav__bd {
   overflow: hidden;
-  padding: 0.25em;
-  padding-bottom: 1em;
+  padding: 0.25em 0.25em 1em;
   color: #fafafa;
 }
 .nav li {
-  line-height: 2em;
+  /*line-height: 2em;*/
   text-align: center;
 }
 
@@ -434,8 +434,8 @@ textarea {
   content: "";
   display: inline-block;
   vertical-align: middle;
-  width: 2.2em;
-  height: 2.2em;
+  width: 2.2rem;
+  height: 2.2rem;
   background: no-repeat center/50% url('../img/ico_tasty.png?1460700003');
 }
 
@@ -446,8 +446,8 @@ textarea {
   content: "";
   display: inline-block;
   vertical-align: middle;
-  width: 2.2em;
-  height: 2.2em;
+  width: 2.2rem;
+  height: 2.2rem;
   background: no-repeat center/50% url('../img/ico_drink.png?1460700031');
 }
 
@@ -534,7 +534,6 @@ textarea {
   height: 2em;
   line-height: 2em;
   font-size: 1em;
-  /*font-weight: bold;*/
 }
 .addition-tag .tag__leading {
   padding-left: 1em;
@@ -572,9 +571,9 @@ textarea {
 
 .addition-panel {
   position: relative;
-  background: #FFF;
   text-align: center;
   vertical-align: middle;
+  background: #fafafa url('../img/bg.png?1460781833');
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
   -moz-transform: translateY(-40px);
   -ms-transform: translateY(-40px);
@@ -754,7 +753,7 @@ textarea {
   table-layout: fixed;
 }
 .content-table .cuisine-body-tbl tbody td {
-  padding: 0.5em   5px;
+  padding: 0.5em 5px;
 }
 .content-table .cuisine-body-tbl tfoot td {
   padding: 0.375em 5px;
@@ -861,12 +860,16 @@ textarea {
   /*background-color: $yellow;*/
   /*border-color: $yellow;*/
   background-image: linear-gradient(-180deg, #f2f2f2 0%, #d4d4d4 100%);
+  -moz-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   -moz-border-radius: 0.25em;
   -webkit-border-radius: 0.25em;
   border-radius: 0.25em;
   font-size: 20px;
   color: #FAB327;
   line-height: 28px;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.85);
 }
 .btn__submit--disabled {
   color: #D8D8D8;
@@ -875,6 +878,7 @@ textarea {
 .footer {
   position: relative;
   margin-top: 1em;
+  margin-bottom: 2.75rem;
   font-size: 1em;
   color: #FFBA33;
   font-weight: lighter;
@@ -958,8 +962,6 @@ textarea {
 /* 2 column's layout */
 @media screen and (max-width: 480px) {
   .item {
-    margin-bottom: 8px;
-    background-color: #ffffff;
     position: relative;
     display: inline-block;
     width: calc( ( 100% - 2px ) / 2 );
@@ -982,8 +984,6 @@ textarea {
 /* 3 column's items */
 @media screen and (min-width: 480px) and (max-width: 720px) {
   .item {
-    margin-bottom: 8px;
-    background-color: #ffffff;
     position: relative;
     display: inline-block;
     width: calc( (100% - 2 * 2px ) / 3);
@@ -1013,6 +1013,16 @@ textarea {
 }
 /* 1 column's 320px sidebar  + 2 column's items */
 @media screen and (min-width: 720px) and (max-width: 800px) {
+  .item {
+    position: relative;
+    display: inline-block;
+    width: calc( ( 100% - 2px ) / 2 );
+  }
+  .item:nth-child(2n) {
+    /*float: right;*/
+    margin-left: 2px;
+  }
+
   .slideshow {
     float: left;
     width: 320px;
@@ -1041,18 +1051,6 @@ textarea {
     width: calc(100% - 320px - 3em);
   }
 
-  .item {
-    margin-bottom: 8px;
-    background-color: #ffffff;
-    position: relative;
-    display: inline-block;
-    width: calc( ( 100% - 2px ) / 2 );
-  }
-  .item:nth-child(2n) {
-    /*float: right;*/
-    margin-left: 2px;
-  }
-
   .addition-panel {
     max-width: 480px;
     margin: 320px auto;
@@ -1067,6 +1065,18 @@ textarea {
 }
 /* 1 column's 320px sidebar + 3 column's items */
 @media screen and (min-width: 800px) and (max-width: 1040px) {
+  .item {
+    position: relative;
+    display: inline-block;
+    width: calc( (100% - 2 * 2px ) / 3);
+  }
+  .item:nth-child(3n-1), .item:nth-child(3n) {
+    margin-left: 2px;
+  }
+  .item:nth-child(3n+1) {
+    margin-left: 0;
+  }
+
   .slideshow {
     float: left;
     width: 320px;
@@ -1095,20 +1105,6 @@ textarea {
     width: calc( 100% - 320px - 3em );
   }
 
-  .item {
-    margin-bottom: 8px;
-    background-color: #ffffff;
-    position: relative;
-    display: inline-block;
-    width: calc( (100% - 2 * 2px ) / 3);
-  }
-  .item:nth-child(3n-1), .item:nth-child(3n) {
-    margin-left: 2px;
-  }
-  .item:nth-child(3n+1) {
-    margin-left: 0;
-  }
-
   .addition-panel {
     max-width: 480px;
     margin: 480px auto;
@@ -1125,6 +1121,18 @@ textarea {
 should been wthin a 1040px wrapper
 which place near the left side of the browser window*/
 @media screen and (min-width: 1040px) {
+  .item {
+    position: relative;
+    display: inline-block;
+    width: calc( (100% - 2 * 2px ) / 3);
+  }
+  .item:nth-child(3n-1), .item:nth-child(3n) {
+    margin-left: 2px;
+  }
+  .item:nth-child(3n+1) {
+    margin-left: 0;
+  }
+
   .wrapper {
     width: 1040px;
   }
@@ -1157,24 +1165,9 @@ which place near the left side of the browser window*/
     width: calc( 100% - 320px - 3em );
   }
 
-  .item {
-    margin-bottom: 8px;
-    background-color: #ffffff;
-    position: relative;
-    display: inline-block;
-    width: calc( (100% - 2 * 2px ) / 3);
-  }
-  .item:nth-child(3n-1), .item:nth-child(3n) {
-    margin-left: 2px;
-  }
-  .item:nth-child(3n+1) {
-    margin-left: 0;
-  }
-
   .addition-panel {
     max-width: 480px;
-    margin: 480px auto;
-    margin-bottom: 0;
+    margin: 480px auto 0;
   }
 
   .footer {
