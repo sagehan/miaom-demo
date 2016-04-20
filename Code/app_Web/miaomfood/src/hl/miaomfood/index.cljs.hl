@@ -112,25 +112,6 @@
       true)))
 
 ;;===== Query  ===========================
-(defn selected-cuisines-of
-  "Which cuisines had been added to cart? return a sequential of maps as results"
-  [ db ]
-  (map #(select-keys
-         %
-         [:db/id :cuisineItem/ID :cuisineItem/name :cuisineItem/spec :cuisineItem/price :cuisineItem/qty])
-       (:cart/cuisineItems (d/pull @db__cart ["*"] 0))))
-
-(defn selected-species-of
-  "Check the selected speies for the special cuisine, return a vector of maps"
-  [ db cid ]
-  (->> (selected-cuisines-of db)  (filter #(= cid (:cuisineItem/ID %)))))
-
-(defn cuisineItem-detail-of [db cid spec]
-  (->> (selected-species-of db cid) (filter #(= spec (:cuisineItem/spec %))) first))
-
-(defn qty-of [db cid spec]
-  (:cuisineItem/qty (cuisineItem-detail-of db__cart cid spec) ))
-
 (defn sum-of-cart [db]
   (d/q '[:find (sum ?s) .
          :with ?e
@@ -139,18 +120,27 @@
          [?e :cuisineItem/qty   ?q ]
          [(* ?p ?q)             ?s ] ] db))
 
+(defc= order-total   (sum-of-cart db__cart      ) )
 (defc= cart           (d/pull db__cart ["*"] 0   ) )
 (defc= cart-items    (:cart/cuisineItems    cart) )
 (defc= order-comment (:order/comment        cart) )
 (defc= customer-name (:order/customerName   cart) )
 (defc= customer-tel  (:order/customerPhone  cart) )
 (defc= customer-addr (:order/streetAddress  cart) )
-(defc= order-total   (sum-of-cart db__cart))
+
+(defc= selected-species-of
+  (fn [ cid ]    (filter #(= cid (:cuisineItem/ID %)) cart-items)))
+
+(defc= cuisineItem-detail-of
+  (fn [cid spec] (->> (selected-species-of cid) (filter #(= spec (:cuisineItem/spec %))) first)))
+
+(defc= qty-of
+  (fn [cid spec] (:cuisineItem/qty (cuisineItem-detail-of cid spec) )))
 
 ;;===== transaction! ======================
-(defn inc-spec-tx [db cid cname spec]
-  (let [eid   (:db/id (cuisineItem-detail-of db cid spec) )
-        qty   (or (:cuisineItem/qty (cuisineItem-detail-of db cid spec)) 0)
+(defn inc-spec-tx [_ cid cname spec]
+  (let [eid   (:db/id (@cuisineItem-detail-of cid spec) )
+        qty   (or (:cuisineItem/qty (@cuisineItem-detail-of cid spec)) 0)
         price (spec-price-of cid spec) ]
     (if-not (nil? eid)
       [{:db/id eid :cuisineItem/qty (inc qty)} ]
@@ -162,9 +152,9 @@
         :cuisineItem/price price
         :cuisineItem/qty   (inc qty)} ] )))
 
-(defn dec-spec-tx [db cid spec]
-  (let [eid (:db/id (cuisineItem-detail-of db cid spec) )
-        qty (or (:cuisineItem/qty (cuisineItem-detail-of db cid spec)) 0) ]
+(defn dec-spec-tx [_ cid spec]
+  (let [eid (:db/id (@cuisineItem-detail-of cid spec) )
+        qty (or     (@qty-of cid spec) 0) ]
     (when-not (nil? eid)
       (cond (>  qty 1) [{:db/id eid :cuisineItem/qty (dec qty)} ]
             (== qty 1) [[:db.fn/retractEntity eid ] ] ))))
@@ -452,7 +442,7 @@
           (div :class "addition-panel__row-wrap"
             (loop-tpl
              :bindings [spec s_names]
-             (let [quantity (cell= (or (qty-of db__cart cid spec) 0))
+             (let [quantity (cell= (or (qty-of cid spec) 0))
                    added?   (cell= (>  quantity 0)) ]
                (div
                  :class   "addition-panel__row"
@@ -483,7 +473,7 @@
 (defn counter-tag [cid]
   (tag :class        "counter-tag"
        :leadingText  "已选"
-       :trailingText (cell= (->> (selected-species-of db__cart cid)
+       :trailingText (cell= (->> (selected-species-of cid)
                                  (map #(str ((comp name :cuisineItem/spec) %)
                                       " ×"
                                       (:cuisineItem/qty %)))
@@ -491,7 +481,7 @@
 
 (defelem cuisine [{:keys [name depict species currency id] :or {currency "¥"} :as attrs}]
   (let [price     (cell=  (string/join "/" (sort (map :spec/price species))))
-        selected? (cell=  (seq (selected-species-of db__cart id)))
+        selected? (cell=  (seq (selected-species-of id)))
         imgsrc    (cell=  (str "img/" (first depict)))
         attrs      (dissoc attrs  :name :depict :species :currency)]
     (article attrs
