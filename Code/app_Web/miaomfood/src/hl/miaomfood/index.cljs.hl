@@ -115,11 +115,10 @@
 (defn selected-cuisines-of
   "Which cuisines had been added to cart? return a sequential of maps as results"
   [ db ]
-  (let [entities (vec (:cart/cuisineItems (d/entity @db__cart 0)))]
-    (for [e entities]
-      (zipmap
-       [:db/id :cuisineItem/ID :cuisineItem/name :cuisineItem/spec :cuisineItem/price :cuisineItem/qty]
-       ((juxt :db/id :cuisineItem/ID :cuisineItem/name :cuisineItem/spec :cuisineItem/price :cuisineItem/qty) e)))))
+  (map #(select-keys
+         %
+         [:db/id :cuisineItem/ID :cuisineItem/name :cuisineItem/spec :cuisineItem/price :cuisineItem/qty])
+       (:cart/cuisineItems (d/pull @db__cart ["*"] 0))))
 
 (defn selected-species-of
   "Check the selected speies for the special cuisine, return a vector of maps"
@@ -140,12 +139,13 @@
          [?e :cuisineItem/qty   ?q ]
          [(* ?p ?q)             ?s ] ] db))
 
-(defc= cart-items    (selected-cuisines-of db__cart))
+(defc= cart           (d/pull db__cart ["*"] 0   ) )
+(defc= cart-items    (:cart/cuisineItems    cart) )
+(defc= order-comment (:order/comment        cart) )
+(defc= customer-name (:order/customerName   cart) )
+(defc= customer-tel  (:order/customerPhone  cart) )
+(defc= customer-addr (:order/streetAddress  cart) )
 (defc= order-total   (sum-of-cart db__cart))
-(defc= order-comment (:order/comment       (d/pull db__cart [:order/comment] 0)))
-(defc= customer-name (:order/customerName  (d/pull db__cart [:order/customerName] 0)))
-(defc= customer-tel  (:order/customerPhone (d/pull db__cart [:order/customerPhone] 0)))
-(defc= customer-addr (:order/streetAddress (d/pull db__cart [:order/streetAddress] 0)))
 
 ;;===== transaction! ======================
 (defn inc-spec-tx [db cid cname spec]
@@ -366,7 +366,7 @@
   (div :class "order-page"
     (div :class "order__cuisines icon icon__cuisines"
       (header-table  :col-names ["菜品" "单价" "数量" "小计"])
-      (cell= (when-not (nil? cart-items) (content-table :row-items cart-items))))
+      (cell= (when-not (empty? cart-items) (content-table :row-items cart-items))))
     (input-wrap :class "order__comment icon icon__comment"
       (input :placeholder "备注" :value  order-comment :change #(add-comment! @%)))
     (div :class "order__schedule icon icon__schedule"
@@ -406,7 +406,7 @@
     (checkout-button :label "订单中心" :btn__img "img/notepad.png")))
 
 (defelem checkout-panel []
-  (let [isCartEmpty? (cell= (-> cart-items not-empty seq? not))
+  (let [isCartEmpty? (cell= (empty? cart-items))
         hasLogin?    (cell  false)
         isOrderPage? (cell  true)
         isUserPage?  (cell= (not isOrderPage?) )
