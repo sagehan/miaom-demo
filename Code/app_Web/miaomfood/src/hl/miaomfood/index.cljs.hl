@@ -164,7 +164,7 @@
     [[:db.fn/retractAttribute 0 k] [:db/add 0 k v]]
     [[:db/add 0 k v]] ))
 
-(defn order-submit-tx [db]
+(defn order-submit-raw [db]
   (let [raw (d/pull db ["*"] 0)] raw))
 
 (defn inc-cuisine! [cid spec]
@@ -187,7 +187,7 @@
   (d/transact! conn__cart [[:db.fn/call form-input-tx :order/streetAddress address]]))
 
 (defn submit-order! []
-  (rpc/submit-order! (vector (order-submit-tx @db__cart)))
+  (rpc/submit-order!   (order-submit-raw @db__cart))
   (do (reset! db__cart (d/empty-db)) (js/localStorage.removeItem storeage-name)))
 
 ;; State cells =====================================================================

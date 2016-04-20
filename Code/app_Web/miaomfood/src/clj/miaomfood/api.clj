@@ -7,6 +7,4 @@
 
 (defrpc user-db [uid] (q/user-db uid))
 
-(defrpc like! [uid cuisine]
-  (q/like! uid cuisine)
-  (q/user-db uid))
+(defrpc submit-order! [order-raw] (q/submit-order! order-raw))

@@ -9,6 +9,7 @@
 
 (defc raw-db [])
 (defc user-db {})
+(defc order {})
 (defc error nil)
 (defc loading [])
 
@@ -18,4 +19,4 @@
 (def fetch-user-db
   (mkremote 'miaomfood.api/user-db user-db error loading))
 
-(def like! (mkremote 'miaomfood.api/like! user error loading))
+(def submit-order! (mkremote 'miaomfood.api/submit-order! order error loading))

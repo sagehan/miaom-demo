@@ -193,10 +193,10 @@
     :db.install/_attribute :db.part/db}
 
    {:db/id #db/id[:db.part/db]
-    :db/ident :spec/duplex
-    :db/valueType :db.type/ref
+    :db/ident :spec/duplexable
+    :db/valueType :db.type/boolean
     :db/cardinality :db.cardinality/one
-    :db/doc "双拼对象"
+    :db/doc "能否双拼？"
     :db.install/_attribute :db.part/db}
 
    {:db/id #db/id[:db.part/db]
@@ -215,11 +215,11 @@
     :db.install/_attribute :db.part/db}
 
    {:db/id #db/id[:db.part/db]
-    :db/ident :spec/quantity
+    :db/ident :spec/soldTotal
     :db/valueType :db.type/long
     :db/cardinality :db.cardinality/one
     :db/noHistory true
-    :db/doc "订购量"
+    :db/doc "总销量计数"
     :db.install/_attribute :db.part/db}
 
    ;; Enums
@@ -433,6 +433,13 @@
     :db/cardinality :db.cardinality/many
     :db/isComponent true
     :db/doc "订单条目对应的菜品订购数量"
+    :db.install/_attribute :db.part/db}
+
+   {:db/id #db/id[:db.part/db]
+    :db/ident :cuisineItem/duplex
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/many
+    :db/doc "双拼组"
     :db.install/_attribute :db.part/db}
 
    {:db/id #db/id[:db.part/db]

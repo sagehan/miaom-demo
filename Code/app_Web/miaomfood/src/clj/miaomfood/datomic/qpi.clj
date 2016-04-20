@@ -51,7 +51,22 @@
 
 (defn user-db [uid] (e->user uid conn))
 
-(defn like!
-  "A customer up-vote an cuisine"
-  [user-ident cuisine-id]
-  @(d/transact conn [{:db/id user-ident  :customer/likes cuisine-id}]))
+(defn submit-order! [ order-raw ]
+  (let [filter #(-> %
+                    (update :db/id (fn [n] (d/tempid :db.part/user (- n))) )
+                    (update :cuisineItem/ID (fn [ID] (d/entid (d/db conn) [:cuisine/id ID])) )
+                    (select-keys [:db/id
+                                  :cuisineItem/ID
+                                  :cuisineItem/spec
+                                  :cuisineItem/qty]) )
+        items  (vec (map filter (:cart/cuisineItems order-raw)))
+        id     (d/tempid :db.part/user)
+        tx     [(-> order-raw
+                    (select-keys [:order/customerName
+                                  :order/customerPhone
+                                  :order/streetAddress
+                                  :order/comment
+                                  :order/schedule-day
+                                  :order/schedule-time ])
+                    (assoc :db/id id :order/cuisineItems items))] ]
+    @(d/transact conn tx) ))

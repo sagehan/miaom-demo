@@ -33,11 +33,13 @@
                      :spec/name :spec.name/八寸
                      :currency/Abbr :currency.Abbr/CNY
                      :spec/price 39
+                     :spec/duplexable true
                      :spec/inventory 100}
                     {:db/id #db/id[:db.part/user -11]
                      :spec/name :spec.name/十寸
                      :currency/Abbr :currency.Abbr/CNY
                      :spec/price 59
+                     :spec/duplexable true
                      :spec/inventory 100}
                     ]}
  {:db/id #db/id[:db.part/user -9]
@@ -48,11 +50,13 @@
                      :spec/name :spec.name/八寸
                      :currency/Abbr :currency.Abbr/CNY
                      :spec/price 39
+                     :spec/duplexable true
                      :spec/inventory 100}
                     {:db/id #db/id[:db.part/user -13]
                      :spec/name :spec.name/十寸
                      :currency/Abbr :currency.Abbr/CNY
                      :spec/price 59
+                     :spec/duplexable true
                      :spec/inventory 100}
                     ]}
  {:db/id  #db/id[:db.part/user -14]
@@ -62,6 +66,7 @@
   :cuisine/species [{:db/id #db/id[:db.part/user]
                      :spec/name :spec.name/份
                      :spec/price 25
+                     :spec/duplexable true
                      :spec/inventory 100}]}
  {:db/id #db/id[:db.part/user -15]
   :customer/id #uuid "56e658a4-9686-45cd-a746-5d983306aff4"
