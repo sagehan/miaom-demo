@@ -98,18 +98,18 @@
 (defn persist [db]
   (js/localStorage.setItem storeage-name (dt/write-transit-str db)))
 
-(d/listen! conn__cart :persistence
-           (fn [tx-report] (when-let [db (:db-after tx-report)]
-                             (js/setTimeout #(persist db) 0))))
+;(d/listen! conn__cart :persistence
+;           (fn [tx-report] (when-let [db (:db-after tx-report)]
+;                             (js/setTimeout #(persist db) 0))))
 
 ;;===== restoring once persisted DB on page load
 ;;      Thanks Nikita Prokopov https://github.com/tonsky/
-(when-let [stored (js/localStorage.getItem storeage-name)]
-  (let [stored-db (dt/read-transit-str stored)]
-    (when (= (:schema stored-db) schema__cart)
-      (d/reset-conn! conn__cart stored-db)
-      (persist stored-db)
-      true)))
+;(when-let [stored (js/localStorage.getItem storeage-name)]
+;  (let [stored-db (dt/read-transit-str stored)]
+;    (when (= (:schema stored-db) schema__cart)
+;      (d/reset-conn! conn__cart stored-db)
+;      (persist stored-db)
+;      true)))
 
 ;;===== Query  ===========================
 (defn sum-of-cart [db]
@@ -164,7 +164,7 @@
     [[:db.fn/retractAttribute 0 k] [:db/add 0 k v]]
     [[:db/add 0 k v]] ))
 
-(defn order-submit-raw [db]
+(defn order-raw [db]
   (let [raw (d/pull db ["*"] 0)] raw))
 
 (defn inc-cuisine! [cid spec]
@@ -187,7 +187,7 @@
   (d/transact! conn__cart [[:db.fn/call form-input-tx :order/streetAddress address]]))
 
 (defn submit-order! []
-  (rpc/submit-order!   (order-submit-raw @db__cart))
+  (rpc/submit-order!   (order-raw @db__cart))
   (do (reset! db__cart (d/empty-db)) (js/localStorage.removeItem storeage-name)))
 
 ;; State cells =====================================================================

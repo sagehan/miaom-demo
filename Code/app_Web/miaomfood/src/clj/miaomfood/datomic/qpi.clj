@@ -60,6 +60,7 @@
                                   :cuisineItem/spec
                                   :cuisineItem/qty]) )
         items  (vec (map filter (:cart/cuisineItems order-raw)))
+        token  (str (d/squuid)) ; just for demo
         id     (d/tempid :db.part/user)
         tx     [(-> order-raw
                     (select-keys [:order/customerName
@@ -68,5 +69,7 @@
                                   :order/comment
                                   :order/schedule-day
                                   :order/schedule-time ])
-                    (assoc :db/id id :order/cuisineItems items))] ]
+                    (assoc :db/id id
+                           :order/cuisineItems items
+                           :order/tokenSlug token))] ]
     @(d/transact conn tx) ))

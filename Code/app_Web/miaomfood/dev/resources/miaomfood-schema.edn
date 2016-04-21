@@ -430,8 +430,7 @@
    {:db/id #db/id[:db.part/db]
     :db/ident :cuisineItem/qty
     :db/valueType :db.type/long
-    :db/cardinality :db.cardinality/many
-    :db/isComponent true
+    :db/cardinality :db.cardinality/one
     :db/doc "订单条目对应的菜品订购数量"
     :db.install/_attribute :db.part/db}
 
