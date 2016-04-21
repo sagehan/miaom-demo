@@ -188,7 +188,7 @@
 
 (defn submit-order! []
   (rpc/submit-order! (order-raw @db__cart  ))
-  (d/reset-conn!     conn__cart (d/empty-db)) )
+  (d/reset-conn!     conn__cart (d/empty-db schema__cart) ))
 
 ;; State cells =====================================================================
 (defc fold-toggle true)
