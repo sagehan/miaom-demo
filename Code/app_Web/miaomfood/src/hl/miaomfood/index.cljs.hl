@@ -95,8 +95,8 @@
 
 ;;===== persisting DB between page reloads!
 (defonce storeage-name "miaomfood/DB")
-(defn persist [db]
-  (js/localStorage.setItem storeage-name (dt/write-transit-str db)))
+;(defn persist [db]
+;  (js/localStorage.setItem storeage-name (dt/write-transit-str db)))
 
 ;(d/listen! conn__cart :persistence
 ;           (fn [tx-report] (when-let [db (:db-after tx-report)]
@@ -144,13 +144,13 @@
         price (spec-price-of cid spec) ]
     (if-not (nil? eid)
       [{:db/id eid :cuisineItem/qty (inc qty)} ]
-      [{:db/id 0   :cart/cuisineItems [-1] }
-       {:db/id -1
-        :cuisineItem/ID    cid
-        :cuisineItem/name  cname
-        :cuisineItem/spec  spec
-        :cuisineItem/price price
-        :cuisineItem/qty   (inc qty)} ] )))
+      [{:db/id 0
+        :cart/cuisineItems [{:db/id -1
+                             :cuisineItem/ID    cid
+                             :cuisineItem/name  cname
+                             :cuisineItem/spec  spec
+                             :cuisineItem/price price
+                             :cuisineItem/qty   (inc qty) }] }])))
 
 (defn dec-spec-tx [_ cid spec]
   (let [eid (:db/id (@cuisineItem-detail-of cid spec) )
@@ -187,8 +187,8 @@
   (d/transact! conn__cart [[:db.fn/call form-input-tx :order/streetAddress address]]))
 
 (defn submit-order! []
-  (rpc/submit-order!   (order-raw @db__cart))
-  (do (reset! db__cart (d/empty-db)) (js/localStorage.removeItem storeage-name)))
+  (rpc/submit-order! (order-raw @db__cart  ))
+  (d/reset-conn!     conn__cart (d/empty-db)) )
 
 ;; State cells =====================================================================
 (defc fold-toggle true)
