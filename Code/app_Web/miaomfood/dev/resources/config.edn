@@ -1,8 +1,8 @@
 {
 
  :datomic
- {:uri     "datomic:dev://localhost:4334/miaomfood"
-  :dev-uri "datomic:dev://localhost:4334/miaomfood-dev"}
+ {:uri     "datomic:free://localhost:4334/miaomfood"
+  :dev-uri "datomic:free://localhost:4334/miaomfood-dev"}
 
  :http
  {:port 5252}

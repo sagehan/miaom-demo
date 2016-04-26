@@ -26,7 +26,8 @@
 
                  ;; locate the datomic-pro installation , execute  bin/maven-install
                  ;; , that will install the datomic-pro jar to your local maven repo
-                 [com.datomic/datomic-pro  "0.9.5350"]
+                 ;; [com.datomic/datomic-pro  "0.9.5350"]
+                 [com.datomic/datomic-free "0.9.5359"]
 
                  ;; boot clj
                  [boot/core                 "2.5.5"      :scope "provided"]
@@ -56,7 +57,7 @@
 (task-options!
  target  {:dir #{"target"}}
 
- environ {:env {:datomic-uri "datomic:dev://localhost:4334/miaomfood-dev"}}
+ environ {:env {:datomic-uri "datomic:free://localhost:4334/miaomfood-dev"}}
 
  serve   {:init 'miaomfood.db/init
           :handler 'miaomfood.core/handler
