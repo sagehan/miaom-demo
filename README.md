@@ -23,6 +23,8 @@ This project mainly uses those technology:
 
 ## Usage
 
+To follow this guide, you need to change to directory `Code/app_Web/miaomfood`!
+
 ### Startup Datomic transactor!
 
 Before any playing around, please make sure that datomic transactor is running!

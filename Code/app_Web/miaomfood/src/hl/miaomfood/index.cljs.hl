@@ -121,7 +121,7 @@
          [(* ?p ?q)             ?s ] ] db))
 
 (defc= order-total   (sum-of-cart db__cart      ) )
-(defc= cart           (d/pull db__cart ["*"] 0   ) )
+(defc= cart          (d/pull db__cart ["*"] 0   ) )
 (defc= cart-items    (:cart/cuisineItems    cart) )
 (defc= order-comment (:order/comment        cart) )
 (defc= customer-name (:order/customerName   cart) )
@@ -383,8 +383,7 @@
   (div :class "user-page"))
 
 (defelem control-tabs []
-  (div :class "control-tabs"
-    ))
+  (div :class "control-tabs" :text ";TODO: "))
 
 (defelem controller-bar []
   (div :class (cell= {:controller-bar true, :clearfix true,
