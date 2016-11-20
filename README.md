@@ -1,3 +1,12 @@
+[boot]: http://boot-clj.com
+[2]: http://localhost:8000
+[Hoplon]: http://hoplon.io
+[Datomic]: http://www.datomic.com/
+[datascript]: https://github.com/tonsky/datascript
+[6]: http://tonsky.me/blog/the-web-after-tomorrow/
+[7]: http://localhost:5252
+[LICENSE]: https://www.eclipse.org/legal/epl-v10.html
+
 # miaomfood
 
 A simple demo built with full clojure(script) technology stack which use
@@ -11,15 +20,15 @@ I recommend you guys read this article: [The Web After Tomorrow][6].
 
 This project mainly uses those technology:
 
-1. [Hoplon][3] : Reactive framework which compete with react/Om.
-2. [Datomic][4] : Distributed NoSQL database.
-3. [datascript][5] : Front-end NoSQL memory database, mock datomic!
+1. [Hoplon] Reactive framework which compete with react/Om.
+2. [Datomic] Distributed NoSQL database.
+3. [datascript] Front-end NoSQL memory database, mock datomic!
 
 ## Dependencies
 
 - java 1.8
 - [datomic](https://my.datomic.com/downloads/free)  0.9.5359
-- [boot][1]
+- [boot]
 
 ## Usage
 
@@ -50,7 +59,7 @@ You can read [this](http://docs.datomic.com/getting-started.html) article to get
     - auto reload the html(and other static files like .css, .hl) page on changes
     - Clojurescript REPL
 
-2. Go to [http://localhost:8000][2] in your browser. You should see the SPA page.
+2. Go to <http://localhost:8000> in your browser. You should see the SPA page.
 
 3. If you edit and save a file, the task will recompile the code and reload the
    browser to show the updated version.
@@ -85,15 +94,5 @@ You can read [this](http://docs.datomic.com/getting-started.html) article to get
    advanced compilation and prerender the html.
 
 ## License
-
 Copyright © 2016 **Sage Han**. All rights reserved.
-
-Licensed under Eclipse Public License (see [LICENSE](LICENSE)).
-
-[1]: http://boot-clj.com
-[2]: http://localhost:8000
-[3]: http://hoplon.io
-[4]: http://www.datomic.com/
-[5]: https://github.com/tonsky/datascript
-[6]: http://tonsky.me/blog/the-web-after-tomorrow/
-[7]: http://localhost:5252
+Licensed under Eclipse Public License (see [LICENSE]).
