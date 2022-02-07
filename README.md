@@ -94,5 +94,5 @@ You can read [this](http://docs.datomic.com/getting-started.html) article to get
    advanced compilation and prerender the html.
 
 ## License
-Copyright © 2016 **Sage Han**. All rights reserved.
+Copyright © 2016 **Truewen**. All rights reserved.
 Licensed under Eclipse Public License (see [LICENSE]).
